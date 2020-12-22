@@ -25,7 +25,7 @@ int main()
 
 	PommeParser parser(&tokens);
 
-	parser.name()->accept();
+	//parser.name()->accept();
 	
 	/*antlr4::tree::ParseTree *tree = parser.stored_definition();
 
