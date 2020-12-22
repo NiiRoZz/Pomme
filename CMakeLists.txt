@@ -12,30 +12,23 @@ find_package(antlr4-generator REQUIRED)
 
 set(ANTLR4_JAR_LOCATION ${PROJECT_SOURCE_DIR}/thirdparty/antlr/antlr-4.9-complete.jar)
 
-if(NOT MSVC)
-  add_definitions(-Wall -Wextra -g -pedantic)
-endif()
-
 # generate both
 antlr4_generate( 
-  antlrpomme_lexer
+  antlrpomme
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Pomme.g4
   BOTH
   FALSE
   TRUE
-  "antlrpomme"
-  "${ANTLR4_TOKEN_FILES_antlrpomme_lexer}"
-  "${ANTLR4_TOKEN_DIRECTORY_antlrpomme_lexer}"
+  "Pomme"
 )
 
 # Add directories for generated include files
-include_directories( ${PROJECT_BINARY_DIR} ${ANTLR4_INCLUDE_DIR} ${ANTLR4_INCLUDE_DIR_antlrpomme_lexer} ${ANTLR4_INCLUDE_DIR_antlrpomme_parser} )
+include_directories( ${PROJECT_BINARY_DIR} ${ANTLR4_INCLUDE_DIR} ${ANTLR4_INCLUDE_DIR_antlrpomme} )
 
 # Add source to this project's executable.
 add_executable (Pomme
   src/Pomme.cpp
-  ${ANTLR4_SRC_FILES_antlrpomme_lexer}
-  ${ANTLR4_SRC_FILES_antlrpomme_parser}
+  ${ANTLR4_SRC_FILES_antlrpomme}
 )
 
 add_dependencies(Pomme antlr4_static)
