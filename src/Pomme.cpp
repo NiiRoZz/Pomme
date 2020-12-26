@@ -1,37 +1,40 @@
-﻿// Pomme.cpp : Defines the entry point for the application.
-//
+﻿#include "Pomme.h"
 
-#include "Pomme.h"
+#include "Compiler.h"
+#include "VirtualMachine.h"
 
-#include <antlr4-runtime.h>
 #include "PommeLexer.h"
-#include "PommeParser.h"
+#include "PommeLexerTokenManager.h"
+
+#include <fstream>
 
 using namespace Pomme;
 
 int main()
 {
-	//std::ifstream stream;
-	//stream.open("input.scene");
-
-	antlr4::ANTLRInputStream input("testtest");
-	PommeLexer lexer(&input);
-	antlr4::CommonTokenStream tokens(&lexer);
-
-	tokens.fill();
-	for (auto token : tokens.getTokens()) {
-		std::cout << token->toString() << std::endl;
+	std::string filename = "input.pomme";
+	std::ifstream stream;
+	stream.open(filename);
+	if (!stream.is_open())
+	{
+		std::cout << "failed to open " << filename << '\n\n';
 	}
 
-	PommeParser parser(&tokens);
+	JAVACC_STRING_TYPE s;
+	while (!stream.eof()) {
+		s += stream.get();
+	}
 
-	//parser.name()->accept();
-	
-	/*antlr4::tree::ParseTree *tree = parser.stored_definition();
+	CharStream charStream(s.c_str(), s.size() - 1, 1, 1);
 
-	parser.main();
+	PommeLexerTokenManager* scanner = new PommeLexerTokenManager(&charStream);
+	PommeLexer lexer(scanner);
 
-	Pomme::PommeParser::FileContext* tree = parser.file();*/
+	PommeNode* tree = static_cast<PommeNode*>(lexer.input());
+	tree->dump("");
+
+	/*VirtualMachine vm;
+	Compiler compiler(tree, vm);*/
 
 	return 0;
 }

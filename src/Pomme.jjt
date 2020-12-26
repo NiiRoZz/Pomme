@@ -1,0 +1,149 @@
+options
+{
+	MULTI=true;
+	OUTPUT_LANGUAGE="c++";
+	STATIC=false;
+  NODE_SCOPE_HOOK=true;
+	VISITOR=true;
+	NAMESPACE="Pomme";
+  NODE_CLASS="PommeNode";
+}
+
+PARSER_BEGIN(PommeLexer)
+
+void jjtreeOpenNodeScope(PommeNode *n)
+{
+  if (n == nullptr) return;
+  n->setLineNumber( getToken(1)->beginLine );
+  n->setLineColumn( getToken(1)->beginColumn );
+}
+
+void jjtreeCloseNodeScope(PommeNode *n)
+{
+}
+
+PARSER_END(PommeLexer)
+
+SKIP :
+{
+	" "
+| "\r"
+| "\t"
+| "\n"
+| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+| <"/*"(~["/"])*  "*""/" >
+}
+
+TOKEN: 
+{ 
+		<ASSIGNEMENT : "=">  
+		| <PLUS : "+">  
+		| <MINUS : "-"> 
+		| <MULT : "*"> 
+		| <DIV : "/"> 
+		| <INCR : "++"> 
+		| <INCRASSIGN : "+=">
+		| <DECR : "--"> 
+		| <DECRASSIGN : "-=">
+}
+
+TOKEN:
+{
+		<CLASS : "class">
+		| <IF : "if"> 
+		| <ELSE : "else"> 
+		| <WHILE : "while"> 
+		| <PRINT : "print"> 
+		| <PRINTLN : "println">
+		| <RETURN : "return"> 
+}
+
+TOKEN:
+{
+		<PARENTL : "("> 
+		| <PARENTR : ")"> 
+		| <BRACEL : "{"> 
+		| <BRACER : "}"> 
+		| <BRACKETL : "["> 
+		| <BRACKETR : "]"> 
+		| <COLON : ":">
+		| <SEMICOLON : ";"> 
+		| <COMMA : ","> 
+		| <POINT : ".">
+		| <EXCLAMATION : "!">
+}
+
+TOKEN:
+{
+		<EQ : "=="> 
+		| <GR : ">"> 
+		| <OR : "||"> 
+		| <AND : "&&">
+		| <TRUE : "true" >
+		| <FALSE : "false" >
+}
+
+TOKEN:
+{
+		<VOID: "void">
+		| <CONST: "const">
+		| <DIGIT : (["0"-"9"])+>
+		| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9","_"])*>
+		| <STRING : "\""(~["\n","\r"])*"\"">
+		| <FLOAT : (["0"-"9"])*["."](["0"-"9"])+>
+}
+
+SimpleNode* input() : {}
+{
+	instrs() <EOF> { return jjtThis; }
+}
+
+void ident() #ident:
+{Token* t;}
+{
+	 t = <IDENTIFIER> { jjtThis->setIdent(t->image); }
+}
+
+void instrs() #void :
+{}
+{
+	instr() <SEMICOLON> instrs() #instrs
+	| {} #inil
+}
+
+void instr() #void :
+{}
+{
+	var()
+}
+
+void var() #void :
+{}
+{
+	type() ident() varP()
+}
+
+void varP() #void :
+{}
+{
+	vexp() #var(3)
+}
+
+void vexp() #void :
+{}
+{
+	{} #omega
+}
+
+void typemeth() #void :
+{}
+{
+	< VOID > #voidType
+	| type()
+}
+
+void type() #void :
+{}
+{
+	ident()
+}
