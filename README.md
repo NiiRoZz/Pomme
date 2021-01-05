@@ -21,4 +21,5 @@ Convert pomme file into bytecode.
 ### Virtual Machine
 
 Load bytecode produced by the [compiler](#Compiler).
+
 Can instantiate a new class directly from your host application.
