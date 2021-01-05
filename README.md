@@ -2,6 +2,9 @@
 
 ![pomme](./assets/apple.png)
 
+Scripting language.
+Target to be easily moddable and added to any application.
+Used in a custom project for UE4.
 
 ## Components
 
