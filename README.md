@@ -12,8 +12,13 @@ Used in a custom project for UE4.
 
 ### Lexer/Parser
 
-Using [javacc](https://github.com/javacc/javacc) for generating the AST tree
+Using [javacc](https://github.com/javacc/javacc) for generating the AST tree.
 
 ### Compiler
 
+Convert pomme file into bytecode.
+
 ### Virtual Machine
+
+Load bytecode produced by the [compiler](#Compiler).
+Can instantiate a new class directly from your host application.
