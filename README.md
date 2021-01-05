@@ -2,7 +2,7 @@
 
 ![pomme](./assets/apple.png)
 
-Scripting language.
+Scripting language for C++ application.
 
 Target to be easily moddable and added to any application.
 
