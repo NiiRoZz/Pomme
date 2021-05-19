@@ -1,0 +1,112 @@
+
+todo: 
+
+opérateur de décalage,
+check switch
+fonction globale
+enum
+
+
+
+
+classes ->  classe  ";" classes |															classes($1, $3)
+			vide;																			cnil																	
+
+classe -> 	"class" ident "{" decls "}" |													classe($2 ,$4)
+			"modded" class ident "{" decls "}"												moddedclasse($2, $4)
+
+ident -> 	identificateur 																	ident($1)
+
+decls -> 	decl ";" decls | 																decls($1, $3)
+			vide 																			vnil
+
+decl -> 	var | 																			$1
+			methode 																		$1
+
+vars -> 	var ";" vars | 																	vars($1,$3)
+			vide 																			vnil
+
+var -> 		typemeth ident vexp | 															var($1, $2, $3)
+			typemeth ident "[" exp "]" | 													tableau($1, $2, $4)
+			"const" type ident vexp 														cst($2, $3, $4)
+
+vexp -> 	"=" exp | 																		$2
+			vide 																			omega
+
+methode -> 	identfuncs typemeth ident "("entêtes")" "{" vars instrs "}"						méthode($1, $2, $4, $7, $8)
+
+identfuncs -> 	static visibility identfunc |												identfuncs($1, $2, $3)
+			 	vide
+
+static -> 	"static" | 																		static_child
+			vide 																			snil																
+
+visibility -> 	"public" | 																	public_child
+				"private" | 																private_child
+				"protected" |																protected_child
+				vide																		vinil
+
+identfunc ->  	"override" | 																override_child
+				"native" | 																	native_child
+				vide																		idnil
+
+entêtes -> 	entête "," entêtes | 															entêtes($1, $3)
+			entête | 																		entêtes($1, enil)
+			vide 																			enil
+
+entête -> 	type ident 																		entête($1,$2)
+
+instrs -> 	instr ";" instrs 																instrs($1, $3)
+			vide 																			inil
+
+instr -> 	ident1 "=" exp | 																affectation($1, $3)
+			ident1 "+=" exp | 																somme($1,$3)
+			ident1"++" | 																	incrément($1)
+			ident"("listexp")" | 															appelI($1,$3)
+			ident"."ident"("listexp")" | 													appelIClasse($1, $3)
+			"return" exp | 																	retour($2)
+			"if" exp "{" instrs "}" [else "{" instrs "}"] | 								si($2, $4, $8)
+			"while" exp "{" instrs "}" 														tantque($2, $4)
+			"switch" exp "{" listcase "}"													switch($1, $2)
+
+listcase -> "case" exp ":" instrs; listcase |												case($1, $2, $3)
+			vide
+
+listexp -> 	exp "," listexp |															 	listexp($1, $3)
+			exp | 																			listexp($1, exnil)
+			vide 																			exnil
+
+exp -> 		"!" exp1 | 																		non($2)
+			"-" exp1 | 																		moins($2)
+			exp "&&" exp1 | 																et($1, $4)
+			exp "||" exp1 | 																ou($1, $4)
+			exp1 																			$1
+
+exp1 -> 	exp1 "==" exp2 | 																=($1,$3)
+			exp1 ">" exp2 | 																> ($1,$3)
+			exp2 																			$1
+
+exp2 -> 	exp2 "+" terme | 																+($1,$3)
+			exp2 "-" terme | 																-($1,$3)
+			terme 																			$1
+
+terme -> 	terme "*" fact | 																*($1, $3)
+			terme "/"fact | 																/($1, $3)
+			fact 																			$1
+
+fact -> 	ident1 | 																		$1
+			ident"("listexp")" | 															appelE($1, $3)
+			ident"."ident"("listexp")" | 													appelEClasse($1, $3)
+			true | 																			vrai
+			false | 																		faux
+			nombre | 																		nbre($1)
+			"("exp")" 																		$2
+
+ident1 -> 	ident | 																		$1
+			ident"["exp"]" 																	tab($1, $3)
+
+typemeth -> void | 																			rien
+			type 																			$1
+
+type -> 	ident																			$1
+			
