@@ -101,7 +101,7 @@ SimpleNode* input() : {}
 void ident() #ident:
 {Token* t;}
 {
-	 t = <IDENTIFIER> { jjtThis->setIdent(t->image); }
+	 t = <IDENTIFIER> {  }
 }
 
 void instrs() #void :
