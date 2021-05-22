@@ -27,88 +27,138 @@ PARSER_END(PommeLexer)
 SKIP :
 {
 	" "
-| "\r"
-| "\t"
-| "\n"
-| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
-| <"/*"(~["/"])*  "*""/" >
+	| "\r"
+	| "\t"
+	| "\n"
+	| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+	| <"/*"(~["/"])*  "*""/" >
 }
 
 TOKEN: 
 { 
-		<ASSIGNEMENT : "=">  
-		| <PLUS : "+">  
-		| <MINUS : "-"> 
-		| <MULT : "*"> 
-		| <DIV : "/"> 
-		| <INCR : "++"> 
-		| <INCRASSIGN : "+=">
-		| <DECR : "--"> 
-		| <DECRASSIGN : "-=">
+	<ASSIGNEMENT : "=">  
+	| <PLUS : "+">  
+	| <MINUS : "-"> 
+	| <MULT : "*"> 
+	| <DIV : "/"> 
+	| <INCR : "++"> 
+	| <INCRASSIGN : "+=">
+	| <DECR : "--"> 
+	| <DECRASSIGN : "-=">
 }
 
 TOKEN:
 {
-		<CLASS : "class">
-		| <IF : "if"> 
-		| <ELSE : "else"> 
-		| <WHILE : "while"> 
-		| <PRINT : "print"> 
-		| <PRINTLN : "println">
-		| <RETURN : "return"> 
+	<CLASS : "class">
+	| <ENUM : "enum"> 
+	| <IF : "if"> 
+	| <ELSE : "else"> 
+	| <WHILE : "while"> 
+	| <PRINT : "print"> 
+	| <PRINTLN : "println">
+	| <RETURN : "return"> 
 }
 
 TOKEN:
 {
-		<PARENTL : "("> 
-		| <PARENTR : ")"> 
-		| <BRACEL : "{"> 
-		| <BRACER : "}"> 
-		| <BRACKETL : "["> 
-		| <BRACKETR : "]"> 
-		| <COLON : ":">
-		| <SEMICOLON : ";"> 
-		| <COMMA : ","> 
-		| <POINT : ".">
-		| <EXCLAMATION : "!">
+	<PARENTL : "("> 
+	| <PARENTR : ")"> 
+	| <BRACEL : "{"> 
+	| <BRACER : "}"> 
+	| <BRACKETL : "["> 
+	| <BRACKETR : "]"> 
+	| <COLON : ":">
+	| <SEMICOLON : ";"> 
+	| <COMMA : ","> 
+	| <POINT : ".">
+	| <EXCLAMATION : "!">
 }
 
 TOKEN:
 {
-		<EQ : "=="> 
-		| <GR : ">"> 
-		| <OR : "||"> 
-		| <AND : "&&">
-		| <TRUE : "true" >
-		| <FALSE : "false" >
+	<EQ : "=="> 
+	| <GR : ">"> 
+	| <OR : "||"> 
+	| <AND : "&&">
+	| <TRUE : "true" >
+	| <FALSE : "false" >
 }
 
 TOKEN:
 {
-		<VOID: "void">
-		| <CONST: "const">
-		| <DIGIT : (["0"-"9"])+>
-		| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9","_"])*>
-		| <STRING : "\""(~["\n","\r"])*"\"">
-		| <FLOAT : (["0"-"9"])*["."](["0"-"9"])+>
+	<VOID: "void">
+	| <CONST: "const">
+	| <NATIVE: "native">
+	| <EXTENDS: "extends">
+	| <DIGIT : (["0"-"9"])+>
+	| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9"])*>
+	| <IDENTIFIEROPERATOR : ("operator")("\\+="|"-="|"\\*="|"\\/="|"\\|="|"&="|">>="|"<<="|"\\+\\+"|"--"|">"|"<"|">="|"<="|"=="|"!="|"\\+"|"-"|"\\*"|"\\/"|"%"|"bool")>
+	| <STRING : "\""(~["\n","\r"])*"\"">
+	| <FLOAT : (["0"-"9"])*["."](["0"-"9"])+>
 }
 
 SimpleNode* input() : {}
 {
-	instrs() <EOF> { return jjtThis; }
+	scopes() <EOF> { return jjtThis; }
 }
 
 void ident() #ident:
-{Token* t;}
+{Token *t;}
 {
-	 t = <IDENTIFIER> {  }
+   t= <IDENTIFIER> {  }
+}
+
+void nmbr() #nmbr:
+{Token *t;}
+{
+   t= <DIGIT> {  }
+}
+
+void scopes() #void :
+{}
+{
+	scope() <SEMICOLON> scopes() #scopes(2)
+	| {} #scinil
+}
+
+void scope() #void :
+{}
+{
+	globalFunction()
+	| enumerate()
+}
+
+void enumerate() #void :
+{}
+{
+	<ENUM> ident() <BRACEL> declenums() <BRACER> #enumerate(2)
+}
+
+void declenums() #void :
+{}
+{
+	declenum() <COMMA> declenums()	#declenums(2)
+	| {} #ennil
+}
+
+void declenum() #void :
+{}
+{
+	LOOKAHEAD(2) ident() <ASSIGNEMENT> nmbr() #enumassign(2)
+	| ident() #enumdefault(1)
+}
+
+void globalFunction() #void :
+{}
+{
+	typemeth() ident() <PARENTL> entetes() <PARENTR> <BRACEL> instrs() <BRACER> #globalFunction(4)
 }
 
 void instrs() #void :
 {}
 {
-	instr() <SEMICOLON> instrs() #instrs
-	| {} #inil
+	instr() <SEMICOLON> instrs() #instrs(2)
+	| {}	#inil
 }
 
 void instr() #void :
@@ -120,30 +170,55 @@ void instr() #void :
 void var() #void :
 {}
 {
-	type() ident() varP()
-}
-
-void varP() #void :
-{}
-{
-	vexp() #var(3)
+	type() ident() vexp() #var(3)
+	| <CONST> type() ident() vexp() #constant(3)
 }
 
 void vexp() #void :
 {}
 {
-	{} #omega
+	<ASSIGNEMENT> exp()
+	| <BRACKETL> exp() <BRACKETR> #array(1)
+	| {}	#omega
+}
+
+void entetes() #void :
+{}
+{
+   	entete() entetes2()	#entetes(2)
+ 	| {}	#enil
+}
+
+void entetes2() #void :
+{}
+{
+  	<COMMA> entete() entetes2()	#entetes(2)
+ 	| {}	#enil
+}
+
+
+void entete() #void :
+{}
+{
+  	type() ident()	#entete(2)
 }
 
 void typemeth() #void :
 {}
 {
-	< VOID > #voidType
-	| type()
+	<VOID> #voidType
+  	| type()
 }
 
-void type() #void :
+
+void type() #void:
 {}
 {
 	ident()
+}
+
+void exp() #void :
+{}
+{
+ 	<EXCLAMATION> #excl
 }

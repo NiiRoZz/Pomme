@@ -11,6 +11,8 @@ target_include_directories(pomme_tests
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest/include
     ${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${JAVACC_GENERATED_SRC_DIR}
 )
 
 target_link_libraries(pomme_tests

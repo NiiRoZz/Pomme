@@ -1,1 +1,21 @@
-int a;
+void func()
+{
+    int a;
+};
+
+test func2(float a, int c)
+{
+    int d;
+    int e = !;
+    const int f;
+    const int g[!];
+    const int h = !;
+    int b[!];
+};
+
+enum testenum
+{
+    FIRST,
+    SECOND,
+    THIRD = 50,
+};
