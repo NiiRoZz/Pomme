@@ -5,15 +5,15 @@ scopes -> 	scope ";" scopes |																scopes($1,$3)
 			vide																			scinil
 
 scope -> classe |																			$1
-		enum |																				$1
+		enumerate |																				$1
 		globalFunction																		$1
 
 classe -> 	"class" ident "{" decls "}" |													class($2 ,$4)
 			"class" ident "extends" ident "{" decls "}" |									classChild($2, $4, $6)
 			"modded" "class" ident "{" decls "}"											moddedClass($3, $5)
 
-enum ->     "enum" ident "{" declenums "}" |												enum($2, $4)
-			"modded" "enum" ident "{" declenums "}" | 										moddedEnum($3, $5)
+enumerate ->    "enum" ident "{" declenums "}" |											enumerate($2, $4)
+				"modded" "enum" ident "{" declenums "}" | 									moddedEnumerate($3, $5)
 
 declenums -> declenum "," declenums |														declenums($1, $3)
 			 declenum |																		$1
