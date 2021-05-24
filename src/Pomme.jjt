@@ -285,7 +285,7 @@ void instr() #void :
 	| <BREAK> #pommeBreak
 	| <IF> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> pommeElse() #pommeIf(3)
 	| <PRINT> <PARENTL> exp() <PARENTR> #pommePrint(1)
-	| <SWITCH> <PARENTL> fact() <PARENTR> <BRACEL> listcases() <BRACER> #pommeSwitch(2)
+	| <SWITCH> <PARENTL> exp() <PARENTR> <BRACEL> listcases() <BRACER> #pommeSwitch(2)
 	| var()
 }
 
@@ -377,9 +377,7 @@ void type() #void:
 void exp() #void :
 {}
 {
- 	<EXCLAMATION> exp1() #no(1)
-	| <MINUS> exp1() #unaryMinus(1)
-	| exp1() expP()
+ 	exp1() expP()
 }
 
 void expP() #void :
@@ -393,32 +391,50 @@ void expP() #void :
 void exp1() #void :
 {}
 {
-	exp1() <EQ> exp2() #pommeEQ(2)
-	| exp1() <NEQ> exp2() #pommeNEQ(2)
-	| exp1() <GT> exp2() #pommeGT(2)
-	| exp1() <GET> exp2() #pommeGET(2)
-	| exp1() <LT> exp2() #pommeLT(2)
-	| exp1() <LET> exp2() #pommeLET(2)
-	| exp2()
+	exp2() exp1P()
+}
+
+void exp1P() #void :
+{}
+{
+  	<EQ> exp2() exp1P() #pommeEQ(2)
+	| <NEQ> exp2() exp1P() #pommeNEQ(2)
+	| <GT> exp2() exp1P() #pommeGT(2)
+	| <GET> exp2() exp1P() #pommeGET(2)
+	| <LT> exp2() exp1P() #pommeLT(2)
+	| <LET> exp2() exp1P() #pommeLET(2)
+  	| {} 
 }
 
 void exp2() #void :
 {}
 {
-	exp2() <ADD> terme() #pommeAdd(2)
-	| exp2() <MINUS> terme() #pommeMinus(2)
-	| exp2() <SHIFTR> terme() #pommeShiftR(2)
-	| exp2() <SHIFTL> terme() #pommeShiftL(2)
-	| terme()
+	terme() exp2P()
+}
+
+void exp2P() #void :
+{}
+{
+  	<ADD> terme() exp2P() #pommeAdd(2)
+	| <MINUS> terme() exp2P() #pommeMinus(2)
+	| <SHIFTR> terme() exp2P() #pommeShiftR(2)
+	| <SHIFTL> terme() exp2P() #pommeShiftL(2)
+  	| {} 
 }
 
 void terme() #void :
 {}
 {
-	terme() <MULT> fact2() #pommeMult(2)
-	| terme() <DIV> fact2() #pommeDiv(2)
-	| terme() <MODULO> fact2() #pommeModulo(2)
-	| fact2()
+	fact2() termeP()
+}
+
+void termeP() #void :
+{}
+{
+  	<MULT> fact2() termeP() #pommeMult(2)
+	| <DIV> fact2() termeP() #pommeDiv(2)
+	| <MODULO> fact2() termeP() #pommeModulo(2)
+  	| {} 
 }
 
 void fact2() #void :
@@ -426,6 +442,8 @@ void fact2() #void :
 {
 	fact()
 	| <PARENTL> exp() <PARENTR>
+	| <MINUS> fact2() #pommeUnary(1)
+	| <EXCLAMATION> fact2() #pommeNot(1)
 }
 
 void fact() #void :
