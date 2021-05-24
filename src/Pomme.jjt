@@ -3,10 +3,10 @@ options
 	MULTI=true;
 	OUTPUT_LANGUAGE="c++";
 	STATIC=false;
-  NODE_SCOPE_HOOK=true;
+  	NODE_SCOPE_HOOK=true;
 	VISITOR=true;
 	NAMESPACE="Pomme";
-  NODE_CLASS="PommeNode";
+  	NODE_CLASS="PommeNode";
 }
 
 PARSER_BEGIN(PommeLexer)
@@ -37,14 +37,23 @@ SKIP :
 TOKEN: 
 { 
 	<ASSIGNEMENT : "=">  
-	| <PLUS : "+">  
+	| <ADD : "+">  
+	| <ADDEQ : "+=">
 	| <MINUS : "-"> 
+	| <MINUSEQ : "-=">
 	| <MULT : "*"> 
+	| <MULTEQ : "*=">
 	| <DIV : "/"> 
+	| <DIVEQ : "/=">
+	| <OREQ : "|=">
+	| <ANDEQ : "&=">
+	| <SHIFTL : "<<">
+	| <SHIFTLEQ : "<<=">
+	| <SHIFTR : ">>">
+	| <SHIFTREQ : ">>=">
 	| <INCR : "++"> 
-	| <INCRASSIGN : "+=">
 	| <DECR : "--"> 
-	| <DECRASSIGN : "-=">
+	| <MODULO : "%">
 }
 
 TOKEN:
@@ -55,8 +64,11 @@ TOKEN:
 	| <ELSE : "else"> 
 	| <WHILE : "while"> 
 	| <PRINT : "print"> 
-	| <PRINTLN : "println">
 	| <RETURN : "return"> 
+	| <BREAK : "break">
+	| <SWITCH : "switch">
+	| <CASE : "case">
+	| <DEFAULTCASE : "default">
 }
 
 TOKEN:
@@ -77,7 +89,11 @@ TOKEN:
 TOKEN:
 {
 	<EQ : "=="> 
-	| <GR : ">"> 
+	| <NEQ : "!=">
+	| <GT : ">"> 
+	| <GET : ">=">
+	| <LT : "<"> 
+	| <LET : "<=">
 	| <OR : "||"> 
 	| <AND : "&&">
 	| <TRUE : "true" >
@@ -90,7 +106,13 @@ TOKEN:
 	| <CONST: "const">
 	| <NATIVE: "native">
 	| <EXTENDS: "extends">
-	| <DIGIT : (["0"-"9"])+>
+	| <MODDED: "modded">
+	| <STATIC: "static">
+	| <PUBLIC: "public">
+	| <PRIVATE: "private">
+	| <PROTECTED: "protected">
+	| <OVERRIDE: "override">
+	| <INT : (["0"-"9"])+>
 	| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9"])*>
 	| <IDENTIFIEROPERATOR : ("operator")("\\+="|"-="|"\\*="|"\\/="|"\\|="|"&="|">>="|"<<="|"\\+\\+"|"--"|">"|"<"|">="|"<="|"=="|"!="|"\\+"|"-"|"\\*"|"\\/"|"%"|"bool")>
 	| <STRING : "\""(~["\n","\r"])*"\"">
@@ -105,13 +127,31 @@ SimpleNode* input() : {}
 void ident() #ident:
 {Token *t;}
 {
-   t= <IDENTIFIER> {  }
+   t = <IDENTIFIER> { }
 }
 
-void nmbr() #nmbr:
+void identOp() #identOp:
 {Token *t;}
 {
-   t= <DIGIT> {  }
+	t = <IDENTIFIEROPERATOR> { }
+}
+
+void pommeInt() #pommeInt:
+{Token *t;}
+{
+   t= <INT> {  }
+}
+
+void pommeFloat() #pommeFloat:
+{Token *t;}
+{
+   t= <FLOAT> {  }
+}
+
+void pommeString() #pommeString:
+{Token *t;}
+{
+   t= <STRING> {  }
 }
 
 void scopes() #void :
@@ -124,27 +164,89 @@ void scopes() #void :
 void scope() #void :
 {}
 {
-	globalFunction()
+	LOOKAHEAD(2) classes()
+	| globalFunction()
 	| enumerate()
+}
+
+void classes() #void :
+{}
+{
+	LOOKAHEAD(3) <CLASS> ident() <BRACEL> decls() <BRACER> #defaultClass(2)
+	| <CLASS> ident() <EXTENDS> ident() <BRACEL> decls() <BRACER> #classChild(3)
+	| <MODDED> <CLASS> ident() <BRACEL> decls() <BRACER> #moddedClass(2)
+}
+
+void decls() #void :
+{}
+{
+	decl() <SEMICOLON> decls() #decls(2)
+	| {} #dnil
+}
+
+void decl() #void :
+{}
+{
+	LOOKAHEAD(3) var()
+	| methode()
+}
+
+void methode() #void :
+{}
+{
+	identfuncs() typemeth() identmeth() <PARENTL> entetes() <PARENTR> <BRACEL> instrs() <BRACER> #methode(5)
+	| <NATIVE> pommeStatic() visibility() typemeth() identmeth() <PARENTL> entetes() <PARENTR> #methodeNative(5)
+}
+
+void identfuncs() #void :
+{}
+{
+	pommeStatic() visibility() pommeOverride() #identFuncs(3)
+}
+
+void pommeStatic() #void :
+{}
+{
+	<STATIC> #staticChild
+	| {} #snil
+}
+
+void visibility() #void :
+{}
+{
+	<PUBLIC> #publicChild
+	| <PRIVATE> #privateChild
+	| <PROTECTED> #protectedChild
+	| {} #vinil
+}
+
+void pommeOverride() #void :
+{}
+{
+	<OVERRIDE> #overrideChild
+	| {} #onil
 }
 
 void enumerate() #void :
 {}
 {
-	<ENUM> ident() <BRACEL> declenums() <BRACER> #enumerate(2)
+	LOOKAHEAD(3) <ENUM> ident() <BRACEL> declenums() <BRACER> #enumerate(2)
+	| <ENUM> ident() <EXTENDS> ident() <BRACEL> declenums() <BRACER> #extendsEnumerate(3)
+	| <MODDED> <ENUM> ident() <BRACEL> declenums() <BRACER> #moddedEnumerate(2)
 }
 
 void declenums() #void :
 {}
 {
-	declenum() <COMMA> declenums()	#declenums(2)
+	LOOKAHEAD(4) declenum() <COMMA> declenums()	#declenums(2)
+	| declenum()
 	| {} #ennil
 }
 
 void declenum() #void :
 {}
 {
-	LOOKAHEAD(2) ident() <ASSIGNEMENT> nmbr() #enumassign(2)
+	LOOKAHEAD(2) ident() <ASSIGNEMENT> pommeInt() #enumassign(2)
 	| ident() #enumdefault(1)
 }
 
@@ -152,6 +254,7 @@ void globalFunction() #void :
 {}
 {
 	typemeth() ident() <PARENTL> entetes() <PARENTR> <BRACEL> instrs() <BRACER> #globalFunction(4)
+	| <NATIVE> typemeth() ident() <PARENTL> entetes() <PARENTR> #globalFunctionNative(3)
 }
 
 void instrs() #void :
@@ -164,7 +267,55 @@ void instrs() #void :
 void instr() #void :
 {}
 {
-	var()
+	LOOKAHEAD(2) ident() <PARENTL> listexp() <PARENTR> #callI(2)
+	| LOOKAHEAD(5) ident() <POINT> ident() <PARENTL> listexp() <PARENTR> #callIClass(3)
+	| LOOKAHEAD(5) ident1() <ASSIGNEMENT> exp() #assignement(2)
+	| LOOKAHEAD(5) ident1() <ADDEQ> exp() #addeq(2)
+	| LOOKAHEAD(5) ident1() <MINUSEQ> exp() #minuseq(2)
+	| LOOKAHEAD(5) ident1() <DIVEQ> exp() #diveq(2)
+	| LOOKAHEAD(5) ident1() <MULTEQ> exp() #multeq(2)
+	| LOOKAHEAD(5) ident1() <OREQ> exp() #oreq(2)
+	| LOOKAHEAD(5) ident1() <ANDEQ> exp() #andeq(2)
+	| LOOKAHEAD(5) ident1() <SHIFTLEQ> exp() #shiftleq(2)
+	| LOOKAHEAD(5) ident1() <SHIFTREQ> exp() #shiftreq(2)
+	| LOOKAHEAD(5) ident1() <INCR> #incrementPost(1)
+	| <INCR> ident1() #incrementPre(1)
+	| <RETURN> exp() #pommeReturn(1)
+	| <WHILE> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> #pommeWhile(2)
+	| <BREAK> #pommeBreak
+	| <IF> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> pommeElse() #pommeIf(3)
+	| <PRINT> <PARENTL> exp() <PARENTR> #pommePrint(1)
+	| <SWITCH> <PARENTL> fact() <PARENTR> <BRACEL> listcases() <BRACER> #pommeSwitch(2)
+	| var()
+}
+
+void listcases() #void :
+{}
+{
+	<CASE> exp() <COLON> <BRACEL> instrs() <BRACER> listcases() #pommeCases(3)
+	| <DEFAULTCASE> <COLON> <BRACEL> instrs() <BRACER> #pommeDefault(1)
+	| {} #swinil
+}
+
+void pommeElse() #void :
+{}
+{
+  	<ELSE> <BRACEL> instrs() <BRACER>
+	| {} #inil
+}
+
+void listexp() #void :
+{}
+{
+  	exp() listexpP() #listexp(2)
+	| {} #exnil
+}
+
+void listexpP() #void :
+{}
+{
+  	<COMMA> exp() listexpP() #listexp(2)
+	| {} #exnil
 }
 
 void var() #void :
@@ -210,6 +361,12 @@ void typemeth() #void :
   	| type()
 }
 
+void identmeth() #void :
+{}
+{
+	ident()
+	| identOp()
+}
 
 void type() #void:
 {}
@@ -220,5 +377,80 @@ void type() #void:
 void exp() #void :
 {}
 {
- 	<EXCLAMATION> #excl
+ 	<EXCLAMATION> exp1() #no(1)
+	| <MINUS> exp1() #unaryMinus(1)
+	| exp1() expP()
+}
+
+void expP() #void :
+{}
+{
+  	<AND> exp1() expP() #pommeAnd(2)
+  	| <OR> exp1() expP() #pommeOr(2)
+  	| {} 
+}
+
+void exp1() #void :
+{}
+{
+	exp1() <EQ> exp2() #pommeEQ(2)
+	| exp1() <NEQ> exp2() #pommeNEQ(2)
+	| exp1() <GT> exp2() #pommeGT(2)
+	| exp1() <GET> exp2() #pommeGET(2)
+	| exp1() <LT> exp2() #pommeLT(2)
+	| exp1() <LET> exp2() #pommeLET(2)
+	| exp2()
+}
+
+void exp2() #void :
+{}
+{
+	exp2() <ADD> terme() #pommeAdd(2)
+	| exp2() <MINUS> terme() #pommeMinus(2)
+	| exp2() <SHIFTR> terme() #pommeShiftR(2)
+	| exp2() <SHIFTL> terme() #pommeShiftL(2)
+	| terme()
+}
+
+void terme() #void :
+{}
+{
+	terme() <MULT> fact2() #pommeMult(2)
+	| terme() <DIV> fact2() #pommeDiv(2)
+	| terme() <MODULO> fact2() #pommeModulo(2)
+	| fact2()
+}
+
+void fact2() #void :
+{}
+{
+	fact()
+	| <PARENTL> exp() <PARENTR>
+}
+
+void fact() #void :
+{}
+{
+	LOOKAHEAD(3) ident() <PARENTL> listexp() <PARENTR> #callE(2)
+	| LOOKAHEAD(5) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callEClass(3)
+	| ident1()
+	| <TRUE> #pommeTrue
+	| <FALSE> #pommeFalse
+	| number()
+	| pommeString()
+}
+
+void ident1() #void :
+{}
+{
+	LOOKAHEAD(2) ident() <POINT> ident() #accessMember(2)
+	| LOOKAHEAD(2) ident() <BRACKETL> exp() <BRACKETR> #accessTab(2)
+	| ident()
+}
+
+void number() #void :
+{}
+{
+	pommeInt()
+	| pommeFloat()
 }

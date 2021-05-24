@@ -2,6 +2,7 @@
 
 #include "PommeLexer.h"
 #include "PommeLexerTokenManager.h"
+#include "MyErrorHandler.h"
 
 #include <iostream>
 #include <fstream>
@@ -9,7 +10,7 @@
 using namespace Pomme;
 
 TEST(TEST1TEST, First) {
-  std::string filename = "input.pomme";
+  	std::string filename = "input.pomme";
 	std::ifstream stream;
 	stream.open(filename);
 	if (!stream.is_open())
@@ -24,11 +25,16 @@ TEST(TEST1TEST, First) {
 
 	CharStream charStream(s.c_str(), s.size() - 1, 1, 1);
 
-	PommeLexerTokenManager* scanner = new PommeLexerTokenManager(&charStream);
-	PommeLexer lexer(scanner);
+	MyErrorHandler *myErrorHandler = new MyErrorHandler();
+
+	PommeLexerTokenManager scanner(&charStream);
+
+	PommeLexer lexer(&scanner);
+	lexer.setErrorHandler(myErrorHandler);
 
 	PommeNode* tree = static_cast<PommeNode*>(lexer.input());
-	tree->dump("");
 
-  EXPECT_TRUE(true);
+	EXPECT_EQ(myErrorHandler->getErrorCount(), 0);
+
+	if (myErrorHandler->getErrorCount() == 0) tree->dump("");
 }

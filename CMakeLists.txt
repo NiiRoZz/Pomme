@@ -31,7 +31,12 @@ include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" )
 
 # Add source to this project's executable.
 add_library(${APP}
-  "src/Pomme.cpp" "src/VirtualMachine.cpp" "src/Compiler.cpp" "src/CompilerVisitor.cpp" "src/PommeNode.cpp")
+  "src/Pomme.cpp"
+  "src/VirtualMachine.cpp"
+  "src/Compiler.cpp"
+  "src/CompilerVisitor.cpp"
+  "src/PommeNode.cpp"
+)
 
 add_custom_target(
   JavaCCTarget
