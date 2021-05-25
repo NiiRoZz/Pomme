@@ -1,0 +1,27 @@
+input
+ scopes
+  defaultClass
+   ident
+   decls
+    methode
+     identFuncs
+      snil
+      vinil
+      onil
+     voidType
+     ident
+     enil
+     inil
+    decls
+     methode
+      identFuncs
+       snil
+       vinil
+       onil
+      voidType
+      identDestructor
+       ident
+      enil
+      inil
+     dnil
+  scinil

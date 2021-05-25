@@ -1,0 +1,13 @@
+input
+ scopes
+  globalFunction
+   voidType
+   ident
+   enil
+   instrs
+    constant
+     ident
+     ident
+     pommeInt
+    inil
+  scinil

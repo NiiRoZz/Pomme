@@ -84,6 +84,7 @@ TOKEN:
 	| <COMMA : ","> 
 	| <POINT : ".">
 	| <EXCLAMATION : "!">
+	| <TILDE : "~">
 }
 
 TOKEN:
@@ -121,7 +122,7 @@ TOKEN:
 
 SimpleNode* input() : {}
 {
-	scopes() <EOF> { return jjtThis; }
+	scopes() { return jjtThis; }
 }
 
 void ident() #ident:
@@ -279,7 +280,9 @@ void instr() #void :
 	| LOOKAHEAD(5) ident1() <SHIFTLEQ> exp() #shiftleq(2)
 	| LOOKAHEAD(5) ident1() <SHIFTREQ> exp() #shiftreq(2)
 	| LOOKAHEAD(5) ident1() <INCR> #incrementPost(1)
+	| LOOKAHEAD(5) ident1() <DECR> #decrementPost(1)
 	| <INCR> ident1() #incrementPre(1)
+	| <DECR> ident1() #decrementPre(1)
 	| <RETURN> exp() #pommeReturn(1)
 	| <WHILE> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> #pommeWhile(2)
 	| <BREAK> #pommeBreak
@@ -366,6 +369,7 @@ void identmeth() #void :
 {
 	ident()
 	| identOp()
+	| <TILDE> ident() #identDestructor(1)
 }
 
 void type() #void:
@@ -444,6 +448,7 @@ void fact2() #void :
 	| <PARENTL> exp() <PARENTR>
 	| <MINUS> fact2() #pommeUnary(1)
 	| <EXCLAMATION> fact2() #pommeNot(1)
+	| <TILDE> fact2() #pommeTilde(1)
 }
 
 void fact() #void :

@@ -1,0 +1,18 @@
+input
+ scopes
+  globalFunction
+   voidType
+   ident
+   enil
+   inil
+  scopes
+   globalFunction
+    voidType
+    ident
+    enil
+    instrs
+     callI
+      ident
+      exnil
+     inil
+   scinil

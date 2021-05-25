@@ -1,0 +1,7 @@
+input
+ scopes
+  globalFunctionNative
+   voidType
+   ident
+   enil
+  scinil

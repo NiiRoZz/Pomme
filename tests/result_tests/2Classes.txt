@@ -1,0 +1,10 @@
+input
+ scopes
+  defaultClass
+   ident
+   dnil
+  scopes
+   defaultClass
+    ident
+    dnil
+   scinil

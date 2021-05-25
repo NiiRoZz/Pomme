@@ -1,0 +1,24 @@
+input
+ scopes
+  globalFunction
+   voidType
+   ident
+   enil
+   instrs
+    var
+     ident
+     ident
+     array
+      pommeAdd
+       pommeInt
+       pommeInt
+    instrs
+     assignement
+      accessTab
+       ident
+       pommeAdd
+        pommeInt
+        pommeInt
+      pommeInt
+     inil
+  scinil

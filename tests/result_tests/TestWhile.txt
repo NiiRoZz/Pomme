@@ -1,0 +1,15 @@
+input
+ scopes
+  globalFunction
+   voidType
+   ident
+   enil
+   instrs
+    pommeWhile
+     pommeTrue
+     instrs
+      pommePrint
+       pommeString
+      inil
+    inil
+  scinil

@@ -1,0 +1,6 @@
+input
+ scopes
+  defaultClass
+   ident
+   dnil
+  scinil

@@ -1,0 +1,21 @@
+input
+ scopes
+  globalFunction
+   voidType
+   ident
+   enil
+   instrs
+    var
+     ident
+     ident
+     pommeAnd
+      pommeTrue
+      pommeFalse
+    instrs
+     assignement
+      ident
+      pommeOr
+       pommeTrue
+       pommeFalse
+     inil
+  scinil

@@ -50,6 +50,11 @@ add_dependencies(${APP} JavaCCTarget)
 
 file(COPY ${PROJECT_SOURCE_DIR}/input.pomme DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+file(GLOB MY_TESTS_FILES
+${PROJECT_SOURCE_DIR}/tests/result_tests/*.txt
+)
+file(COPY ${MY_TESTS_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests)
+
 file(GLOB JAVACC_SRC_FILES ${JAVACC_GENERATED_SRC_DIR}/*.cc)
 target_sources(${APP} PRIVATE ${JAVACC_SRC_FILES})
 

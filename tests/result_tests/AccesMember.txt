@@ -1,0 +1,34 @@
+input
+ scopes
+  defaultClass
+   ident
+   decls
+    var
+     ident
+     ident
+     pommeInt
+    dnil
+  scopes
+   globalFunction
+    voidType
+    ident
+    enil
+    instrs
+     var
+      ident
+      ident
+      ident
+     instrs
+      callI
+       ident
+       exnil
+      instrs
+       var
+        ident
+        ident
+        accessMember
+         ident
+         ident
+       inil
+   scinil
+

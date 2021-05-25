@@ -1,0 +1,22 @@
+input
+ scopes
+  globalFunction
+   ident
+   ident
+   enil
+   instrs
+    pommeReturn
+     pommeInt
+    inil
+  scopes
+   defaultClass
+    ident
+    decls
+     var
+      ident
+      ident
+      callE
+       ident
+       exnil
+     dnil
+   scinil

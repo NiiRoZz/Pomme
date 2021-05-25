@@ -1,0 +1,22 @@
+input
+ scopes
+  globalFunction
+   voidType
+   ident
+   enil
+   inil
+  scopes
+   globalFunction
+    voidType
+    ident
+    entetes
+     entete
+      ident
+      ident
+     entetes
+      entete
+       ident
+       ident
+      enil
+    inil
+   scinil
