@@ -97,8 +97,6 @@ TOKEN:
 	| <LET : "<=">
 	| <OR : "||"> 
 	| <AND : "&&">
-	| <TRUE : "true" >
-	| <FALSE : "false" >
 }
 
 TOKEN:
@@ -113,6 +111,10 @@ TOKEN:
 	| <PRIVATE: "private">
 	| <PROTECTED: "protected">
 	| <OVERRIDE: "override">
+	| <TRUE : "true">
+	| <FALSE : "false">
+	| <NULLEXP : "null">
+	| <NEWEXP : "new">
 	| <INT : (["0"-"9"])+>
 	| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9"])*>
 	| <IDENTIFIEROPERATOR : ("operator")("\\+="|"-="|"\\*="|"\\/="|"\\|="|"&="|">>="|"<<="|"\\+\\+"|"--"|">"|"<"|">="|"<="|"=="|"!="|"\\+"|"-"|"\\*"|"\\/"|"%"|"bool")>
@@ -456,17 +458,19 @@ void fact() #void :
 {
 	LOOKAHEAD(3) ident() <PARENTL> listexp() <PARENTR> #callE(2)
 	| LOOKAHEAD(5) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callEClass(3)
+	| <NEWEXP> ident() <PARENTL> listexp() <PARENTR> #pommeNew(2) 
 	| ident1()
 	| <TRUE> #pommeTrue
 	| <FALSE> #pommeFalse
 	| number()
 	| pommeString()
+	| <NULLEXP> #pommeNull
 }
 
 void ident1() #void :
 {}
 {
-	LOOKAHEAD(2) ident() <POINT> ident() #accessMember(2)
+	LOOKAHEAD(2) ident() <POINT> ident1() #accessMember(2)
 	| LOOKAHEAD(2) ident() <BRACKETL> exp() <BRACKETR> #accessTab(2)
 	| ident()
 }

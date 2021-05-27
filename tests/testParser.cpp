@@ -25,8 +25,8 @@ using namespace Pomme;
 	std::cout.rdbuf(old);\
 	std::ifstream t(file);\
 	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());\
-	EXPECT_EQ(text, str);\
-	std::cout << text << std::endl;
+	EXPECT_EQ(text, str);//\
+	//std::cout << text << std::endl;
 
 
 TEST(TEST_LEXER_PARSER, BasicClass)
@@ -95,7 +95,7 @@ TEST(TEST_LEXER_PARSER, 1Function1Member)
 
 TEST(TEST_LEXER_PARSER, AccesMember)
 {
-	TEST_PARSER_FILE("class Test{ int b = 8;} void main(){ Test t = new Test(); int a = t.b; };\n", "tests/AccesMember.txt");
+	TEST_PARSER_FILE("class Test{ int b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int a = t.b; int c = t.t.b; };\n", "tests/AccesMember.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestIfElse)
@@ -130,7 +130,7 @@ TEST(TEST_LEXER_PARSER, TestOperator3)
 
 TEST(TEST_LEXER_PARSER, TestOperator4)
 {
-	TEST_PARSER_FILE("void main(){ int b = 2; int a = 111 000 >> 2; a = 111 000 << 2; a = 4 % 2; a += b; a -= b; a *= b; a /= b; };\n", "tests/TestOperator4.txt");
+	TEST_PARSER_FILE("void main(){ int b = 2; int a = 111000 >> 2; a = 111000 << 2; a = 4 % 2; a += b; a -= b; a *= b; a /= b; };\n", "tests/TestOperator4.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestOperator5)
@@ -170,12 +170,12 @@ TEST(TEST_LEXER_PARSER, TestArray3)
 
 TEST(TEST_LEXER_PARSER, TestNull)
 {
-	TEST_PARSER_FILE("class Array{ int array[10]; }; class test{ Array a = new Array(); a.array[3] = 8;  a = null; };\n", "tests/TestNull.txt");
+	TEST_PARSER_FILE("class Array{ int array[10]; }; void test(){ Array a = null; a.array[3] = 8; };\n", "tests/TestNull.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestThis)
 {
-	TEST_PARSER_FILE("class Array{ int array[10]; void test(){ this.array[2] = 0; };  void test2(){ this.test(); }; };\n", "tests/TestThis.txt");
+	TEST_PARSER_FILE("class Array{ int array[10]; void test(){ this.array[1] = 0; };  void test2(){ this.test(); }; };\n", "tests/TestThis.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestClassSpecific)

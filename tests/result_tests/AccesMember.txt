@@ -7,7 +7,14 @@ input
      ident
      ident
      pommeInt
-    dnil
+    decls
+     var
+      ident
+      ident
+      pommeNew
+       ident
+       exnil
+     dnil
   scopes
    globalFunction
     voidType
@@ -17,18 +24,24 @@ input
      var
       ident
       ident
-      ident
-     instrs
-      callI
+      pommeNew
        ident
        exnil
+     instrs
+      var
+       ident
+       ident
+       accessMember
+        ident
+        ident
       instrs
        var
         ident
         ident
         accessMember
          ident
-         ident
+         accessMember
+          ident
+          ident
        inil
    scinil
-

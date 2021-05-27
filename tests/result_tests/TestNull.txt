@@ -1,37 +1,31 @@
 input
  scopes
-  decls
-   defaultClass
+  defaultClass
+   ident
+   decls
+    var
+     ident
+     ident
+     array
+      pommeInt
+    dnil
+  scopes
+   globalFunction
+    voidType
     ident
-    decls
+    enil
+    instrs
      var
       ident
       ident
-      array
+      pommeNull
+     instrs
+      assignement
+       accessMember
+        ident
+        accessTab
+         ident
+         pommeInt
        pommeInt
-     dnil
-   decls
-    ident
-    decls
-     methode
-      methode
-       var
-        ident
-        ident
-        ident
-       identFuncs
-        snil
-        vinil
-        onil
-       ident
-       enil
-       inil
-      identFuncs
-       snil
-       vinil
-       onil
-      ident
-      enil
       inil
-     dnil
-  scinil
+   scinil

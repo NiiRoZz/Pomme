@@ -133,13 +133,15 @@ fact2 -> 	fact |																			$1
 fact -> 	ident1 | 																		$1
 			ident "(" listexp ")" | 														callE($1, $3)
 			ident "." identmeth "(" listexp ")" | 											callEClass($1, $3, $5)
+			"new" ident "(" listexp ")" |													pommeNew
 			true | 																			pommeTrue
 			false | 																		pommeFalse
 			number |																		$1
-			pommeString																		$1
+			pommeString |																	$1
+			"null"																			pommeNull
 
 ident1 -> 	ident | 																		$1
-			ident "." ident																	accessMember($1, $3)
+			ident "." ident1																accessMember($1, $3)
 			ident"["exp"]" 																	accessTab($1, $3)
 
 typemeth -> void | 																			rien
