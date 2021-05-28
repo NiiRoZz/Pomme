@@ -8,17 +8,18 @@ namespace Pomme
 
 	class PommeNode : public SimpleNode
 	{
-			int m_LineNumber;
-			int m_ColumnNumber;
+	public:
+		PommeNode(int id);
+		PommeNode(PommeLexer* parser, int id);
 
 	public:
-			PommeNode(int id);
-			PommeNode(PommeLexer* parser, int id);
+		void setLineNumber(int lineNumber);
+		int getLineNumber() const;
+		void setLineColumn(int columnNumber);
+		int getLineColumn();
 
-	public:
-			void setLineNumber(int lineNumber);
-			int getLineNumber() const;
-			void setLineColumn(int columnNumber);
-			int getLineColumn();
+  private:
+    int m_LineNumber;
+		int m_ColumnNumber;
 	};
 }

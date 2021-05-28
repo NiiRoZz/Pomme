@@ -4,6 +4,7 @@ add_executable(pomme_tests
   main.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest/src/gtest-all.cc
   testParser.cpp
+  testCompiler.cpp
 )
 
 

@@ -116,8 +116,8 @@ TOKEN:
 	| <NULLEXP : "null">
 	| <NEWEXP : "new">
 	| <INT : (["0"-"9"])+>
-	| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9"])*>
-	| <IDENTIFIEROPERATOR : ("operator")("\\+="|"-="|"\\*="|"\\/="|"\\|="|"&="|">>="|"<<="|"\\+\\+"|"--"|">"|"<"|">="|"<="|"=="|"!="|"\\+"|"-"|"\\*"|"\\/"|"%"|"bool")>
+	| <IDENTIFIEROPERATOR : ("operator")(<ADDEQ>|<MINUSEQ>|<MULTEQ>|<DIVEQ>|<OREQ>|<ANDEQ>|<SHIFTREQ>|<SHIFTLEQ>|<INCR>|<DECR>|<GT>|<LT>|<GET>|<LET>|<EQ>|<NEQ>|<ADD>|<MINUS>|<MULT>|<DIV>|<MODULO>|"bool")>
+	| <IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9","_"])*>
 	| <STRING : "\""(~["\n","\r"])*"\"">
 	| <FLOAT : (["0"-"9"])*["."](["0"-"9"])+>
 }
@@ -130,7 +130,7 @@ SimpleNode* input() : {}
 void ident() #ident:
 {Token *t;}
 {
-   t = <IDENTIFIER> { }
+   t = <IDENTIFIER> { jjtThis->m_Identifier = t->image; }
 }
 
 void identOp() #identOp:
@@ -142,19 +142,19 @@ void identOp() #identOp:
 void pommeInt() #pommeInt:
 {Token *t;}
 {
-   t= <INT> {  }
+   t= <INT> {  jjtThis->m_Value = std::stoull(t->image); }
 }
 
 void pommeFloat() #pommeFloat:
 {Token *t;}
 {
-   t= <FLOAT> {  }
+   t= <FLOAT> { jjtThis->m_Value = std::stof(t->image);  }
 }
 
 void pommeString() #pommeString:
 {Token *t;}
 {
-   t= <STRING> {  }
+   t= <STRING> { jjtThis->m_Value = t->image;  }
 }
 
 void scopes() #void :
@@ -270,19 +270,19 @@ void instrs() #void :
 void instr() #void :
 {}
 {
-	LOOKAHEAD(2) ident() <PARENTL> listexp() <PARENTR> #callI(2)
-	| LOOKAHEAD(5) ident() <POINT> ident() <PARENTL> listexp() <PARENTR> #callIClass(3)
-	| LOOKAHEAD(5) ident1() <ASSIGNEMENT> exp() #assignement(2)
-	| LOOKAHEAD(5) ident1() <ADDEQ> exp() #addeq(2)
-	| LOOKAHEAD(5) ident1() <MINUSEQ> exp() #minuseq(2)
-	| LOOKAHEAD(5) ident1() <DIVEQ> exp() #diveq(2)
-	| LOOKAHEAD(5) ident1() <MULTEQ> exp() #multeq(2)
-	| LOOKAHEAD(5) ident1() <OREQ> exp() #oreq(2)
-	| LOOKAHEAD(5) ident1() <ANDEQ> exp() #andeq(2)
-	| LOOKAHEAD(5) ident1() <SHIFTLEQ> exp() #shiftleq(2)
-	| LOOKAHEAD(5) ident1() <SHIFTREQ> exp() #shiftreq(2)
-	| LOOKAHEAD(5) ident1() <INCR> #incrementPost(1)
-	| LOOKAHEAD(5) ident1() <DECR> #decrementPost(1)
+	LOOKAHEAD(2) identmeth() <PARENTL> listexp() <PARENTR> #callI(2)
+	| LOOKAHEAD(7) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callIClass(3)
+	| LOOKAHEAD(7) ident1() <ASSIGNEMENT> exp() #assignement(2)
+	| LOOKAHEAD(7) ident1() <ADDEQ> exp() #addeq(2)
+	| LOOKAHEAD(7) ident1() <MINUSEQ> exp() #minuseq(2)
+	| LOOKAHEAD(7) ident1() <DIVEQ> exp() #diveq(2)
+	| LOOKAHEAD(7) ident1() <MULTEQ> exp() #multeq(2)
+	| LOOKAHEAD(7) ident1() <OREQ> exp() #oreq(2)
+	| LOOKAHEAD(7) ident1() <ANDEQ> exp() #andeq(2)
+	| LOOKAHEAD(7) ident1() <SHIFTLEQ> exp() #shiftleq(2)
+	| LOOKAHEAD(7) ident1() <SHIFTREQ> exp() #shiftreq(2)
+	| LOOKAHEAD(7) ident1() <INCR> #incrementPost(1)
+	| LOOKAHEAD(7) ident1() <DECR> #decrementPost(1)
 	| <INCR> ident1() #incrementPre(1)
 	| <DECR> ident1() #decrementPre(1)
 	| <RETURN> exp() #pommeReturn(1)
@@ -446,7 +446,7 @@ void termeP() #void :
 void fact2() #void :
 {}
 {
-	fact()
+	LOOKAHEAD(4) fact()
 	| <PARENTL> exp() <PARENTR>
 	| <MINUS> fact2() #pommeUnary(1)
 	| <EXCLAMATION> fact2() #pommeNot(1)
@@ -456,8 +456,8 @@ void fact2() #void :
 void fact() #void :
 {}
 {
-	LOOKAHEAD(3) ident() <PARENTL> listexp() <PARENTR> #callE(2)
-	| LOOKAHEAD(5) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callEClass(3)
+	LOOKAHEAD(3) identmeth() <PARENTL> listexp() <PARENTR> #callE(2)
+	| LOOKAHEAD(6) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callEClass(3)
 	| <NEWEXP> ident() <PARENTL> listexp() <PARENTR> #pommeNew(2) 
 	| ident1()
 	| <TRUE> #pommeTrue

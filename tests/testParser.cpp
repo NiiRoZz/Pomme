@@ -36,12 +36,12 @@ TEST(TEST_LEXER_PARSER, BasicClass)
 
 TEST(TEST_LEXER_PARSER, BasicFuncs)
 {
-	TEST_PARSER_FILE("void func() {}; void func(int a, int b) {};\n", "tests/basicFuncs.txt");
+	TEST_PARSER_FILE("void func() {}; void func(int64_t a, int64_t b) {};\n", "tests/basicFuncs.txt");
 }
 
 TEST(TEST_LEXER_PARSER, BasicDeclsFuncs)
 {
-	TEST_PARSER_FILE("void func() { int a; int a = 5; int a[2]; float b; float b = 5; float b[5]; };\n", "tests/basicDeclsVars.txt");
+	TEST_PARSER_FILE("void func() { int64_t a; int64_t a = 5; int64_t a[2]; float b; float b = 5; float b[5]; };\n", "tests/basicDeclsVars.txt");
 }
 
 TEST(TEST_LEXER_PARSER, BasicEnums)
@@ -80,7 +80,7 @@ TEST(TEST_LEXER_PARSER, 1Class1Method1Function)
 
 TEST(TEST_LEXER_PARSER, 3Functions1Return)
 {
-	TEST_PARSER_FILE("void test2(){}; void test1(){}; int test1(){ return 0;};\n", "tests/3Functions1Return.txt");
+	TEST_PARSER_FILE("void test2(){}; void test1(){}; int64_t test1(){ return 0;};\n", "tests/3Functions1Return.txt");
 }
 
 TEST(TEST_LEXER_PARSER, 2Functions)
@@ -90,22 +90,22 @@ TEST(TEST_LEXER_PARSER, 2Functions)
 
 TEST(TEST_LEXER_PARSER, 1Function1Member)
 {
-	TEST_PARSER_FILE("int f(){ return 3;}; class main{ int a = f(); };\n", "tests/1Function1Member.txt");
+	TEST_PARSER_FILE("int64_t f(){ return 3;}; class main{ int64_t a = f(); };\n", "tests/1Function1Member.txt");
 }
 
 TEST(TEST_LEXER_PARSER, AccesMember)
 {
-	TEST_PARSER_FILE("class Test{ int b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int a = t.b; int c = t.t.b; };\n", "tests/AccesMember.txt");
+	TEST_PARSER_FILE("class Test{ int64_t b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int64_t a = t.b; int64_t c = t.t.b; t.operator+=(); operator*(); t.operatorbool(); operator++(); t.t.salut(); };\n", "tests/AccesMember.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestIfElse)
 {
-	TEST_PARSER_FILE("void main(){ int a; if(true){ a = 2; }else{ a = 3; }; };\n", "tests/TestIfElse.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a; if(true){ a = 2; }else{ a = 3; }; };\n", "tests/TestIfElse.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestIf)
 {
-	TEST_PARSER_FILE("void main(){ int a; if(true){ a = 2; }; };\n", "tests/TestIf.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a; if(true){ a = 2; }; };\n", "tests/TestIf.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestWhile)
@@ -115,7 +115,7 @@ TEST(TEST_LEXER_PARSER, TestWhile)
 
 TEST(TEST_LEXER_PARSER, TestOperator1)
 {
-	TEST_PARSER_FILE("void main(){  int b = 2; int a = 1; a <<= b; a >>= b; b++; ++b; b--; --b;};\n", "tests/TestOperator1.txt");
+	TEST_PARSER_FILE("void main(){ int64_t b = 2; int64_t a = 1; a <<= b; a >>= b; b++; ++b; b--; --b;};\n", "tests/TestOperator1.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestOperator2)
@@ -125,12 +125,12 @@ TEST(TEST_LEXER_PARSER, TestOperator2)
 
 TEST(TEST_LEXER_PARSER, TestOperator3)
 {
-	TEST_PARSER_FILE("void main(){ int a = 8*7;  a = 8 + 7;  a = 8 - 7;  a = 8/8; };\n", "tests/TestOperator3.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a = 8*7;  a = 8 + 7;  a = 8 - 7;  a = 8/8; };\n", "tests/TestOperator3.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestOperator4)
 {
-	TEST_PARSER_FILE("void main(){ int b = 2; int a = 111000 >> 2; a = 111000 << 2; a = 4 % 2; a += b; a -= b; a *= b; a /= b; };\n", "tests/TestOperator4.txt");
+	TEST_PARSER_FILE("void main(){ int64_t b = 2; int64_t a = 111000 >> 2; a = 111000 << 2; a = 4 % 2; a += b; a -= b; a *= b; a /= b; };\n", "tests/TestOperator4.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestOperator5)
@@ -145,37 +145,37 @@ TEST(TEST_LEXER_PARSER, TestOperator6)
 
 TEST(TEST_LEXER_PARSER, TestOperator7)
 {
-	TEST_PARSER_FILE("void main(){ int a = 0; bool b = a == 1; b = a != 0;  b = !a;  };\n", "tests/TestOperator7.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a = 0; bool b = a == 1; b = a != 0;  b = !a;  };\n", "tests/TestOperator7.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestOperator8)
 {
-	TEST_PARSER_FILE("void main(){ int a = 1111; int b = ~a;};\n", "tests/TestOperator8.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a = 1111; int64_t b = ~a;};\n", "tests/TestOperator8.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestArray1)
 {
-	TEST_PARSER_FILE("void main(){ int a[10]; a[3] = 2; };\n", "tests/TestArray1.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a[10]; a[3] = 2; };\n", "tests/TestArray1.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestArray2)
 {
-	TEST_PARSER_FILE("void main(){ int a[10-5]; a[3] = 2; };\n", "tests/TestArray2.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a[10-5]; a[3] = 2; };\n", "tests/TestArray2.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestArray3)
 {
-	TEST_PARSER_FILE("void main(){ int a[10+5]; a[3+2] = 2; };\n", "tests/TestArray3.txt");
+	TEST_PARSER_FILE("void main(){ int64_t a[10+5]; a[3+2] = 2; };\n", "tests/TestArray3.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestNull)
 {
-	TEST_PARSER_FILE("class Array{ int array[10]; }; void test(){ Array a = null; a.array[3] = 8; };\n", "tests/TestNull.txt");
+	TEST_PARSER_FILE("class Array{ int64_t array[10]; }; void test(){ Array a = null; a.array[3] = 8; };\n", "tests/TestNull.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestThis)
 {
-	TEST_PARSER_FILE("class Array{ int array[10]; void test(){ this.array[1] = 0; };  void test2(){ this.test(); }; };\n", "tests/TestThis.txt");
+	TEST_PARSER_FILE("class Array{ int64_t array[10]; void test(){ this.array[1] = 0; };  void test2(){ this.test(); }; };\n", "tests/TestThis.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestClassSpecific)
@@ -185,7 +185,7 @@ TEST(TEST_LEXER_PARSER, TestClassSpecific)
 
 TEST(TEST_LEXER_PARSER, TestConst)
 {
-	TEST_PARSER_FILE("void constTest(){ const int a = 8; };\n", "tests/TestConst.txt");
+	TEST_PARSER_FILE("void constTest(){ const int64_t a = 8; };\n", "tests/TestConst.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestNativeGlobalFunction)

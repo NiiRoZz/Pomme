@@ -9,7 +9,7 @@ namespace Pomme
 	}
 
 	PommeNode::PommeNode(PommeLexer* parser, int id)
-		: SimpleNode(parser, id)
+	: SimpleNode(parser, id)
 	{
 	}
 

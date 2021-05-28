@@ -43,5 +43,23 @@ input
          accessMember
           ident
           ident
-       inil
+       instrs
+        callIClass
+         ident
+         identOp
+         exnil
+        instrs
+         callI
+          identOp
+          exnil
+         instrs
+          callIClass
+           ident
+           identOp
+           exnil
+          instrs
+           callI
+            identOp
+            exnil
+           inil
    scinil
