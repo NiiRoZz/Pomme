@@ -1,6 +1,6 @@
 input
  scopes
-  globalFunctionNative
+  pommeGlobalFunctionNative
    voidType
    ident
    enil

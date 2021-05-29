@@ -1,31 +1,41 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    instrs
-    var
+    pommeVariable
      ident
      ident
      pommeInt
     instrs
-     var
+     pommeVariable
       ident
       ident
       pommeEQ
-       ident
+       listacces
+        ident
+        acnil
        pommeInt
      instrs
       assignement
-       ident
-       pommeNEQ
+       listacces
         ident
+        acnil
+       pommeNEQ
+        listacces
+         ident
+         acnil
         pommeInt
       instrs
        assignement
-        ident
-        pommeNot
+        listacces
          ident
+         acnil
+        pommeNot
+         listacces
+          ident
+          acnil
        inil
   scinil

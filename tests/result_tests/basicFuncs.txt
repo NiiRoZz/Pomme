@@ -1,20 +1,20 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    inil
   scopes
-   globalFunction
+   pommeGlobalFunction
     voidType
     ident
-    entetes
-     entete
+    headers
+     header
       ident
       ident
-     entetes
-      entete
+     headers
+      header
        ident
        ident
       enil

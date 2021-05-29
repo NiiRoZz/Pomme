@@ -1,6 +1,6 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil

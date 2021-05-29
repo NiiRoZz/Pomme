@@ -1,18 +1,18 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    decls
-    methodeNative
+    pommeMethodeNative
      snil
      vinil
      voidType
      ident
      enil
     decls
-     methode
+     pommeMethode
       identFuncs
-       staticChild
+       pommeStatic
        vinil
        onil
       voidType

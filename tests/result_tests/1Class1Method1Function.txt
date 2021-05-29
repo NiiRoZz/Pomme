@@ -1,9 +1,9 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    decls
-    methode
+    pommeMethode
      identFuncs
       snil
       vinil
@@ -14,7 +14,7 @@ input
      inil
     dnil
   scopes
-   globalFunction
+   pommeGlobalFunction
     voidType
     ident
     enil

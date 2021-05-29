@@ -1,11 +1,11 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    instrs
-    var
+    pommeVariable
      ident
      ident
      pommeAnd
@@ -13,7 +13,9 @@ input
       pommeFalse
     instrs
      assignement
-      ident
+      listacces
+       ident
+       acnil
       pommeOr
        pommeTrue
        pommeFalse

@@ -1,38 +1,54 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    instrs
-    var
+    pommeVariable
      ident
      ident
      pommeInt
     instrs
-     var
+     pommeVariable
       ident
       ident
       pommeInt
      instrs
       shiftleq
-       ident
-       ident
+       listacces
+        ident
+        acnil
+       listacces
+        ident
+        acnil
       instrs
        shiftreq
-        ident
-        ident
+        listacces
+         ident
+         acnil
+        listacces
+         ident
+         acnil
        instrs
         incrementPost
-         ident
+         listacces
+          ident
+          acnil
         instrs
          incrementPre
-          ident
+          listacces
+           ident
+           acnil
          instrs
           decrementPost
-           ident
+           listacces
+            ident
+            acnil
           instrs
            decrementPre
-            ident
+            listacces
+             ident
+             acnil
            inil
   scinil

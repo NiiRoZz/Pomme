@@ -1,11 +1,11 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    instrs
-    constant
+    pommeConstant
      ident
      ident
      pommeInt

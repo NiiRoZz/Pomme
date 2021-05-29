@@ -1,18 +1,20 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    inil
   scopes
-   globalFunction
+   pommeGlobalFunction
     voidType
     ident
     enil
     instrs
-     callI
-      ident
-      exnil
+     listacces
+      accessMethode
+       ident
+       exnil
+      acnil
      inil
    scinil

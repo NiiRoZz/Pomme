@@ -1,31 +1,52 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    decls
-    var
+    pommeVariable
      ident
      ident
-     array
+     pommeArray
       pommeInt
-    dnil
+    decls
+     pommeVariable
+      ident
+      ident
+      pommeNew
+       ident
+       exnil
+     dnil
   scopes
-   globalFunction
+   pommeGlobalFunction
     voidType
     ident
     enil
     instrs
-     var
+     pommeVariable
       ident
       ident
       pommeNull
      instrs
       assignement
-       accessMember
+       listacces
         ident
-        accessTab
-         ident
-         pommeInt
+        listacces
+         accessTab
+          ident
+          pommeInt
+         acnil
        pommeInt
-      inil
+      instrs
+       assignement
+        listacces
+         ident
+         listacces
+          ident
+          listacces
+           accessTab
+            ident
+            pommeInt
+           acnil
+        pommeInt
+       inil
    scinil

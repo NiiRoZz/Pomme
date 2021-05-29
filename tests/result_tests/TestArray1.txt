@@ -1,20 +1,22 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    voidType
    ident
    enil
    instrs
-    var
+    pommeVariable
      ident
      ident
-     array
+     pommeArray
       pommeInt
     instrs
      assignement
-      accessTab
-       ident
-       pommeInt
+      listacces
+       accessTab
+        ident
+        pommeInt
+       acnil
       pommeInt
      inil
   scinil

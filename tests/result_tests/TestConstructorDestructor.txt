@@ -1,9 +1,9 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    decls
-    methode
+    pommeMethode
      identFuncs
       snil
       vinil
@@ -13,13 +13,13 @@ input
      enil
      inil
     decls
-     methode
+     pommeMethode
       identFuncs
        snil
        vinil
        onil
       voidType
-      identDestructor
+      pommeDestructor
        ident
       enil
       inil

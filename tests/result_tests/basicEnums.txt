@@ -1,6 +1,6 @@
 input
  scopes
-  enumerate
+  pommeEnum
    ident
    declenums
     enumdefault
@@ -12,14 +12,14 @@ input
       ident
       pommeInt
   scopes
-   moddedEnumerate
+   pommeModdedEnum
     ident
     declenums
      enumdefault
       ident
      ennil
    scopes
-    extendsEnumerate
+    pommeExtendsEnum
      ident
      ident
      declenums

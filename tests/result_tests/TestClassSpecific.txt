@@ -1,27 +1,30 @@
 input
  scopes
-  classChild
+  pommeClassChild
    ident
    ident
    decls
-    methode
+    pommeMethode
      identFuncs
       snil
       vinil
-      overrideChild
+      pommeOverride
      voidType
      ident
      enil
      instrs
-      callIClass
+      listacces
        ident
-       ident
-       exnil
+       listacces
+        accessMethode
+         ident
+         exnil
+        acnil
       inil
     decls
-     methode
+     pommeMethode
       identFuncs
-       staticChild
+       pommeStatic
        vinil
        onil
       voidType
@@ -29,20 +32,20 @@ input
       enil
       inil
      decls
-      methode
+      pommeMethode
        identFuncs
         snil
-        privateChild
+        pommePrivate
         onil
        voidType
        ident
        enil
        inil
       decls
-       methode
+       pommeMethode
         identFuncs
          snil
-         protectedChild
+         pommeProtected
          onil
         voidType
         ident

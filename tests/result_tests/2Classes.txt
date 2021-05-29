@@ -1,10 +1,10 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    dnil
   scopes
-   defaultClass
+   pommeClass
     ident
     dnil
    scinil

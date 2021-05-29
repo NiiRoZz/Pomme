@@ -1,6 +1,6 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    dnil
   scinil

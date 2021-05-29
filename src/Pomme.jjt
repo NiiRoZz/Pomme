@@ -60,6 +60,7 @@ TOKEN:
 {
 	<CLASS : "class">
 	| <ENUM : "enum"> 
+	| <TYPEDEF : "typedef">
 	| <IF : "if"> 
 	| <ELSE : "else"> 
 	| <WHILE : "while"> 
@@ -170,14 +171,16 @@ void scope() #void :
 	LOOKAHEAD(2) classes()
 	| globalFunction()
 	| enumerate()
+	| <TYPEDEF> ident() ident() #pommeTypeDef(2)
 }
 
 void classes() #void :
 {}
 {
-	LOOKAHEAD(3) <CLASS> ident() <BRACEL> decls() <BRACER> #defaultClass(2)
-	| <CLASS> ident() <EXTENDS> ident() <BRACEL> decls() <BRACER> #classChild(3)
-	| <MODDED> <CLASS> ident() <BRACEL> decls() <BRACER> #moddedClass(2)
+	<CLASS> ident() ( 	<BRACEL> decls() <BRACER> #pommeClass(2)
+						| <EXTENDS> ident() <BRACEL> decls() <BRACER> #pommeClassChild(3)
+					)
+	| <MODDED> <CLASS> ident() <BRACEL> decls() <BRACER> #pommeModdedClass(2)
 }
 
 void decls() #void :
@@ -197,8 +200,8 @@ void decl() #void :
 void methode() #void :
 {}
 {
-	identfuncs() typemeth() identmeth() <PARENTL> entetes() <PARENTR> <BRACEL> instrs() <BRACER> #methode(5)
-	| <NATIVE> pommeStatic() visibility() typemeth() identmeth() <PARENTL> entetes() <PARENTR> #methodeNative(5)
+	identfuncs() typemeth() identmeth() <PARENTL> headers() <PARENTR> <BRACEL> instrs() <BRACER> #pommeMethode(5)
+	| <NATIVE> pommeStatic() visibility() typemeth() identmeth() <PARENTL> headers() <PARENTR> #pommeMethodeNative(5)
 }
 
 void identfuncs() #void :
@@ -210,54 +213,57 @@ void identfuncs() #void :
 void pommeStatic() #void :
 {}
 {
-	<STATIC> #staticChild
+	<STATIC> #pommeStatic
 	| {} #snil
 }
 
 void visibility() #void :
 {}
 {
-	<PUBLIC> #publicChild
-	| <PRIVATE> #privateChild
-	| <PROTECTED> #protectedChild
+	<PUBLIC> #pommePublic
+	| <PRIVATE> #pommePrivate
+	| <PROTECTED> #pommeProtected
 	| {} #vinil
 }
 
 void pommeOverride() #void :
 {}
 {
-	<OVERRIDE> #overrideChild
+	<OVERRIDE> #pommeOverride
 	| {} #onil
 }
 
 void enumerate() #void :
 {}
 {
-	LOOKAHEAD(3) <ENUM> ident() <BRACEL> declenums() <BRACER> #enumerate(2)
-	| <ENUM> ident() <EXTENDS> ident() <BRACEL> declenums() <BRACER> #extendsEnumerate(3)
-	| <MODDED> <ENUM> ident() <BRACEL> declenums() <BRACER> #moddedEnumerate(2)
+	<ENUM> ident() 	( 	<BRACEL> declenums() <BRACER> #pommeEnum(2)
+						| <EXTENDS> ident() <BRACEL> declenums() <BRACER> #pommeExtendsEnum(3)
+					)
+	| <MODDED> <ENUM> ident() <BRACEL> declenums() <BRACER> #pommeModdedEnum(2)
 }
 
 void declenums() #void :
 {}
 {
-	LOOKAHEAD(4) declenum() <COMMA> declenums()	#declenums(2)
-	| declenum()
+	declenum() 	( 	<COMMA> declenums() #declenums(2)
+					| {} 
+				)
 	| {} #ennil
 }
 
 void declenum() #void :
 {}
 {
-	LOOKAHEAD(2) ident() <ASSIGNEMENT> pommeInt() #enumassign(2)
-	| ident() #enumdefault(1)
+	ident() ( 	<ASSIGNEMENT> pommeInt() #enumassign(2)
+				| {} #enumdefault(1)
+			)
 }
 
 void globalFunction() #void :
 {}
 {
-	typemeth() ident() <PARENTL> entetes() <PARENTR> <BRACEL> instrs() <BRACER> #globalFunction(4)
-	| <NATIVE> typemeth() ident() <PARENTL> entetes() <PARENTR> #globalFunctionNative(3)
+	typemeth() ident() <PARENTL> headers() <PARENTR> <BRACEL> instrs() <BRACER> #pommeGlobalFunction(4)
+	| <NATIVE> typemeth() ident() <PARENTL> headers() <PARENTR> #pommeGlobalFunctionNative(3)
 }
 
 void instrs() #void :
@@ -270,36 +276,42 @@ void instrs() #void :
 void instr() #void :
 {}
 {
-	LOOKAHEAD(2) identmeth() <PARENTL> listexp() <PARENTR> #callI(2)
-	| LOOKAHEAD(7) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callIClass(3)
-	| LOOKAHEAD(7) ident1() <ASSIGNEMENT> exp() #assignement(2)
-	| LOOKAHEAD(7) ident1() <ADDEQ> exp() #addeq(2)
-	| LOOKAHEAD(7) ident1() <MINUSEQ> exp() #minuseq(2)
-	| LOOKAHEAD(7) ident1() <DIVEQ> exp() #diveq(2)
-	| LOOKAHEAD(7) ident1() <MULTEQ> exp() #multeq(2)
-	| LOOKAHEAD(7) ident1() <OREQ> exp() #oreq(2)
-	| LOOKAHEAD(7) ident1() <ANDEQ> exp() #andeq(2)
-	| LOOKAHEAD(7) ident1() <SHIFTLEQ> exp() #shiftleq(2)
-	| LOOKAHEAD(7) ident1() <SHIFTREQ> exp() #shiftreq(2)
-	| LOOKAHEAD(7) ident1() <INCR> #incrementPost(1)
-	| LOOKAHEAD(7) ident1() <DECR> #decrementPost(1)
-	| <INCR> ident1() #incrementPre(1)
-	| <DECR> ident1() #decrementPre(1)
+	LOOKAHEAD(2) var()
+	| <INCR> listacces() #incrementPre(1)
+	| <DECR> listacces() #decrementPre(1)
 	| <RETURN> exp() #pommeReturn(1)
 	| <WHILE> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> #pommeWhile(2)
 	| <BREAK> #pommeBreak
 	| <IF> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> pommeElse() #pommeIf(3)
 	| <PRINT> <PARENTL> exp() <PARENTR> #pommePrint(1)
 	| <SWITCH> <PARENTL> exp() <PARENTR> <BRACEL> listcases() <BRACER> #pommeSwitch(2)
-	| var()
+	| listacces() ( <ASSIGNEMENT> exp() #assignement(2) 
+					| <ADDEQ> exp() #addeq(2) 
+					| <MINUSEQ> exp() #minuseq(2) 
+					| <DIVEQ> exp() #diveq(2) 
+					| <MULTEQ> exp() #multeq(2) 
+					| <OREQ> exp() #oreq(2) 
+					| <ANDEQ> exp() #andeq(2) 
+					| <SHIFTLEQ> exp() #shiftleq(2)
+					| <SHIFTREQ> exp() #shiftreq(2)
+					| <INCR> #incrementPost(1)
+					| <DECR> #decrementPost(1)
+					| {}
+				)
 }
 
 void listcases() #void :
 {}
 {
-	<CASE> exp() <COLON> <BRACEL> instrs() <BRACER> listcases() #pommeCases(3)
+	pommecase() listcases() #pommeCases(2)
 	| <DEFAULTCASE> <COLON> <BRACEL> instrs() <BRACER> #pommeDefault(1)
 	| {} #swinil
+}
+
+void pommecase() #void :
+{}
+{
+	<CASE> exp() <COLON> <BRACEL> instrs() <BRACER> #pommeCase(2)
 }
 
 void pommeElse() #void :
@@ -326,37 +338,37 @@ void listexpP() #void :
 void var() #void :
 {}
 {
-	type() ident() vexp() #var(3)
-	| <CONST> type() ident() vexp() #constant(3)
+	type() ident() vexp() #pommeVariable(3)
+	| <CONST> type() ident() vexp() #pommeConstant(3)
 }
 
 void vexp() #void :
 {}
 {
 	<ASSIGNEMENT> exp()
-	| <BRACKETL> exp() <BRACKETR> #array(1)
+	| <BRACKETL> exp() <BRACKETR> #pommeArray(1)
 	| {}	#omega
 }
 
-void entetes() #void :
+void headers() #void :
 {}
 {
-   	entete() entetes2()	#entetes(2)
- 	| {}	#enil
+   	header() headersP()	#headers(2)
+ 	| {} #enil
 }
 
-void entetes2() #void :
+void headersP() #void :
 {}
 {
-  	<COMMA> entete() entetes2()	#entetes(2)
- 	| {}	#enil
+  	<COMMA> header() headersP()	#headers(2)
+ 	| {} #enil
 }
 
 
-void entete() #void :
+void header() #void :
 {}
 {
-  	type() ident()	#entete(2)
+  	type() ident() #header(2)
 }
 
 void typemeth() #void :
@@ -371,7 +383,7 @@ void identmeth() #void :
 {
 	ident()
 	| identOp()
-	| <TILDE> ident() #identDestructor(1)
+	| <TILDE> ident() #pommeDestructor(1)
 }
 
 void type() #void:
@@ -446,7 +458,7 @@ void termeP() #void :
 void fact2() #void :
 {}
 {
-	LOOKAHEAD(4) fact()
+	LOOKAHEAD(3) fact()
 	| <PARENTL> exp() <PARENTR>
 	| <MINUS> fact2() #pommeUnary(1)
 	| <EXCLAMATION> fact2() #pommeNot(1)
@@ -456,10 +468,8 @@ void fact2() #void :
 void fact() #void :
 {}
 {
-	LOOKAHEAD(3) identmeth() <PARENTL> listexp() <PARENTR> #callE(2)
-	| LOOKAHEAD(6) ident() <POINT> identmeth() <PARENTL> listexp() <PARENTR> #callEClass(3)
-	| <NEWEXP> ident() <PARENTL> listexp() <PARENTR> #pommeNew(2) 
-	| ident1()
+	<NEWEXP> ident() <PARENTL> listexp() <PARENTR> #pommeNew(2) 
+	| listacces()
 	| <TRUE> #pommeTrue
 	| <FALSE> #pommeFalse
 	| number()
@@ -467,11 +477,24 @@ void fact() #void :
 	| <NULLEXP> #pommeNull
 }
 
-void ident1() #void :
+void listacces() #void :
 {}
 {
-	LOOKAHEAD(2) ident() <POINT> ident1() #accessMember(2)
-	| LOOKAHEAD(2) ident() <BRACKETL> exp() <BRACKETR> #accessTab(2)
+  	access() listaccesP() #listacces(2)
+}
+
+void listaccesP() #void :
+{}
+{
+	<POINT> access() listaccesP() #listacces(2)
+	| {} #acnil
+}
+
+void access() #void :
+{}
+{
+	LOOKAHEAD(2) ident() <BRACKETL> exp() <BRACKETR> #accessTab(2)
+	| LOOKAHEAD(2) identmeth() <PARENTL> listexp() <PARENTR> #accessMethode(2)
 	| ident()
 }
 

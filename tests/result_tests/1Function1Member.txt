@@ -1,6 +1,6 @@
 input
  scopes
-  globalFunction
+  pommeGlobalFunction
    ident
    ident
    enil
@@ -9,14 +9,16 @@ input
      pommeInt
     inil
   scopes
-   defaultClass
+   pommeClass
     ident
     decls
-     var
+     pommeVariable
       ident
       ident
-      callE
-       ident
-       exnil
+      listacces
+       accessMethode
+        ident
+        exnil
+       acnil
      dnil
    scinil

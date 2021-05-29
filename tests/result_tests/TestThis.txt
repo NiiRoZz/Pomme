@@ -1,15 +1,15 @@
 input
  scopes
-  defaultClass
+  pommeClass
    ident
    decls
-    var
+    pommeVariable
      ident
      ident
-     array
+     pommeArray
       pommeInt
     decls
-     methode
+     pommeMethode
       identFuncs
        snil
        vinil
@@ -19,15 +19,17 @@ input
       enil
       instrs
        assignement
-        accessMember
+        listacces
          ident
-         accessTab
-          ident
-          pommeInt
+         listacces
+          accessTab
+           ident
+           pommeInt
+          acnil
         pommeInt
        inil
      decls
-      methode
+      pommeMethode
        identFuncs
         snil
         vinil
@@ -36,10 +38,13 @@ input
        ident
        enil
        instrs
-        callIClass
+        listacces
          ident
-         ident
-         exnil
+         listacces
+          accessMethode
+           ident
+           exnil
+          acnil
         inil
       dnil
   scinil

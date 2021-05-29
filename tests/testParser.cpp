@@ -25,8 +25,8 @@ using namespace Pomme;
 	std::cout.rdbuf(old);\
 	std::ifstream t(file);\
 	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());\
-	EXPECT_EQ(text, str);//\
-	//std::cout << text << std::endl;
+	EXPECT_EQ(text, str);\
+	std::cout << text << std::endl;
 
 
 TEST(TEST_LEXER_PARSER, BasicClass)
@@ -41,7 +41,7 @@ TEST(TEST_LEXER_PARSER, BasicFuncs)
 
 TEST(TEST_LEXER_PARSER, BasicDeclsFuncs)
 {
-	TEST_PARSER_FILE("void func() { int64_t a; int64_t a = 5; int64_t a[2]; float b; float b = 5; float b[5]; };\n", "tests/basicDeclsVars.txt");
+	TEST_PARSER_FILE("void func() { int64_t a; int64_t a = 5; int64_t a[2]; float b; float b = 5; float b[5]; };\n", "tests/basicDeclsFuncs.txt");
 }
 
 TEST(TEST_LEXER_PARSER, BasicEnums)
@@ -95,7 +95,7 @@ TEST(TEST_LEXER_PARSER, 1Function1Member)
 
 TEST(TEST_LEXER_PARSER, AccesMember)
 {
-	TEST_PARSER_FILE("class Test{ int64_t b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int64_t a = t.b; int64_t c = t.t.b; t.operator+=(); operator*(); t.operatorbool(); operator++(); t.t.salut(); };\n", "tests/AccesMember.txt");
+	TEST_PARSER_FILE("class Test{ int64_t b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int64_t a = t.b; int64_t c = t.t.b; t.operator+=(); operator*(); t.operatorbool(); operator++(); t.t.salut(); t.salut().a; };\n", "tests/AccesMember.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestIfElse)
@@ -170,7 +170,7 @@ TEST(TEST_LEXER_PARSER, TestArray3)
 
 TEST(TEST_LEXER_PARSER, TestNull)
 {
-	TEST_PARSER_FILE("class Array{ int64_t array[10]; }; void test(){ Array a = null; a.array[3] = 8; };\n", "tests/TestNull.txt");
+	TEST_PARSER_FILE("class Array{ int64_t array[10]; Array arrayTest = new Array(); }; void test(){ Array a = null; a.array[3] = 8; a.arrayTest.array[0] = 10; };\n", "tests/TestNull.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestThis)
@@ -196,4 +196,9 @@ TEST(TEST_LEXER_PARSER, TestNativeGlobalFunction)
 TEST(TEST_LEXER_PARSER, TestConstructorDestructor)
 {
 	TEST_PARSER_FILE("class Destr{ void Destr(){}; void ~Destr(){}; };\n", "tests/TestConstructorDestructor.txt");
+}
+
+TEST(TEST_LEXER_PARSER, TestTypeDef)
+{
+	TEST_PARSER_FILE("class Test {}; enum TestEnum {}; typedef TestEnum MyEnum;\n", "tests/TestTypeDef.txt");
 }

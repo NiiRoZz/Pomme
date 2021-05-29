@@ -59,7 +59,7 @@ namespace Pomme
     std::cout << "ASTscinil " << node->jjtGetNumChildren() << std::endl;
   }
 
-  void CompilerVisitor::visit(const ASTdefaultClass *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTdefaultClass *node, void * data) 
   {
     std::cout << "ASTdefaultClass " << node->jjtGetNumChildren() << std::endl;
 
@@ -74,7 +74,7 @@ namespace Pomme
   void CompilerVisitor::visit(const ASTmoddedClass *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTdecls *node, void * data) 
   {
@@ -88,7 +88,7 @@ namespace Pomme
     std::cout << "ASTdnil " << node->jjtGetNumChildren() << std::endl;
   }
 
-  void CompilerVisitor::visit(const ASTmethode *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTmethode *node, void * data) 
   {
     std::cout << "ASTmethode " << node->jjtGetNumChildren() << std::endl;
 
@@ -98,24 +98,24 @@ namespace Pomme
   void CompilerVisitor::visit(const ASTmethodeNative *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTidentFuncs *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASTstaticChild *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTstaticChild *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTsnil *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASTpublicChild *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTpublicChild *node, void * data) 
   {
 
   }
@@ -128,24 +128,24 @@ namespace Pomme
   void CompilerVisitor::visit(const ASTprotectedChild *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTvinil *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASToverrideChild *node, void * data) 
+  /*void CompilerVisitor::visit(const ASToverrideChild *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTonil *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASTenumerate *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTenumerate *node, void * data) 
   {
 
   }
@@ -158,7 +158,7 @@ namespace Pomme
   void CompilerVisitor::visit(const ASTmoddedEnumerate *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTdeclenums *node, void * data) 
   {
@@ -180,7 +180,7 @@ namespace Pomme
 
   }
 
-  void CompilerVisitor::visit(const ASTglobalFunction *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTglobalFunction *node, void * data) 
   {
 
   }
@@ -188,7 +188,7 @@ namespace Pomme
   void CompilerVisitor::visit(const ASTglobalFunctionNative *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTinstrs *node, void * data) 
   {
@@ -202,15 +202,15 @@ namespace Pomme
     std::cout << "ASTinil " << node->jjtGetNumChildren() << std::endl;
   }
 
-  void CompilerVisitor::visit(const ASTcallI *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTcallI *node, void * data) 
   {
 
-  }
+  }*/
 
-  void CompilerVisitor::visit(const ASTcallIClass *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTcallIClass *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTassignement *node, void * data) 
   {
@@ -332,7 +332,7 @@ namespace Pomme
 
   }
 
-  void CompilerVisitor::visit(const ASTvar *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTvar *node, void * data) 
   {
     std::cout << "ASTvar " << node->jjtGetNumChildren() << std::endl;
 
@@ -347,37 +347,37 @@ namespace Pomme
   void CompilerVisitor::visit(const ASTarray *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTomega *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASTentetes *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTentetes *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTenil *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASTentete *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTentete *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTvoidType *node, void * data) 
   {
 
   }
 
-  void CompilerVisitor::visit(const ASTidentDestructor *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTidentDestructor *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTpommeAnd *node, void * data) 
   {
@@ -469,15 +469,15 @@ namespace Pomme
 
   }
 
-  void CompilerVisitor::visit(const ASTcallE *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTcallE *node, void * data) 
   {
 
-  }
+  }*/
 
-  void CompilerVisitor::visit(const ASTcallEClass *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTcallEClass *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTpommeNew *node, void * data) 
   {
@@ -499,10 +499,10 @@ namespace Pomme
 
   }
 
-  void CompilerVisitor::visit(const ASTaccessMember *node, void * data) 
+  /*void CompilerVisitor::visit(const ASTaccessMember *node, void * data) 
   {
 
-  }
+  }*/
 
   void CompilerVisitor::visit(const ASTaccessTab *node, void * data) 
   {
