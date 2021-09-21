@@ -14,7 +14,8 @@ find_package(Java COMPONENTS Runtime REQUIRED)
 
 set(JAVACC_JAR_LOCATION ${PROJECT_SOURCE_DIR}/thirdparty/javacc/javacc-7.0.10.jar)
 set(JAVACC_INPUT_FILE Pomme)
-set(JAVACC_GENERATED_SRC_DIR ${CMAKE_BINARY_DIR}/javacc_generated_src)
+# set(JAVACC_GENERATED_SRC_DIR ${CMAKE_BINARY_DIR}/javacc_generated_src)
+set(JAVACC_GENERATED_SRC_DIR ${PROJECT_SOURCE_DIR}/include/javacc)
 set(JJTREE_INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/${JAVACC_INPUT_FILE}.jjt)
 
 option(BUILD_TESTING "Build tests" ON)
@@ -27,7 +28,7 @@ endif()
 include(GNUInstallDirs)
 
 # Add directories for generated include files
-include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "include/" "include/javacc" )
+include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "include/" )
 
 # Add source to this project's executable.
 add_library(${APP}
