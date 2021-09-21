@@ -27,7 +27,7 @@ endif()
 include(GNUInstallDirs)
 
 # Add directories for generated include files
-include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" )
+include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "include/" "include/javacc" )
 
 # Add source to this project's executable.
 add_library(${APP}
@@ -37,7 +37,7 @@ add_library(${APP}
   "src/PommeNode.cpp"
 )
 
-add_custom_target(
+#[[add_custom_target(
   JavaCCTarget
   COMMAND
     "${Java_JAVA_EXECUTABLE}" -cp "${JAVACC_JAR_LOCATION}" jjtree -OUTPUT_DIRECTORY="${JAVACC_GENERATED_SRC_DIR}" "${JJTREE_INPUT_FILE}"
@@ -45,7 +45,7 @@ add_custom_target(
     "${Java_JAVA_EXECUTABLE}" -cp "${JAVACC_JAR_LOCATION}" javacc -OUTPUT_DIRECTORY="${JAVACC_GENERATED_SRC_DIR}" "${JAVACC_GENERATED_SRC_DIR}/${JAVACC_INPUT_FILE}.jj"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
-add_dependencies(${APP} JavaCCTarget)
+add_dependencies(${APP} JavaCCTarget)]]
 
 file(COPY ${PROJECT_SOURCE_DIR}/input.pomme DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -54,7 +54,7 @@ ${PROJECT_SOURCE_DIR}/tests/result_tests/*.txt
 )
 file(COPY ${MY_TESTS_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
-file(GLOB JAVACC_SRC_FILES ${JAVACC_GENERATED_SRC_DIR}/*.cc)
+file(GLOB JAVACC_SRC_FILES include/javacc/*.cc)
 target_sources(${APP} PRIVATE ${JAVACC_SRC_FILES})
 
 install(
