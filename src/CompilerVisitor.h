@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PommeLexerVisitor.h"
+#include "VM/Chunk.h"
 
 namespace Pomme
 {
@@ -12,6 +13,15 @@ namespace Pomme
 
 	public:
 		CompilerVisitor(VirtualMachine &vm);
+		Chunk* compilingChunk;
+
+		int line;
+
+		Chunk* currentChunk();
+		void emitBytes(uint8_t byte1, uint8_t byte2);
+		void emitByte(uint8_t byte);
+		void emitReturn();
+		void endCompiler();
 
 	public:
 		// Inherited via TestLexerVisitor

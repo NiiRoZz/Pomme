@@ -1,5 +1,6 @@
 #include "CompilerVisitor.h"
 #include "VM/VirtualMachine.h"
+#include "VM/Chunk.h"
 
 #include <iostream>
 
@@ -8,6 +9,27 @@ namespace Pomme
 	CompilerVisitor::CompilerVisitor(VirtualMachine& vm)
 	: m_Vm(vm)
 	{
+	}
+
+  Chunk* CompilerVisitor::currentChunk() {
+		return this->compilingChunk;
+	}
+
+  void CompilerVisitor::emitBytes(uint8_t byte1, uint8_t byte2) {
+    emitByte(byte1);
+    emitByte(byte2);
+  }
+
+	void CompilerVisitor::emitByte(uint8_t byte) {
+		currentChunk()->writeChunk(byte, line);
+	}
+
+	void CompilerVisitor::endCompiler() {
+		emitReturn();
+	}
+
+	void CompilerVisitor::emitReturn() {
+		emitByte(AS_OPCODE(OpCode::OP_RETURN));
 	}
 
 	void CompilerVisitor::visit(const SimpleNode *node, void * data) 
