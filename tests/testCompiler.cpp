@@ -34,5 +34,6 @@ TEST(TEST_COMPILER, BasicTest)
     std::cout << text << std::endl;
 
     VirtualMachine virtualMachine;
-    Compiler compiler(tree, virtualMachine);
+	ObjFunction function;
+    Compiler compiler(tree, virtualMachine, function);
 }

@@ -9,6 +9,7 @@ namespace Pomme
     {
         VAL_BOOL,
         VAL_NIL, 
+        VAL_NULL,
         VAL_NUMBER,
         VAL_OBJ,
     };
@@ -27,6 +28,7 @@ namespace Pomme
 
     #define IS_BOOL(value)    ((value).type == ValueType::VAL_BOOL)
     #define IS_NIL(value)     ((value).type == ValueType::VAL_NIL)
+    #define IS_NULL(value)     ((value).type == ValueType::VAL_NULL)
     #define IS_NUMBER(value)  ((value).type == ValueType::VAL_NUMBER)
     #define IS_OBJ(value)     ((value).type == ValueType::VAL_OBJ)
 
@@ -36,6 +38,7 @@ namespace Pomme
 
     #define BOOL_VAL(value)   ((Value){ValueType::VAL_BOOL, {.boolean = value}})
     #define NIL_VAL           ((Value){ValueType::VAL_NIL, {.number = 0}})
+    #define NULL_VAL          ((Value){ValueType::VAL_NULL, {.number = 0}})
     #define NUMBER_VAL(value) ((Value){ValueType::VAL_NUMBER, {.number = value}})
     #define OBJ_VAL(object)   ((Value){ValueType::VAL_OBJ, {.obj = (Obj*)object}})
 }

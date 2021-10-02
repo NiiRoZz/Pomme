@@ -12,6 +12,9 @@ namespace Pomme
 	enum class OpCode: uint8_t
     {
         OP_CONSTANT,
+        OP_TRUE,
+        OP_FALSE,
+        OP_NULL,
         OP_NEGATE,
         OP_ADD,
         OP_SUBTRACT,

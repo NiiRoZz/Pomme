@@ -5,10 +5,10 @@
 
 namespace Pomme
 {
-	Compiler::Compiler(SimpleNode* tree, VirtualMachine& vm)
+	Compiler::Compiler(SimpleNode* tree, VirtualMachine& vm, ObjFunction& function)
 	: m_Vm(vm)
 	{
-		/*CompilerVisitor visitor(vm);
-		tree->jjtAccept(&visitor, nullptr);*/
+		CompilerVisitor visitor(vm, function);
+		tree->jjtAccept(&visitor, nullptr);
 	}
 }

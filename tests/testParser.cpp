@@ -202,3 +202,6 @@ TEST(TEST_LEXER_PARSER, TestTypeDef)
 {
 	TEST_PARSER_FILE("class Test {}; enum TestEnum {}; typedef TestEnum MyEnum;\n", "tests/TestTypeDef.txt");
 }
+
+
+#undef TEST_PARSER_FILE

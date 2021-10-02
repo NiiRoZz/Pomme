@@ -1,5 +1,6 @@
 #pragma once
 
+#include "VM/Object.h"
 
 namespace Pomme
 {
@@ -11,6 +12,6 @@ namespace Pomme
 		VirtualMachine& m_Vm;
 
 	public:
-		Compiler(SimpleNode* tree, VirtualMachine& vm);
+		Compiler(SimpleNode* tree, VirtualMachine& vm, ObjFunction& function);
 	};
 }

@@ -185,7 +185,7 @@ namespace Pomme
 
     bool VirtualMachine::isFalsey(Value value)
     {
-        return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+        return IS_NIL(value) || IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
     }
 
     bool VirtualMachine::callValue(Value callee, int argCount)
