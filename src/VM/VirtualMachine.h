@@ -53,6 +53,11 @@ namespace Pomme
 		void printObject(Value value);
 		void printFunction(ObjFunction* function);
 
+		void defineMethod(uint16_t slot);
+
+		ObjInstance* newInstance(ObjClass* klass);
+		ObjBoundMethod* newBoundMethod(Value receiver, ObjFunction* method);
+
 	private:
 		std::array<CallFrame, FRAMES_MAX> frames;
   		int frameCount;

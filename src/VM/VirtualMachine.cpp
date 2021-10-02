@@ -123,6 +123,30 @@ namespace Pomme
                     break;
                 }
 
+                case AS_OPCODE(OpCode::OP_GET_PROPERTY):
+                {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+					uint16_t slot = READ_INT16();
+
+                    pop(); // Instance.
+                    push(instance->fields[slot]);
+
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_SET_PROPERTY):
+                {
+					ObjInstance* instance = AS_INSTANCE(peek(1));
+                    uint16_t slot = READ_INT16();
+                    instance->fields[slot] = peek(0);
+
+                    Value value = pop();
+                    pop();
+                    push(value);
+
+                    break;
+                }
+
                 case AS_OPCODE(OpCode::OP_JUMP):
                 {
 					uint16_t offset = READ_INT16();
@@ -173,6 +197,36 @@ namespace Pomme
                     frame = &frames[frameCount - 1];
                     break;
                 }
+
+                case AS_OPCODE(OpCode::OP_INHERIT):
+                {
+                    Value superclass = peek(1);
+                    ObjClass* subclass = AS_CLASS(peek(0));
+
+                    //TODO: add all methods from superclass into subclass
+
+                    pop(); // Subclass.
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_METHOD):
+                {
+                    defineMethod(READ_INT16());
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_GET_SUPER):
+                {
+                    ObjString* name = READ_STRING();
+                    ObjClass* superclass = AS_CLASS(pop());
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_NOT):
+                {
+                    push(BOOL_VAL(isFalsey(pop())));
+                    break;
+                }
             }
         }
 
@@ -194,6 +248,24 @@ namespace Pomme
         {
             switch (OBJ_TYPE(callee))
             {
+                case ObjType::OBJ_BOUND_METHOD:
+                {
+                    ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                    stackTop[-argCount - 1] = bound->receiver;
+                    return call(bound->method, argCount);
+                }
+
+                case ObjType::OBJ_CLASS:
+                {
+                    ObjClass* klass = AS_CLASS(callee);
+                    stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                    if (klass->constructorIdx > -1)
+                    {
+                        return call(AS_FUNCTION(klass->methods[klass->constructorIdx]), argCount);
+                    }
+                    return true;
+                }
+
                 case ObjType::OBJ_FUNCTION: 
                     return call(AS_FUNCTION(callee), argCount);
                 
@@ -256,8 +328,17 @@ namespace Pomme
     {
         switch (OBJ_TYPE(value))
         {
+            case ObjType::OBJ_BOUND_METHOD:
+                printFunction(AS_BOUND_METHOD(value)->method);
+                break;
+            case ObjType::OBJ_CLASS:
+                printf("%s", AS_CLASS(value)->name->chars.data());
+                break;
             case ObjType::OBJ_FUNCTION:
                 printFunction(AS_FUNCTION(value));
+                break;
+            case ObjType::OBJ_INSTANCE:
+                printf("%s instance", AS_INSTANCE(value)->klass->name->chars.data());
                 break;
             case ObjType::OBJ_NATIVE:
                 printf("<native fn>");
@@ -271,5 +352,28 @@ namespace Pomme
     void VirtualMachine::printFunction(ObjFunction* function)
     {
         printf("<fn %s>", function->name->chars.data());
+    }
+
+    void VirtualMachine::defineMethod(uint16_t slot)
+    {
+        Value method = peek(0);
+        ObjClass* klass = AS_CLASS(peek(1));
+        klass->methods[slot] = method;
+        pop();
+    }
+
+    ObjInstance* VirtualMachine::newInstance(ObjClass* klass)
+    {
+        ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, ObjType::OBJ_INSTANCE);
+        instance->klass = klass;
+        return instance;
+    }
+
+    ObjBoundMethod* VirtualMachine::newBoundMethod(Value receiver, ObjFunction* method)
+    {
+        ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, ObjType::OBJ_BOUND_METHOD);
+        bound->receiver = receiver;
+        bound->method = method;
+        return bound;
     }
 }
