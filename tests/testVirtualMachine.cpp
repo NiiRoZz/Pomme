@@ -28,6 +28,8 @@ TEST(TEST_VM, BasicTest)
     chunk.writeChunk(0x00);
     chunk.writeChunk(0x00);
 
+    chunk.writeChunk(static_cast<uint8_t>(OpCode::OP_PRINT));
+
     chunk.writeChunk(static_cast<uint8_t>(OpCode::OP_RETURN));
 
     VirtualMachine vm;

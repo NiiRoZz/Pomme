@@ -49,6 +49,10 @@ namespace Pomme
 		bool callValue(Value callee, int argCount);
 		bool call(ObjFunction* function, int argCount);
 
+		void printValue(Value value);
+		void printObject(Value value);
+		void printFunction(ObjFunction* function);
+
 	private:
 		std::array<CallFrame, FRAMES_MAX> frames;
   		int frameCount;

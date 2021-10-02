@@ -60,9 +60,9 @@ namespace Pomme
 
 		#define BINARY_OP(valueType, op) \
 			do { \
-			double b = AS_NUMBER(pop()); \
-			double a = AS_NUMBER(pop()); \
-			push(valueType(a op b)); \
+                double b = AS_NUMBER(pop()); \
+                double a = AS_NUMBER(pop()); \
+                push(valueType(a op b)); \
 			} while (false)
         
         #define AS_OPCODE(code) static_cast<uint8_t>(code)
@@ -90,7 +90,7 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_PRINT):
                 {
-					//printValue(pop());
+					printValue(pop());
                     printf("\n");
                     break;
                 }
@@ -158,7 +158,6 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_RETURN):
                 {
-                    /*
                     Value result = pop();
                     frameCount--;
 
@@ -173,12 +172,6 @@ namespace Pomme
 
                     frame = &frames[frameCount - 1];
                     break;
-                    */
-
-					Value value = pop();
-					std::cout << AS_NUMBER(value) << std::endl;
-
-                    return InterpretResult::INTERPRET_OK;
                 }
             }
         }
@@ -244,5 +237,39 @@ namespace Pomme
         frame->slots = stackTop - argCount - 1;
 
         return true;
+    }
+
+    void VirtualMachine::printValue(Value value)
+    {
+        switch (value.type)
+        {
+            case ValueType::VAL_BOOL:
+                printf(AS_BOOL(value) ? "true" : "false");
+                break;
+            case ValueType::VAL_NIL: printf("nil"); break;
+            case ValueType::VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
+            case ValueType::VAL_OBJ: printObject(value); break;
+        }
+    }
+
+    void VirtualMachine::printObject(Value value)
+    {
+        switch (OBJ_TYPE(value))
+        {
+            case ObjType::OBJ_FUNCTION:
+                printFunction(AS_FUNCTION(value));
+                break;
+            case ObjType::OBJ_NATIVE:
+                printf("<native fn>");
+                break;
+            case ObjType::OBJ_STRING:
+                printf("%s", AS_STDSTRING(value).data());
+                break;
+        }
+    }
+
+    void VirtualMachine::printFunction(ObjFunction* function)
+    {
+        printf("<fn %s>", function->name->chars.data());
     }
 }
