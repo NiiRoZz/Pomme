@@ -53,7 +53,8 @@ namespace Pomme
 		void printObject(Value value);
 		void printFunction(ObjFunction* function);
 
-		void defineMethod(uint16_t slot);
+		void defineMethod(uint16_t slot, ObjString* name);
+		void defineField(uint16_t slot, ObjString* name);
 
 		ObjInstance* newInstance(ObjClass* klass);
 		ObjBoundMethod* newBoundMethod(Value receiver, ObjFunction* method);

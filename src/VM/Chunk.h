@@ -35,6 +35,7 @@ namespace Pomme
         OP_RETURN,
         OP_INHERIT,
         OP_METHOD,
+        OP_FIELD,
         OP_GET_SUPER,
         OP_MODULO,
         OP_SHIFTR,
