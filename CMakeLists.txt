@@ -32,7 +32,8 @@ include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "i
 
 # Add source to this project's executable.
 add_library(${APP}
-  "src/VirtualMachine.cpp"
+  "src/VM/VirtualMachine.cpp"
+  "src/VM/Chunk.cpp"
   "src/Compiler.cpp"
   "src/CompilerVisitor.cpp"
   "src/PommeNode.cpp"

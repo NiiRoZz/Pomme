@@ -1,5 +1,5 @@
 #include "CompilerVisitor.h"
-#include "VirtualMachine.h"
+#include "VM/VirtualMachine.h"
 
 #include <iostream>
 

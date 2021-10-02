@@ -1,6 +1,6 @@
 #include "Compiler.h"
 
-#include "VirtualMachine.h"
+#include "VM/VirtualMachine.h"
 #include "CompilerVisitor.h"
 
 namespace Pomme

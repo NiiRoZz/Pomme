@@ -2,7 +2,7 @@
 
 #include "PommeLexer.h"
 #include "Compiler.h"
-#include "VirtualMachine.h"
+#include "VM/VirtualMachine.h"
 #include "PommeLexerTokenManager.h"
 #include "MyErrorHandler.h"
 
