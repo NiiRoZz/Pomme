@@ -22,6 +22,8 @@ namespace Pomme
 		void emitByte(uint8_t byte);
 		void emitReturn();
 		void endCompiler();
+		void emitConstant(Value value);
+		uint8_t makeConstant(Value value);
 
 	public:
 		// Inherited via TestLexerVisitor

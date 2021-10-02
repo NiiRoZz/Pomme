@@ -19,7 +19,7 @@ namespace Pomme
 		int getLineColumn();
 
   private:
-    int m_LineNumber;
+    	int m_LineNumber;
 		int m_ColumnNumber;
 	};
 }
