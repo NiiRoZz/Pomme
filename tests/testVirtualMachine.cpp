@@ -27,7 +27,7 @@ using namespace Pomme;
 
 TEST(TEST_VM, BasicTest)
 {
-    TEST_VM_TEST("void f() { print(5.0 + 10.0); };\n");
+    TEST_VM_TEST("void f() { print(5.0 + 10.0); print(\"Hello world, My name is lucas\"); };\n");
 
     std::cout << text << std::endl;
 
