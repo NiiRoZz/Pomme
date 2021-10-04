@@ -7,7 +7,19 @@ namespace Pomme
     VirtualMachine::VirtualMachine()
     : stackTop(stack.data())
     , frameCount(0)
+    , objects(nullptr)
     {
+    }
+
+    VirtualMachine::~VirtualMachine()
+    {
+        Obj* object = objects;
+        while (object != NULL)
+        {
+            Obj* next = object->next;
+            freeObject(object);
+            object = next;
+        }
     }
 
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
@@ -243,6 +255,20 @@ namespace Pomme
 		#undef BINARY_OP
     }
 
+    void VirtualMachine::freeObject(Obj* object)
+    {
+        switch (object->type)
+        {
+            case ObjType::OBJ_STRING:
+            {
+                ObjString* string = (ObjString*)object;
+                FREE_ARRAY(char, string->chars, string->length + 1);
+                FREE(ObjString, object);
+                break;
+            }
+        }
+    }
+
     bool VirtualMachine::isFalsey(Value value)
     {
         return IS_NIL(value) || IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
@@ -338,26 +364,26 @@ namespace Pomme
                 printFunction(AS_BOUND_METHOD(value)->method);
                 break;
             case ObjType::OBJ_CLASS:
-                printf("%s", AS_CLASS(value)->name->chars.data());
+                printf("%s", AS_CLASS(value)->name->chars);
                 break;
             case ObjType::OBJ_FUNCTION:
                 printFunction(AS_FUNCTION(value));
                 break;
             case ObjType::OBJ_INSTANCE:
-                printf("%s instance", AS_INSTANCE(value)->klass->name->chars.data());
+                printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
                 break;
             case ObjType::OBJ_NATIVE:
                 printf("<native fn>");
                 break;
             case ObjType::OBJ_STRING:
-                printf("%s", AS_STDSTRING(value).data());
+                printf("%s", AS_CSTRING(value));
                 break;
         }
     }
 
     void VirtualMachine::printFunction(ObjFunction* function)
     {
-        printf("<fn %s>", function->name->chars.data());
+        printf("<fn %s>", function->name->chars);
     }
 
     void VirtualMachine::defineMethod(uint16_t slot, ObjString* name)
@@ -378,14 +404,14 @@ namespace Pomme
 
     ObjInstance* VirtualMachine::newInstance(ObjClass* klass)
     {
-        ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, ObjType::OBJ_INSTANCE);
+        ObjInstance* instance = ALLOCATE_OBJ(this, ObjInstance, ObjType::OBJ_INSTANCE);
         instance->klass = klass;
         return instance;
     }
 
     ObjBoundMethod* VirtualMachine::newBoundMethod(Value receiver, ObjFunction* method)
     {
-        ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, ObjType::OBJ_BOUND_METHOD);
+        ObjBoundMethod* bound = ALLOCATE_OBJ(this, ObjBoundMethod, ObjType::OBJ_BOUND_METHOD);
         bound->receiver = receiver;
         bound->method = method;
         return bound;

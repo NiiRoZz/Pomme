@@ -93,13 +93,8 @@ namespace Pomme
     void CompilerVisitor::visit(const ASTpommeString *node, void * data) 
     {
         std::cout << "ASTpommeString : " << node->m_Value << std::endl;
-        ObjString* string = ALLOCATE_OBJ(ObjString, ObjType::OBJ_STRING);
-        std::cout << "ASTpommeString.length() : " << node->m_Value.length() << std::endl;
-        std::string str = node->m_Value.substr(1, node->m_Value.length() - 2);
-        string->chars = str;
-        std::cout << "ASTpommeString : " << node->m_Value << std::endl;
 
-        emitConstant(OBJ_VAL(string));
+        emitConstant(OBJ_VAL(copyString(&m_Vm, node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
     }
 
     void CompilerVisitor::visit(const ASTscopes *node, void * data) 

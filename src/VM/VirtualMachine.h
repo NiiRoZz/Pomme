@@ -15,6 +15,19 @@
 
 namespace Pomme
 {
+
+	#define ALLOCATE(type, count) \
+        (type*)reallocate(NULL, 0, sizeof(type) * (count))
+    
+    #define ALLOCATE_OBJ(vm, type, objectType) \
+        (type*)allocateObject(vm, sizeof(type), objectType)
+
+	#define FREE_ARRAY(type, pointer, oldCount) \
+    	reallocate(pointer, sizeof(type) * (oldCount), 0)
+
+	#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
+
+
 	enum class InterpretResult: uint8_t
 	{
 		INTERPRET_OK,
@@ -32,6 +45,7 @@ namespace Pomme
 	{
 	public:
 		VirtualMachine();
+		~VirtualMachine();
 
 		InterpretResult interpret(ObjFunction* function);
 
@@ -40,9 +54,13 @@ namespace Pomme
 		void push(Value value);
 		Value pop();
 		Value peek(int depth);
+
+		Obj* objects;
 		
 	private:
 		InterpretResult run();
+
+		void freeObject(Obj* object);
 
 		bool isFalsey(Value value);
 
@@ -68,4 +86,43 @@ namespace Pomme
 
 		std::array<Value, GLOBALS_MAX> globals;
 	};
+
+	static void* reallocate(void* pointer, size_t oldSize, size_t newSize)
+    {
+        if (newSize == 0)
+        {
+            free(pointer);
+            return NULL;
+        }
+
+        void* result = std::realloc(pointer, newSize);
+        return result;
+    }
+
+    static Obj* allocateObject(VirtualMachine* vm, size_t size, ObjType type)
+    {
+        Obj* object = (Obj*)reallocate(NULL, 0, size);
+        object->type = type;
+
+        object->next = vm->objects;
+        vm->objects = object;
+
+        return object;
+    }
+
+	static ObjString* allocateString(VirtualMachine* vm, char* chars, int length)
+    {
+        ObjString* string = ALLOCATE_OBJ(vm, ObjString, ObjType::OBJ_STRING);
+        string->length = length;
+        string->chars = chars;
+        return string;
+    }
+
+    static ObjString* copyString(VirtualMachine* vm, const char* chars, int length)
+    {
+        char* heapChars = ALLOCATE(char, length + 1);
+        std::memcpy(heapChars, chars, length);
+        heapChars[length] = '\0';
+        return allocateString(vm, heapChars, length);
+    }
 }
