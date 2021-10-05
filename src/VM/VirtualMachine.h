@@ -15,19 +15,6 @@
 
 namespace Pomme
 {
-
-	#define ALLOCATE(vm, type, count) \
-        reinterpret_cast<type*>(vm->reallocate(NULL, 0, sizeof(type) * (count)))
-    
-    #define ALLOCATE_OBJ(vm, type, objectType) \
-        reinterpret_cast<type*>(vm->allocateObject(sizeof(type), objectType))
-
-	#define FREE_ARRAY(type, pointer, oldCount) \
-    	reallocate(pointer, sizeof(type) * (oldCount), 0)
-
-	#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
-
-
 	enum class InterpretResult: uint8_t
 	{
 		INTERPRET_OK,
@@ -55,11 +42,12 @@ namespace Pomme
 		Value pop();
 		Value peek(int depth);
 
-		void* reallocate(void* pointer, size_t oldSize, size_t newSize);
 		Obj* allocateObject(size_t size, ObjType type);
 
 		ObjString* allocateString(char* chars, int length);
 		ObjString* copyString(const char* chars, int length);
+
+		ObjFunction* newFunction();
 		
 	private:
 		InterpretResult run();
@@ -92,16 +80,4 @@ namespace Pomme
 
 		Obj* objects;
 	};
-
-	static void* reallocate(void* pointer, size_t oldSize, size_t newSize)
-    {
-        if (newSize == 0)
-        {
-            free(pointer);
-            return NULL;
-        }
-
-        void* result = std::realloc(pointer, newSize);
-        return result;
-    }
 }

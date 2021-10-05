@@ -13,18 +13,9 @@ namespace Pomme
 		VirtualMachine& m_Vm;
 
 	public:
-		CompilerVisitor(VirtualMachine &vm, ObjFunction& function);
-		Chunk* compilingChunk;
-
-		int line;
+		CompilerVisitor(VirtualMachine &vm);
 
 		Chunk* currentChunk();
-		void emitBytes(uint8_t byte1, uint8_t byte2);
-		void emitByte(uint8_t byte);
-		void emitReturn();
-		void endCompiler();
-		void emitConstant(Value value);
-		uint8_t makeConstant(Value value);
 
 	public:
 		// Inherited via TestLexerVisitor
@@ -125,5 +116,17 @@ namespace Pomme
 		void visit(const ASTacnil *node, void * data);
 		void visit(const ASTaccessTab *node, void * data);
 		void visit(const ASTaccessMethode *node, void * data);
+
+	private:
+		void emitBytes(uint8_t byte1, uint8_t byte2);
+		void emitByte(uint8_t byte);
+		void emitReturn();
+		void endCompiler();
+		void emitConstant(Value value);
+		uint8_t makeConstant(Value value);
+
+	private:
+		ObjFunction* function;
+		int line;
 	};
 }

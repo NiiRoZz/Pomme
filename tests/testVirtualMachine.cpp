@@ -31,16 +31,12 @@ TEST(TEST_VM, BasicTest)
 
     std::cout << text << std::endl;
 
-	ObjString functionName;
-    ObjFunction function;
-    function.obj.type = ObjType::OBJ_FUNCTION;
-    function.arity = 0;
-    function.name = &functionName;
-
     VirtualMachine vm;
-    Compiler compiler(tree, vm, function);
+    Compiler compiler(vm);
 
-	InterpretResult result = vm.interpret(&function);
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
 }
 
 #undef TEST_VM_TEST

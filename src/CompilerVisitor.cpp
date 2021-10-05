@@ -6,16 +6,15 @@
 
 namespace Pomme
 {
-	CompilerVisitor::CompilerVisitor(VirtualMachine& vm, ObjFunction& function)
+	CompilerVisitor::CompilerVisitor(VirtualMachine& vm)
 	: m_Vm(vm)
-    , compilingChunk(&function.chunk)
 	{
 
 	}
 
     Chunk* CompilerVisitor::currentChunk()
     {
-	  return compilingChunk;
+	  return &function->chunk;
 	}
 
     void CompilerVisitor::emitBytes(uint8_t byte1, uint8_t byte2)
@@ -64,9 +63,13 @@ namespace Pomme
     {
         std::cout << "ASTinput " << node->jjtGetNumChildren() << std::endl;
 
+        function = static_cast<ObjFunction*>(data);
+
         node->jjtChildrenAccept(this, data);
 
+        std::cout << "ASTinput " << node->jjtGetNumChildren() << std::endl;
         endCompiler();
+        std::cout << "ASTinput " << node->jjtGetNumChildren() << std::endl;
     }
 
     void CompilerVisitor::visit(const ASTident *node, void * data) 

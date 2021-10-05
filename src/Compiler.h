@@ -9,9 +9,12 @@ namespace Pomme
 
 	class Compiler
 	{
-		VirtualMachine& m_Vm;
-
 	public:
-		Compiler(SimpleNode* tree, VirtualMachine& vm, ObjFunction& function);
+		Compiler(VirtualMachine& vm);
+
+		ObjFunction* compile(SimpleNode* tree);
+
+	private:
+		VirtualMachine& m_Vm;
 	};
 }

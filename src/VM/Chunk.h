@@ -7,6 +7,8 @@
 
 namespace Pomme
 {
+    class VirtualMachine;
+
     #define AS_OPCODE(code) static_cast<uint8_t>(code)
 
 	enum class OpCode: uint8_t
@@ -66,17 +68,21 @@ namespace Pomme
         OP_CLASS,
     };
 
-    class Chunk
+    struct Chunk
     {
     public:
         void writeChunk(uint8_t byte, int line);
         int addConstant(Value value);
 
     public:
-        std::vector<uint8_t> code;
-        std::vector<Value> constants;
+        int count;
+        int capacity;
+        uint8_t* code;
+        int* lines;
 
-    private:
-        std::vector<int> lines;
+        ValueArray constants;
     };
+
+    void initChunk(Chunk* chunk);
+    void freeChunk(Chunk* chunk);
 }

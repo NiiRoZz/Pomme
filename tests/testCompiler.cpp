@@ -29,11 +29,12 @@ using namespace Pomme;
 
 TEST(TEST_COMPILER, BasicTest)
 {
-	TEST_COMPILER_TEST("class test { void test(){ int64_t a = 2; float b = 5.25123; string c = \"Hello World!\"; }; };\n");
+	TEST_COMPILER_TEST("\n");
 
     std::cout << text << std::endl;
 
-    VirtualMachine virtualMachine;
-	ObjFunction function;
-    Compiler compiler(tree, virtualMachine, function);
+    VirtualMachine vm;
+    Compiler compiler(vm);
+
+	compiler.compile(tree);
 }

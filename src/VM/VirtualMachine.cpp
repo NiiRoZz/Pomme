@@ -1,4 +1,5 @@
 #include "VirtualMachine.h"
+#include "Memory.h"
 
 #include <iostream>
 
@@ -28,7 +29,7 @@ namespace Pomme
 
         CallFrame* frame = &frames[frameCount++];
         frame->function = function;
-        frame->ip = function->chunk.code.data();
+        frame->ip = function->chunk.code;
         frame->slots = stack.data();
 
         return run();
@@ -60,18 +61,6 @@ namespace Pomme
 		return stackTop[-1 - depth];
 	}
 
-    void* VirtualMachine::reallocate(void* pointer, size_t oldSize, size_t newSize)
-    {
-        if (newSize == 0)
-        {
-            free(pointer);
-            return NULL;
-        }
-
-        void* result = std::realloc(pointer, newSize);
-        return result;
-    }
-
     Obj* VirtualMachine::allocateObject(size_t size, ObjType type)
     {
         Obj* object = (Obj*)reallocate(NULL, 0, size);
@@ -100,12 +89,21 @@ namespace Pomme
         return allocateString(heapChars, length);
     }
 
+    ObjFunction* VirtualMachine::newFunction()
+    {
+        ObjFunction* function = ALLOCATE_OBJ(this, ObjFunction, ObjType::OBJ_FUNCTION);
+        function->arity = 0;
+        function->name = NULL;
+        initChunk(&function->chunk);
+        return function;
+    }
+
     InterpretResult VirtualMachine::run()
     {
         CallFrame* frame = &frames[frameCount - 1];
 
         #define READ_BYTE() (*frame->ip++)
-        #define READ_CONSTANT() (frame->function->chunk.constants[READ_BYTE()])
+        #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
         #define READ_INT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
@@ -299,6 +297,14 @@ namespace Pomme
     {
         switch (object->type)
         {
+            case ObjType::OBJ_FUNCTION:
+            {
+                ObjFunction* function = (ObjFunction*)object;
+                freeChunk(&function->chunk);
+                FREE(ObjFunction, object);
+                break;
+            }
+
             case ObjType::OBJ_STRING:
             {
                 ObjString* string = (ObjString*)object;
@@ -377,7 +383,7 @@ namespace Pomme
         CallFrame* frame = &frames[frameCount++];
 
         frame->function = function;
-        frame->ip = function->chunk.code.data();
+        frame->ip = function->chunk.code;
         frame->slots = stackTop - argCount - 1;
 
         return true;
