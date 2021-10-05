@@ -12,7 +12,7 @@ namespace Pomme
         reinterpret_cast<type*>(reallocate(pointer, sizeof(type) * (oldCount), \
             sizeof(type) * (newCount)))
 
-    #define ALLOCATE(vm, type, count) \
+    #define ALLOCATE(type, count) \
             reinterpret_cast<type*>(reallocate(NULL, 0, sizeof(type) * (count)))
         
     #define ALLOCATE_OBJ(vm, type, objectType) \
@@ -28,11 +28,11 @@ namespace Pomme
         if (newSize == 0)
         {
             std::free(pointer);
-            return NULL;
+            return nullptr;
         }
 
         void* result = std::realloc(pointer, newSize);
-        if (result == NULL) std::exit(1);
+        if (result == nullptr) std::exit(1);
         
         return result;
     }

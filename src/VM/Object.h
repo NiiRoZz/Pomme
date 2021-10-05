@@ -72,13 +72,15 @@ namespace Pomme
 
     struct ObjClass
     {
+        //Runtime
         Obj obj;
         ObjString* name;
-        std::unordered_map<std::string, uint16_t> methodsIndices;
         std::array<Value, METHODS_MAX> methods; 
-        std::unordered_map<std::string, uint16_t> fieldsIndices;
-        int constructorIdx = -1;
         int deconstructorIdx = -1;
+
+        //Used for C++->Pomme call
+        std::unordered_map<std::string, uint16_t> methodsIndices;
+        std::unordered_map<std::string, uint16_t> fieldsIndices;
     };
 
     struct ObjInstance

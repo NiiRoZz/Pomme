@@ -2,12 +2,10 @@
 
 #include "Chunk.h"
 #include "Object.h"
+#include "Common.h"
 
 #include <array>
 #include <unordered_map>
-
-#define UINT8_COUNT (UINT8_MAX + 1)
-#define UINT16_COUNT (UINT16_MAX + 1)
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)

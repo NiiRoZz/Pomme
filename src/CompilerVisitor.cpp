@@ -1,6 +1,7 @@
 #include "CompilerVisitor.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
+#include "VM/Memory.h"
 
 #include <iostream>
 
@@ -8,6 +9,8 @@ namespace Pomme
 {
 	CompilerVisitor::CompilerVisitor(VirtualMachine& vm)
 	: m_Vm(vm)
+    , localCount(0)
+    , scopeDepth(0)
 	{
 
 	}
@@ -61,20 +64,15 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTinput *node, void * data) 
     {
-        std::cout << "ASTinput " << node->jjtGetNumChildren() << std::endl;
-
         function = static_cast<ObjFunction*>(data);
 
         node->jjtChildrenAccept(this, data);
 
-        std::cout << "ASTinput " << node->jjtGetNumChildren() << std::endl;
         endCompiler();
-        std::cout << "ASTinput " << node->jjtGetNumChildren() << std::endl;
     }
 
     void CompilerVisitor::visit(const ASTident *node, void * data) 
     {
-        std::cout << "ASTident : " << node->m_Identifier << std::endl;
     }
 
     void CompilerVisitor::visit(const ASTidentOp *node, void * data) 
@@ -84,44 +82,35 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeInt *node, void * data) 
     {
-        std::cout << "ASTpommeInt : " << node->m_Value << std::endl;
+        emitConstant(NUMBER_VAL((double) node->m_Value));
     }
 
     void CompilerVisitor::visit(const ASTpommeFloat *node, void * data) 
     {
-        std::cout << "ASTpommeFloat : " << node->m_Value << std::endl;
         emitConstant(NUMBER_VAL(node->m_Value));
     }
 
     void CompilerVisitor::visit(const ASTpommeString *node, void * data) 
     {
-        std::cout << "ASTpommeString : " << node->m_Value << std::endl;
-
         emitConstant(OBJ_VAL(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
     }
 
     void CompilerVisitor::visit(const ASTscopes *node, void * data) 
     {
-        std::cout << "ASTscopes " << node->jjtGetNumChildren() << std::endl;
-
         node->jjtChildrenAccept(this, data);
     }
 
     void CompilerVisitor::visit(const ASTscinil *node, void * data) 
     {
-        std::cout << "ASTscinil " << node->jjtGetNumChildren() << std::endl;
     }
 
     void CompilerVisitor::visit(const ASTdecls *node, void * data) 
     {
-        std::cout << "ASTdecls " << node->jjtGetNumChildren() << std::endl;
-
         node->jjtChildrenAccept(this, data);
     }
 
     void CompilerVisitor::visit(const ASTdnil *node, void * data) 
     {
-        std::cout << "ASTdnil " << node->jjtGetNumChildren() << std::endl;
     }
 
     void CompilerVisitor::visit(const ASTidentFuncs *node, void * data) 
@@ -166,14 +155,11 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTinstrs *node, void * data) 
     {
-        std::cout << "ASTinstrs " << node->jjtGetNumChildren() << std::endl;
-
         node->jjtChildrenAccept(this, data);
     }
 
     void CompilerVisitor::visit(const ASTinil *node, void * data) 
     {
-        std::cout << "ASTinil " << node->jjtGetNumChildren() << std::endl;
     }
 
     void CompilerVisitor::visit(const ASTassignement *node, void * data) 
@@ -277,8 +263,6 @@ namespace Pomme
     void CompilerVisitor::visit(const ASTpommePrint *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
-
-        std::cout << "ASTpommePrint " << node->jjtGetNumChildren() << std::endl;
 
         emitByte(AS_OPCODE(OpCode::OP_PRINT));
     }
@@ -544,7 +528,11 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeVariable *node, void * data)
     {
-        
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+        node->jjtGetChild(2)->jjtAccept(this, data);
+
+        emitBytes(AS_OPCODE(OpCode::OP_SET_LOCAL), addLocal(name));
     }
 
     void CompilerVisitor::visit(const ASTpommeConstant *node, void * data)
@@ -574,7 +562,17 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTlistacces *node, void * data)
     {
-        
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+
+        for (uint8_t i = localCount - 1; i >= 0; i--)
+        {
+            Local& local = locals[i];
+            if (name == local.name)
+            {
+                emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), i);
+                return;
+            }
+        }
     }
 
     void CompilerVisitor::visit(const ASTacnil *node, void * data)
@@ -585,5 +583,26 @@ namespace Pomme
     void CompilerVisitor::visit(const ASTaccessMethode *node, void * data)
     {
         
+    }
+
+    void CompilerVisitor::beginScope()
+    {
+        scopeDepth++;
+    }
+
+    void CompilerVisitor::endScope()
+    {
+        scopeDepth--;
+    }
+
+    int CompilerVisitor::addLocal(const std::string& name)
+    {
+        int idx = localCount;
+
+        Local* local = &locals[localCount++];
+        local->name = name;
+        local->depth = scopeDepth;
+
+        return idx;
     }
 }

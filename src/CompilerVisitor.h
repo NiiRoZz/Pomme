@@ -3,10 +3,17 @@
 #include "PommeLexerVisitor.h"
 #include "VM/Chunk.h"
 #include "VM/Object.h"
+#include "VM/Common.h"
 
 namespace Pomme
 {
 	class VirtualMachine;
+
+	struct Local
+	{
+		std::string name;
+		int depth;
+	};
 
 	class CompilerVisitor : public PommeLexerVisitor
 	{
@@ -125,8 +132,17 @@ namespace Pomme
 		void emitConstant(Value value);
 		uint8_t makeConstant(Value value);
 
+		void beginScope();
+		void endScope();
+
+		int addLocal(const std::string& name);
 	private:
 		ObjFunction* function;
 		int line;
+
+		std::array<Local, UINT8_COUNT> locals;
+  		int localCount;
+
+		int scopeDepth;
 	};
 }

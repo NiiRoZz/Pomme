@@ -82,7 +82,7 @@ namespace Pomme
 
     ObjString* VirtualMachine::copyString(const char* chars, int length)
     {
-        char* heapChars = ALLOCATE(this, char, length + 1);
+        char* heapChars = ALLOCATE(char, length + 1);
         std::memcpy(heapChars, chars, length);
         heapChars[length] = '\0';
 
@@ -337,10 +337,11 @@ namespace Pomme
                 {
                     ObjClass* klass = AS_CLASS(callee);
                     stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
-                    if (klass->constructorIdx > -1)
+                    /*if (klass->constructorIdx > -1)
                     {
                         return call(AS_FUNCTION(klass->methods[klass->constructorIdx]), argCount);
                     }
+                    */
                     return true;
                 }
 
