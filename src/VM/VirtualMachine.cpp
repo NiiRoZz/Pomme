@@ -238,6 +238,14 @@ namespace Pomme
                     break;
                 }
 
+                case AS_OPCODE(OpCode::OP_LT):   	BINARY_OP(BOOL_VAL, <); break;
+
+                case AS_OPCODE(OpCode::OP_INCR_POST):
+                {
+                    
+                    break;
+                }
+
                 case AS_OPCODE(OpCode::OP_RETURN):
                 {
                     Value result = pop();

@@ -39,4 +39,18 @@ TEST(TEST_VM, BasicTest)
 	InterpretResult result = vm.interpret(function);
 }
 
+TEST(TEST_VM, WhileTestCompilation)
+{
+	TEST_VM_TEST("void f() { float b = 1.0; while (b < 10.0) {print(b); b = b + 1;\n}; print(b); };\n");
+
+    std::cout << text << std::endl;
+
+    VirtualMachine vm;
+    Compiler compiler(vm);
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+}
+
 #undef TEST_VM_TEST

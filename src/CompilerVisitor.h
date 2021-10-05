@@ -132,6 +132,8 @@ namespace Pomme
 		int emitJump(uint8_t instruction);
 		void patchJump(int offset);
 
+		void emitLoop(int loopStart);
+
 		void endCompiler();
 		void emitConstant(Value value);
 		uint8_t makeConstant(Value value);

@@ -63,6 +63,16 @@ namespace Pomme
         currentChunk()->code[offset + 1] = jump & 0xff;
     }
 
+    void CompilerVisitor::emitLoop(int loopStart)
+    {
+        emitByte(AS_OPCODE(OpCode::OP_LOOP));
+
+        int offset = currentChunk()->count - loopStart + 2;
+        //if (offset > UINT16_MAX) error("Loop body too large.");
+
+        emitByte((offset >> 8) & 0xff);
+        emitByte(offset & 0xff);
+    }
 
     void CompilerVisitor::emitConstant(Value value)
     {
@@ -89,7 +99,7 @@ namespace Pomme
     {
         function = static_cast<ObjFunction*>(data);
 
-        node->jjtChildrenAccept(this, data);
+        node->jjtChildrenAccept(this, nullptr);
 
         endCompiler();
     }
@@ -187,7 +197,10 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTassignement *node, void * data) 
     {
-        emitByte(AS_OPCODE(OpCode::OP_ASSIGN));
+        node->jjtChildAccept(1, this, data);
+
+        bool value = true;
+        node->jjtChildAccept(0, this, &value);
     }
 
     void CompilerVisitor::visit(const ASTaddeq *node, void * data) 
@@ -270,7 +283,18 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeWhile *node, void * data) 
     {
+        int loopStart = currentChunk()->count;
 
+        node->jjtChildAccept(0, this, data);
+
+        int exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
+        emitByte(AS_OPCODE(OpCode::OP_POP));
+
+        node->jjtChildAccept(1, this, data);
+        emitLoop(loopStart);
+
+        patchJump(exitJump);
+        emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
     void CompilerVisitor::visit(const ASTpommeBreak *node, void * data) 
@@ -601,6 +625,14 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTlistacces *node, void * data)
     {
+        OpCode op = OpCode::OP_GET_LOCAL;
+        bool assign = (data == nullptr) ? false : *(bool*)data;
+
+        if (assign)
+        {
+            op = OpCode::OP_SET_LOCAL;
+        }
+
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
         for (uint8_t i = localCount - 1; i >= 0; i--)
@@ -608,7 +640,7 @@ namespace Pomme
             Local& local = locals[i];
             if (name == local.name)
             {
-                emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), i);
+                emitBytes(AS_OPCODE(op), i);
                 return;
             }
         }
