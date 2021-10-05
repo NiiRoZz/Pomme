@@ -41,6 +41,29 @@ namespace Pomme
 		emitByte(AS_OPCODE(OpCode::OP_RETURN));
 	}
 
+    int CompilerVisitor::emitJump(uint8_t instruction)
+    {
+        emitByte(instruction);
+        emitByte(0xff);
+        emitByte(0xff);
+        return currentChunk()->count - 2;
+    }
+
+	void CompilerVisitor::patchJump(int offset)
+    {
+        // -2 to adjust for the bytecode for the jump offset itself.
+        int jump = currentChunk()->count - offset - 2;
+
+        if (jump > UINT16_MAX)
+        {
+            //error("Too much code to jump over.");
+        }
+
+        currentChunk()->code[offset] = (jump >> 8) & 0xff;
+        currentChunk()->code[offset + 1] = jump & 0xff;
+    }
+
+
     void CompilerVisitor::emitConstant(Value value)
     {
         emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
@@ -257,7 +280,23 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeIf *node, void * data) 
     {
+        //Condition
+        node->jjtChildAccept(0, this, data);
 
+        int thenJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
+        emitByte(AS_OPCODE(OpCode::OP_POP));
+
+        //Statement
+        node->jjtChildAccept(1, this, data);
+
+        int elseJump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
+
+        patchJump(thenJump);
+        emitByte(AS_OPCODE(OpCode::OP_POP));
+
+        node->jjtChildAccept(2, this, data);
+
+        patchJump(elseJump);
     }
 
     void CompilerVisitor::visit(const ASTpommePrint *node, void * data) 

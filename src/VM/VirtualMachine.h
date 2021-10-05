@@ -54,6 +54,8 @@ namespace Pomme
 
 		bool isFalsey(Value value);
 
+		bool valuesEqual(Value a, Value b);
+
 		bool callValue(Value callee, int argCount);
 		bool call(ObjFunction* function, int argCount);
 

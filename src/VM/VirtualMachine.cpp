@@ -230,6 +230,14 @@ namespace Pomme
                     break;
                 }
 
+                case AS_OPCODE(OpCode::OP_EQ):
+                {
+                    Value b = pop();
+                    Value a = pop();
+                    push(BOOL_VAL(valuesEqual(a, b)));
+                    break;
+                }
+
                 case AS_OPCODE(OpCode::OP_RETURN):
                 {
                     Value result = pop();
@@ -318,6 +326,19 @@ namespace Pomme
     bool VirtualMachine::isFalsey(Value value)
     {
         return IS_NIL(value) || IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+    }
+
+    bool VirtualMachine::valuesEqual(Value a, Value b)
+    {
+        if (a.type != b.type) return false;
+
+        switch (a.type)
+        {
+            case ValueType::VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
+            case ValueType::VAL_NIL:    return true;
+            case ValueType::VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+            default:         return false; // Unreachable.
+        }
     }
 
     bool VirtualMachine::callValue(Value callee, int argCount)
