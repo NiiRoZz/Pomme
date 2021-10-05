@@ -60,6 +60,46 @@ namespace Pomme
 		return stackTop[-1 - depth];
 	}
 
+    void* VirtualMachine::reallocate(void* pointer, size_t oldSize, size_t newSize)
+    {
+        if (newSize == 0)
+        {
+            free(pointer);
+            return NULL;
+        }
+
+        void* result = std::realloc(pointer, newSize);
+        return result;
+    }
+
+    Obj* VirtualMachine::allocateObject(size_t size, ObjType type)
+    {
+        Obj* object = (Obj*)reallocate(NULL, 0, size);
+        object->type = type;
+
+        object->next = objects;
+        objects = object;
+
+        return object;
+    }
+
+    ObjString* VirtualMachine::allocateString(char* chars, int length)
+    {
+        ObjString* string = ALLOCATE_OBJ(this, ObjString, ObjType::OBJ_STRING);
+        string->length = length;
+        string->chars = chars;
+        return string;
+    }
+
+    ObjString* VirtualMachine::copyString(const char* chars, int length)
+    {
+        char* heapChars = ALLOCATE(this, char, length + 1);
+        std::memcpy(heapChars, chars, length);
+        heapChars[length] = '\0';
+
+        return allocateString(heapChars, length);
+    }
+
     InterpretResult VirtualMachine::run()
     {
         CallFrame* frame = &frames[frameCount - 1];

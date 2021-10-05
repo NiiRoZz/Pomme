@@ -16,11 +16,11 @@
 namespace Pomme
 {
 
-	#define ALLOCATE(type, count) \
-        (type*)reallocate(NULL, 0, sizeof(type) * (count))
+	#define ALLOCATE(vm, type, count) \
+        reinterpret_cast<type*>(vm->reallocate(NULL, 0, sizeof(type) * (count)))
     
     #define ALLOCATE_OBJ(vm, type, objectType) \
-        (type*)allocateObject(vm, sizeof(type), objectType)
+        reinterpret_cast<type*>(vm->allocateObject(sizeof(type), objectType))
 
 	#define FREE_ARRAY(type, pointer, oldCount) \
     	reallocate(pointer, sizeof(type) * (oldCount), 0)
@@ -55,7 +55,11 @@ namespace Pomme
 		Value pop();
 		Value peek(int depth);
 
-		Obj* objects;
+		void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+		Obj* allocateObject(size_t size, ObjType type);
+
+		ObjString* allocateString(char* chars, int length);
+		ObjString* copyString(const char* chars, int length);
 		
 	private:
 		InterpretResult run();
@@ -85,6 +89,8 @@ namespace Pomme
 		Value* stackTop;
 
 		std::array<Value, GLOBALS_MAX> globals;
+
+		Obj* objects;
 	};
 
 	static void* reallocate(void* pointer, size_t oldSize, size_t newSize)
@@ -97,32 +103,5 @@ namespace Pomme
 
         void* result = std::realloc(pointer, newSize);
         return result;
-    }
-
-    static Obj* allocateObject(VirtualMachine* vm, size_t size, ObjType type)
-    {
-        Obj* object = (Obj*)reallocate(NULL, 0, size);
-        object->type = type;
-
-        object->next = vm->objects;
-        vm->objects = object;
-
-        return object;
-    }
-
-	static ObjString* allocateString(VirtualMachine* vm, char* chars, int length)
-    {
-        ObjString* string = ALLOCATE_OBJ(vm, ObjString, ObjType::OBJ_STRING);
-        string->length = length;
-        string->chars = chars;
-        return string;
-    }
-
-    static ObjString* copyString(VirtualMachine* vm, const char* chars, int length)
-    {
-        char* heapChars = ALLOCATE(char, length + 1);
-        std::memcpy(heapChars, chars, length);
-        heapChars[length] = '\0';
-        return allocateString(vm, heapChars, length);
     }
 }

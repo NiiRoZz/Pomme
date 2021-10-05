@@ -94,7 +94,7 @@ namespace Pomme
     {
         std::cout << "ASTpommeString : " << node->m_Value << std::endl;
 
-        emitConstant(OBJ_VAL(copyString(&m_Vm, node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
+        emitConstant(OBJ_VAL(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
     }
 
     void CompilerVisitor::visit(const ASTscopes *node, void * data) 
