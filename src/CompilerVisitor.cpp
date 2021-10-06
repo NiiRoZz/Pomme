@@ -576,7 +576,42 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeGlobalFunction *node, void * data)
     {
-        node->jjtChildrenAccept(this, data);
+        //0: type
+        ASTvoidType* voidtype = dynamic_cast<ASTvoidType*>(node->jjtGetChild(0));
+
+        if (voidtype != nullptr)
+        {
+
+        }
+        else
+        {
+
+        }
+
+        //1: name
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+        uint8_t global = makeConstant(NUMBER_VAL((double) m_Vm.addGlobal(name)));
+
+        ObjFunction* currentFunction = function;
+        function = m_Vm.newFunction();
+
+        beginScope(); 
+
+        //2: parameters
+
+        //3: instrs
+        node->jjtChildAccept(3, this, data);
+
+        emitReturn();
+
+        endScope();
+
+        ObjFunction* compiledFunction = function;
+        function = currentFunction;
+
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
+        emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
     void CompilerVisitor::visit(const ASTpommeGlobalFunctionNative *node, void * data)
@@ -664,6 +699,12 @@ namespace Pomme
     void CompilerVisitor::endScope()
     {
         scopeDepth--;
+
+        while (localCount > 0 && locals[localCount - 1].depth > scopeDepth)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_POP));
+            localCount--;
+        }
     }
 
     int CompilerVisitor::addLocal(const std::string& name)

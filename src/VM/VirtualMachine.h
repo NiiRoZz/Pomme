@@ -33,6 +33,7 @@ namespace Pomme
 		~VirtualMachine();
 
 		InterpretResult interpret(ObjFunction* function);
+		InterpretResult interpretGlobalFunction(const std::string& name);
 
 		void defineGlobalNative(std::string name, NativeFn function);
 
@@ -46,6 +47,8 @@ namespace Pomme
 		ObjString* copyString(const char* chars, int length);
 
 		ObjFunction* newFunction();
+
+		std::size_t addGlobal(const std::string& name);
 		
 	private:
 		InterpretResult run();
@@ -75,6 +78,9 @@ namespace Pomme
 
 		std::array<Value, STACK_MAX> stack;
 		Value* stackTop;
+
+		std::unordered_map<std::string, std::size_t> globalsIndices;
+		std::size_t globalsIndicesCount;
 
 		std::array<Value, GLOBALS_MAX> globals;
 

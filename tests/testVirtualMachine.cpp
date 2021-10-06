@@ -37,11 +37,13 @@ TEST(TEST_VM, BasicTest)
 	ObjFunction *function = compiler.compile(tree);
 
 	InterpretResult result = vm.interpret(function);
+
+	result = vm.interpretGlobalFunction("f");
 }
 
-TEST(TEST_VM, WhileTestCompilation)
+TEST(TEST_VM, GlobalFunctionTest)
 {
-	TEST_VM_TEST("void f() { float b = 1.0; while (b < 10.0) {print(b); b = b + 1;\n}; print(b); };\n");
+	TEST_VM_TEST("void f() { print(50.0); };\n");
 
     std::cout << text << std::endl;
 
@@ -51,6 +53,8 @@ TEST(TEST_VM, WhileTestCompilation)
 	ObjFunction *function = compiler.compile(tree);
 
 	InterpretResult result = vm.interpret(function);
+
+	result = vm.interpretGlobalFunction("f");
 }
 
 #undef TEST_VM_TEST

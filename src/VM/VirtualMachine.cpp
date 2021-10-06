@@ -8,6 +8,7 @@ namespace Pomme
     VirtualMachine::VirtualMachine()
     : stackTop(stack.data())
     , frameCount(0)
+    , globalsIndicesCount(0)
     , objects(nullptr)
     {
     }
@@ -26,11 +27,23 @@ namespace Pomme
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
     {
         push(OBJ_VAL(function));
+        call(function, 0);
 
-        CallFrame* frame = &frames[frameCount++];
-        frame->function = function;
-        frame->ip = function->chunk.code;
-        frame->slots = stack.data();
+        return run();
+    }
+
+    InterpretResult VirtualMachine::interpretGlobalFunction(const std::string& name)
+    {
+        auto it = globalsIndices.find(name);
+        if (it == globalsIndices.end())
+        {
+            return InterpretResult::INTERPRET_RUNTIME_ERROR;
+        }
+
+        ObjFunction* function = AS_FUNCTION(globals[it->second]);
+
+        push(OBJ_VAL(function));
+        call(function, 0);
 
         return run();
     }
@@ -98,6 +111,14 @@ namespace Pomme
         return function;
     }
 
+    std::size_t VirtualMachine::addGlobal(const std::string& name)
+    {
+        std::size_t idx = globalsIndicesCount;
+        globalsIndices.emplace(name, idx);
+        globalsIndicesCount++;
+        return idx;
+    }
+
     InterpretResult VirtualMachine::run()
     {
         CallFrame* frame = &frames[frameCount - 1];
@@ -147,14 +168,14 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_GET_GLOBAL):
                 {
-                    uint16_t slot = READ_INT16();
+                    uint8_t slot = READ_BYTE();
                     push(globals[slot]);
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_SET_GLOBAL):
                 {
-					uint16_t slot = READ_INT16();
+					uint8_t slot = READ_BYTE();
                     globals[slot] = peek(0);
                     break;
                 }
@@ -221,6 +242,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_CALL):
                 {
 					int argCount = READ_BYTE();
+                    std::cout << "OP_CALL argCount : " <<  argCount << std::endl;
                     if (!callValue(peek(argCount), argCount))
                     {
                         return InterpretResult::INTERPRET_RUNTIME_ERROR;
