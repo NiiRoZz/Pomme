@@ -285,13 +285,19 @@ namespace Pomme
     {
         int loopStart = currentChunk()->count;
 
+        //condition
         node->jjtChildAccept(0, this, data);
 
         int exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
+        beginScope();
+
+        //statement
         node->jjtChildAccept(1, this, data);
         emitLoop(loopStart);
+
+        endScope();
 
         patchJump(exitJump);
         emitByte(AS_OPCODE(OpCode::OP_POP));
@@ -310,15 +316,23 @@ namespace Pomme
         int thenJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
+        beginScope();
+
         //Statement
         node->jjtChildAccept(1, this, data);
+
+        endScope();
 
         int elseJump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
 
         patchJump(thenJump);
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
+        beginScope();
+
         node->jjtChildAccept(2, this, data);
+
+        endScope();
 
         patchJump(elseJump);
     }
@@ -599,6 +613,7 @@ namespace Pomme
         beginScope(); 
 
         //2: parameters
+        node->jjtChildAccept(2, this, data);
 
         //3: instrs
         node->jjtChildAccept(3, this, data);

@@ -57,4 +57,20 @@ TEST(TEST_VM, GlobalFunctionTest)
 	result = vm.interpretGlobalFunction("f");
 }
 
+TEST(TEST_VM, ScopeTest)
+{
+	TEST_VM_TEST("void f() { float b = 0.0; while (b < 100) {float c = b + 1.0; print(c); b = b + 1;};};\n");
+
+    std::cout << text << std::endl;
+
+    VirtualMachine vm;
+    Compiler compiler(vm);
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	result = vm.interpretGlobalFunction("f");
+}
+
 #undef TEST_VM_TEST
