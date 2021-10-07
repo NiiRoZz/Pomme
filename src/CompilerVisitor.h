@@ -125,8 +125,12 @@ namespace Pomme
 		void visit(const ASTaccessMethode *node, void * data);
 
 	private:
-		void emitBytes(uint8_t byte1, uint8_t byte2);
+		std::string getTypeName(Pomme::Node* node);
+		std::string getParametersType(Pomme::Node* node);
+
 		void emitByte(uint8_t byte);
+		void emitBytes(uint8_t byte1, uint8_t byte2);
+
 		void emitReturn();
 
 		int emitJump(uint8_t instruction);

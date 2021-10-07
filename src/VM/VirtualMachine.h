@@ -37,6 +37,12 @@ namespace Pomme
 
 		void defineGlobalNative(std::string name, NativeFn function);
 
+		template<typename ... Strings>
+		std::string getFunctionName(std::string type, std::string name, const Strings&... rest)
+		{
+			return type + TYPE_FUNC_SEPARATOR + name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
+		}
+
 		void push(Value value);
 		Value pop();
 		Value peek(int depth);
@@ -52,6 +58,17 @@ namespace Pomme
 		
 	private:
 		InterpretResult run();
+
+		std::string getParametersType()
+		{
+			return "";
+		}
+
+		template<typename ... Strings>
+		std::string getParametersType(std::string first, const Strings&... rest)
+		{
+			return first + HEADER_FUNC_SEPARATOR + getParametersType(rest...);
+		}
 
 		void freeObject(Obj* object);
 

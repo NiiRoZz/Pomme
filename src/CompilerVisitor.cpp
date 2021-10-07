@@ -20,76 +20,6 @@ namespace Pomme
 	  return &function->chunk;
 	}
 
-    void CompilerVisitor::emitBytes(uint8_t byte1, uint8_t byte2)
-    {
-        emitByte(byte1);
-        emitByte(byte2);
-    }
-
-	void CompilerVisitor::emitByte(uint8_t byte)
-    {
-	    currentChunk()->writeChunk(byte, line);
-	}
-
-	void CompilerVisitor::endCompiler()
-    {
-		emitReturn();
-	}
-
-	void CompilerVisitor::emitReturn()
-    {
-		emitByte(AS_OPCODE(OpCode::OP_RETURN));
-	}
-
-    int CompilerVisitor::emitJump(uint8_t instruction)
-    {
-        emitByte(instruction);
-        emitByte(0xff);
-        emitByte(0xff);
-        return currentChunk()->count - 2;
-    }
-
-	void CompilerVisitor::patchJump(int offset)
-    {
-        // -2 to adjust for the bytecode for the jump offset itself.
-        int jump = currentChunk()->count - offset - 2;
-
-        if (jump > UINT16_MAX)
-        {
-            //error("Too much code to jump over.");
-        }
-
-        currentChunk()->code[offset] = (jump >> 8) & 0xff;
-        currentChunk()->code[offset + 1] = jump & 0xff;
-    }
-
-    void CompilerVisitor::emitLoop(int loopStart)
-    {
-        emitByte(AS_OPCODE(OpCode::OP_LOOP));
-
-        int offset = currentChunk()->count - loopStart + 2;
-        //if (offset > UINT16_MAX) error("Loop body too large.");
-
-        emitByte((offset >> 8) & 0xff);
-        emitByte(offset & 0xff);
-    }
-
-    void CompilerVisitor::emitConstant(Value value)
-    {
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
-    }
-
-    uint8_t CompilerVisitor::makeConstant(Value value)
-    {
-        int constant = currentChunk()->addConstant(value);
-        if (constant > UINT8_MAX) {
-            //error("Too many constants in one chunk.");
-            return 0;
-        }
-
-        return (uint8_t)constant;
-    }
-
     void CompilerVisitor::visit(const SimpleNode *node, void * data) 
     {
 
@@ -591,29 +521,22 @@ namespace Pomme
     void CompilerVisitor::visit(const ASTpommeGlobalFunction *node, void * data)
     {
         //0: type
-        ASTvoidType* voidtype = dynamic_cast<ASTvoidType*>(node->jjtGetChild(0));
-
-        if (voidtype != nullptr)
-        {
-
-        }
-        else
-        {
-
-        }
+        std::string typeName = getTypeName(node->jjtGetChild(0));
 
         //1: name
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
-        uint8_t global = makeConstant(NUMBER_VAL((double) m_Vm.addGlobal(name)));
+        //2: parameters
+        std::string parametersType = getParametersType(node->jjtGetChild(2));
+
+        std::string nameFunc = typeName + TYPE_FUNC_SEPARATOR + name + NAME_FUNC_SEPARATOR + parametersType;
+
+        uint8_t global = makeConstant(NUMBER_VAL((double) m_Vm.addGlobal(nameFunc)));
 
         ObjFunction* currentFunction = function;
         function = m_Vm.newFunction();
 
         beginScope(); 
-
-        //2: parameters
-        node->jjtChildAccept(2, this, data);
 
         //3: instrs
         node->jjtChildAccept(3, this, data);
@@ -704,6 +627,101 @@ namespace Pomme
     void CompilerVisitor::visit(const ASTaccessMethode *node, void * data)
     {
         
+    }
+
+    std::string CompilerVisitor::getTypeName(Pomme::Node* node)
+    {
+        ASTident* identType = dynamic_cast<ASTident*>(node);
+
+        return ((identType != nullptr) ? identType->m_Identifier : "void");
+    }
+
+    std::string CompilerVisitor::getParametersType(Pomme::Node* node)
+    {
+        ASTheaders* currHeaders = dynamic_cast<ASTheaders*>(node);
+        std::string parametersType = "";
+
+        while (currHeaders != nullptr)
+        {
+            ASTheader* currHeader = dynamic_cast<ASTheader*>(currHeaders->jjtGetChild(0));
+            ASTident* identHeader = dynamic_cast<ASTident*>(currHeader->jjtGetChild(0));
+
+            parametersType += identHeader->m_Identifier + HEADER_FUNC_SEPARATOR;
+
+            currHeaders = dynamic_cast<ASTheaders*>(currHeaders->jjtGetChild(1));
+        }
+
+        return parametersType;
+    }
+
+	void CompilerVisitor::emitByte(uint8_t byte)
+    {
+	    currentChunk()->writeChunk(byte, line);
+	}
+
+    void CompilerVisitor::emitBytes(uint8_t byte1, uint8_t byte2)
+    {
+        emitByte(byte1);
+        emitByte(byte2);
+    }
+
+	void CompilerVisitor::endCompiler()
+    {
+		emitReturn();
+	}
+
+	void CompilerVisitor::emitReturn()
+    {
+		emitByte(AS_OPCODE(OpCode::OP_RETURN));
+	}
+
+    int CompilerVisitor::emitJump(uint8_t instruction)
+    {
+        emitByte(instruction);
+        emitByte(0xff);
+        emitByte(0xff);
+        return currentChunk()->count - 2;
+    }
+
+	void CompilerVisitor::patchJump(int offset)
+    {
+        // -2 to adjust for the bytecode for the jump offset itself.
+        int jump = currentChunk()->count - offset - 2;
+
+        if (jump > UINT16_MAX)
+        {
+            //error("Too much code to jump over.");
+        }
+
+        currentChunk()->code[offset] = (jump >> 8) & 0xff;
+        currentChunk()->code[offset + 1] = jump & 0xff;
+    }
+
+    void CompilerVisitor::emitLoop(int loopStart)
+    {
+        emitByte(AS_OPCODE(OpCode::OP_LOOP));
+
+        int offset = currentChunk()->count - loopStart + 2;
+        //if (offset > UINT16_MAX) error("Loop body too large.");
+
+        emitByte((offset >> 8) & 0xff);
+        emitByte(offset & 0xff);
+    }
+
+    void CompilerVisitor::emitConstant(Value value)
+    {
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
+    }
+
+    uint8_t CompilerVisitor::makeConstant(Value value)
+    {
+        int constant = currentChunk()->addConstant(value);
+        if (constant > UINT8_MAX) {
+            //error("Too many constants in one chunk.");
+            return 0;
+        }
+
+        return (uint8_t)constant;
     }
 
     void CompilerVisitor::beginScope()

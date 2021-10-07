@@ -38,7 +38,7 @@ TEST(TEST_VM, BasicTest)
 
 	InterpretResult result = vm.interpret(function);
 
-	result = vm.interpretGlobalFunction("f");
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"));
 }
 
 TEST(TEST_VM, GlobalFunctionTest)
@@ -54,12 +54,12 @@ TEST(TEST_VM, GlobalFunctionTest)
 
 	InterpretResult result = vm.interpret(function);
 
-	result = vm.interpretGlobalFunction("f");
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"));
 }
 
 TEST(TEST_VM, ScopeTest)
 {
-	TEST_VM_TEST("void f() { float b = 0.0; while (b < 100) {float c = b + 1.0; print(c); b = b + 1;};};\n");
+	TEST_VM_TEST("int f(int a, int b, float c) { float b = 0.0; while (b < 100) {float c = b + 1.0; print(c); b = b + 1;};};\n");
 
     std::cout << text << std::endl;
 
@@ -69,8 +69,8 @@ TEST(TEST_VM, ScopeTest)
 	ObjFunction *function = compiler.compile(tree);
 
 	InterpretResult result = vm.interpret(function);
-
-	result = vm.interpretGlobalFunction("f");
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("int", "f", "int", "int", "float"));
 }
 
 #undef TEST_VM_TEST
