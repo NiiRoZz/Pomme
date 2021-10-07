@@ -88,4 +88,25 @@ TEST(TEST_VM, ScopeTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, IfTest)
+{
+	TEST_VM_TEST("void f(float b) { float c = 0.0; if (1 == 1) {float d = 0.0;}; print(b); };};\n");
+
+    std::cout << text << std::endl;
+
+    VirtualMachine vm;
+    Compiler compiler(vm);
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(100.0)});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

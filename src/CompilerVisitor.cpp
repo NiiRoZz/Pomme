@@ -4,6 +4,7 @@
 #include "VM/Memory.h"
 
 #include <iostream>
+#include <assert.h>
 
 namespace Pomme
 {
@@ -28,7 +29,7 @@ namespace Pomme
     void CompilerVisitor::visit(const ASTinput *node, void * data) 
     {
         line = node->getLineNumber();
-        
+
         function = static_cast<ObjFunction*>(data);
 
         node->jjtChildrenAccept(this, nullptr);
@@ -224,11 +225,9 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
         //statement
-        //beginScope();
-
+        beginScope();
         node->jjtChildAccept(1, this, data);
-
-        //endScope();
+        endScope();
 
         emitLoop(loopStart);
         
@@ -251,14 +250,18 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
         //Statement
+        beginScope();
         node->jjtChildAccept(1, this, data);
+        endScope();
 
         int elseJump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
 
         patchJump(thenJump);
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
+        beginScope();
         node->jjtChildAccept(2, this, data);
+        endScope();
 
         patchJump(elseJump);
     }
@@ -631,12 +634,20 @@ namespace Pomme
         for (uint8_t i = localCount - 1; i >= 0; i--)
         {
             Local& local = locals[i];
+
+            if (local.depth != -1 && local.depth < scopeDepth)
+            {
+                break; 
+            }
+
             if (name == local.name)
             {
                 emitBytes(AS_OPCODE(op), i);
                 return;
             }
         }
+
+        assert(false);
     }
 
     void CompilerVisitor::visit(const ASTacnil *node, void * data)
