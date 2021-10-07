@@ -221,15 +221,17 @@ namespace Pomme
         int exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
-        beginScope();
-
         //statement
+        //beginScope();
+
         node->jjtChildAccept(1, this, data);
+
+        //endScope();
+
         emitLoop(loopStart);
-
-        endScope();
-
+        
         patchJump(exitJump);
+
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
@@ -536,14 +538,19 @@ namespace Pomme
         ObjFunction* currentFunction = function;
         function = m_Vm.newFunction();
 
+        function->name = m_Vm.copyString(name.c_str(), name.length());
+
         beginScope(); 
+
+        //2: parameters
+        node->jjtChildAccept(2, this, data);
 
         //3: instrs
         node->jjtChildAccept(3, this, data);
 
-        emitReturn();
-
         endScope();
+
+        emitReturn();
 
         ObjFunction* compiledFunction = function;
         function = currentFunction;
@@ -564,9 +571,23 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeVariable *node, void * data)
     {
+        //0: type
+        std::string typeName = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+
+        //1: name
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
-        node->jjtGetChild(2)->jjtAccept(this, data);
+        //2: expression value
+        ASTomega* defaultValue = dynamic_cast<ASTomega*>(node->jjtGetChild(2));
+
+        if (defaultValue != nullptr)
+        {
+            emitDefaultValue(typeName);
+        }
+        else
+        {
+            node->jjtGetChild(2)->jjtAccept(this, data);
+        }
 
         emitBytes(AS_OPCODE(OpCode::OP_SET_LOCAL), addLocal(name));
     }
@@ -583,12 +604,15 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTheaders *node, void * data)
     {
-        
+        node->jjtChildrenAccept(this, data);
     }
 
     void CompilerVisitor::visit(const ASTheader *node, void * data)
     {
-        
+        //1: name
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        addLocal(name);
+        function->arity++;
     }
 
     void CompilerVisitor::visit(const ASTpommeDestructor *node, void * data)
@@ -672,6 +696,7 @@ namespace Pomme
 
 	void CompilerVisitor::emitReturn()
     {
+        emitByte(AS_OPCODE(OpCode::OP_NULL));
 		emitByte(AS_OPCODE(OpCode::OP_RETURN));
 	}
 
@@ -708,6 +733,11 @@ namespace Pomme
         emitByte(offset & 0xff);
     }
 
+    void CompilerVisitor::emitDefaultValue(const std::string& typeName)
+    {
+        emitByte(AS_OPCODE(OpCode::OP_NULL));
+    }
+
     void CompilerVisitor::emitConstant(Value value)
     {
         emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
@@ -716,7 +746,8 @@ namespace Pomme
     uint8_t CompilerVisitor::makeConstant(Value value)
     {
         int constant = currentChunk()->addConstant(value);
-        if (constant > UINT8_MAX) {
+        if (constant > UINT8_MAX)
+        {
             //error("Too many constants in one chunk.");
             return 0;
         }

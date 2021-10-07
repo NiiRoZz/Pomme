@@ -6,7 +6,7 @@
 namespace Pomme
 {
     VirtualMachine::VirtualMachine()
-    : stackTop(stack.data())
+    : stackTop(stack)
     , frameCount(0)
     , globalsIndicesCount(0)
     , objects(nullptr)
@@ -27,12 +27,13 @@ namespace Pomme
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
     {
         push(OBJ_VAL(function));
+        function->name = copyString("<SCRIPT>", 8);
         call(function, 0);
 
         return run();
     }
 
-    InterpretResult VirtualMachine::interpretGlobalFunction(const std::string& name)
+    InterpretResult VirtualMachine::interpretGlobalFunction(const std::string& name, const std::vector<Value>& params)
     {
         auto it = globalsIndices.find(name);
         if (it == globalsIndices.end())
@@ -42,8 +43,22 @@ namespace Pomme
 
         ObjFunction* function = AS_FUNCTION(globals[it->second]);
 
+        if (function->arity != params.size())
+        {
+            return InterpretResult::INTERPRET_RUNTIME_ERROR; 
+        }
+
         push(OBJ_VAL(function));
-        call(function, 0);
+
+        for (int i = 0; i < params.size(); ++i)
+        {
+            push(params[i]);
+        }
+        
+        if (!call(function, function->arity))
+        {
+            return InterpretResult::INTERPRET_RUNTIME_ERROR; 
+        }
 
         return run();
     }
@@ -119,6 +134,18 @@ namespace Pomme
         return idx;
     }
 
+    void VirtualMachine::printStack()
+    {
+        printf("          ");
+        for (Value* slot = stack; slot < stackTop; ++slot)
+        {
+            printf("[ ");
+            printValue(*slot);
+            printf(" ]");
+        }
+        printf("\n");
+    }
+
     InterpretResult VirtualMachine::run()
     {
         CallFrame* frame = &frames[frameCount - 1];
@@ -140,6 +167,9 @@ namespace Pomme
 
         for (;;)
         {
+            //printStack();
+            //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
+
             uint8_t instruction;
 
             switch (instruction = READ_BYTE())
@@ -151,6 +181,7 @@ namespace Pomme
                     break;
                 }
 
+                case AS_OPCODE(OpCode::OP_NULL):        push(NULL_VAL); break;
 				case AS_OPCODE(OpCode::OP_NEGATE): 		push(NUMBER_VAL(-AS_NUMBER(pop()))); break;
 				case AS_OPCODE(OpCode::OP_ADD):      	BINARY_OP(NUMBER_VAL, +); break;
 				case AS_OPCODE(OpCode::OP_SUBTRACT): 	BINARY_OP(NUMBER_VAL, -); break;
@@ -191,6 +222,7 @@ namespace Pomme
                 {
 					uint8_t slot = READ_BYTE();
                     frame->slots[slot] = peek(0);
+                    //pop();
                     break;
                 }
 
@@ -242,7 +274,6 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_CALL):
                 {
 					int argCount = READ_BYTE();
-                    std::cout << "OP_CALL argCount : " <<  argCount << std::endl;
                     if (!callValue(peek(argCount), argCount))
                     {
                         return InterpretResult::INTERPRET_RUNTIME_ERROR;
@@ -436,7 +467,7 @@ namespace Pomme
 
         frame->function = function;
         frame->ip = function->chunk.code;
-        frame->slots = stackTop - argCount - 1;
+        frame->slots = stackTop - argCount;
 
         return true;
     }
@@ -449,6 +480,7 @@ namespace Pomme
                 printf(AS_BOOL(value) ? "true" : "false");
                 break;
             case ValueType::VAL_NIL: printf("nil"); break;
+            case ValueType::VAL_NULL: printf("null"); break;
             case ValueType::VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
             case ValueType::VAL_OBJ: printObject(value); break;
         }
@@ -513,5 +545,103 @@ namespace Pomme
         bound->receiver = receiver;
         bound->method = method;
         return bound;
+    }
+
+    int VirtualMachine::disassembleInstruction(Chunk* chunk, int offset)
+    {
+        printf("%04d ", offset);
+        if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1])
+        {
+            printf("   | ");
+        }
+        else
+        {
+            printf("%4d ", chunk->lines[offset]);
+        }
+
+        uint8_t instruction = chunk->code[offset];
+        switch (instruction)
+        {
+            case AS_OPCODE(OpCode::OP_CONSTANT):
+                return constantInstruction("OP_CONSTANT", chunk, offset);
+            case AS_OPCODE(OpCode::OP_RETURN):
+                return simpleInstruction("OP_RETURN", offset);
+            case AS_OPCODE(OpCode::OP_NOT):
+                return simpleInstruction("OP_NOT", offset);
+            case AS_OPCODE(OpCode::OP_NEGATE):
+                return simpleInstruction("OP_NEGATE", offset);
+            case AS_OPCODE(OpCode::OP_ADD):
+                return simpleInstruction("OP_ADD", offset);
+            case AS_OPCODE(OpCode::OP_SUBTRACT):
+                return simpleInstruction("OP_SUBTRACT", offset);
+            case AS_OPCODE(OpCode::OP_MULTIPLY):
+                return simpleInstruction("OP_MULTIPLY", offset);
+            case AS_OPCODE(OpCode::OP_DIVIDE):
+                return simpleInstruction("OP_DIVIDE", offset);
+            case AS_OPCODE(OpCode::OP_NULL):
+                return simpleInstruction("OP_NULL", offset);
+            case AS_OPCODE(OpCode::OP_TRUE):
+                return simpleInstruction("OP_TRUE", offset);
+            case AS_OPCODE(OpCode::OP_FALSE):
+                return simpleInstruction("OP_FALSE", offset);
+            case AS_OPCODE(OpCode::OP_EQ):
+                return simpleInstruction("OP_EQ", offset);
+            case AS_OPCODE(OpCode::OP_GT):
+                return simpleInstruction("OP_GT", offset);
+            case AS_OPCODE(OpCode::OP_LT):
+                return simpleInstruction("OP_LT", offset);
+            case AS_OPCODE(OpCode::OP_PRINT):
+                return simpleInstruction("OP_PRINT", offset);
+            case AS_OPCODE(OpCode::OP_POP):
+                return simpleInstruction("OP_POP", offset);
+            case AS_OPCODE(OpCode::OP_GET_GLOBAL):
+                return constantInstruction("OP_GET_GLOBAL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_SET_GLOBAL):
+                return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_GET_LOCAL):
+                return byteInstruction("OP_GET_LOCAL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_SET_LOCAL):
+                return byteInstruction("OP_SET_LOCAL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_JUMP):
+                return jumpInstruction("OP_JUMP", 1, chunk, offset);
+            case AS_OPCODE(OpCode::OP_JUMP_IF_FALSE):
+                return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
+            case AS_OPCODE(OpCode::OP_LOOP):
+                return jumpInstruction("OP_LOOP", -1, chunk, offset);
+            case AS_OPCODE(OpCode::OP_CALL):
+                return byteInstruction("OP_CALL", chunk, offset);
+            default:
+                printf("Unknown opcode %d\n", instruction);
+            return offset + 1;
+        }
+    }
+
+    int VirtualMachine::simpleInstruction(const char* name, int offset)
+    {
+        printf("%s\n", name);
+        return offset + 1;
+    }
+
+    int VirtualMachine::constantInstruction(const char* name, Chunk* chunk, int offset)
+    {
+        uint8_t constant = chunk->code[offset + 1];
+        printf("%-16s %4d '", name, constant);
+        printValue(chunk->constants.values[constant]);
+        printf("'\n");
+    }
+
+    int VirtualMachine::byteInstruction(const char* name, Chunk* chunk, int offset)
+    {
+        uint8_t slot = chunk->code[offset + 1];
+        printf("%-16s %4d\n", name, slot);
+        return offset + 2;
+    }
+
+    int VirtualMachine::jumpInstruction(const char* name, int sign, Chunk* chunk, int offset)
+    {
+        uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
+        jump |= chunk->code[offset + 2];
+        printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
+        return offset + 3;
     }
 }

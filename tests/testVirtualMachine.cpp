@@ -38,7 +38,11 @@ TEST(TEST_VM, BasicTest)
 
 	InterpretResult result = vm.interpret(function);
 
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"));
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 }
 
 TEST(TEST_VM, GlobalFunctionTest)
@@ -54,12 +58,16 @@ TEST(TEST_VM, GlobalFunctionTest)
 
 	InterpretResult result = vm.interpret(function);
 
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"));
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 }
 
 TEST(TEST_VM, ScopeTest)
 {
-	TEST_VM_TEST("int f(int a, int b, float c) { float b = 0.0; while (b < 100) {float c = b + 1.0; print(c); b = b + 1;};};\n");
+	TEST_VM_TEST("void f(float x) { print(x); float c = 0.0; c = 1.0; };};\n");
 
     std::cout << text << std::endl;
 
@@ -69,8 +77,20 @@ TEST(TEST_VM, ScopeTest)
 	ObjFunction *function = compiler.compile(tree);
 
 	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
  
-	result = vm.interpretGlobalFunction(vm.getFunctionName("int", "f", "int", "int", "float"));
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(500.0)});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	vm.printStack();
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(100.0)});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	vm.printStack();
 }
 
 #undef TEST_VM_TEST

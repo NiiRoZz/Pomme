@@ -138,6 +138,8 @@ namespace Pomme
 
 		void emitLoop(int loopStart);
 
+		void emitDefaultValue(const std::string& typeName);
+
 		void endCompiler();
 		void emitConstant(Value value);
 		uint8_t makeConstant(Value value);
