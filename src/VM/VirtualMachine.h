@@ -98,7 +98,7 @@ namespace Pomme
 		int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset);
 
 	private:
-		std::array<CallFrame, FRAMES_MAX> frames;
+		CallFrame frames[FRAMES_MAX];
   		int frameCount;
 
 		Value stack[STACK_MAX];
@@ -107,7 +107,7 @@ namespace Pomme
 		std::unordered_map<std::string, std::size_t> globalsIndices;
 		std::size_t globalsIndicesCount;
 
-		std::array<Value, GLOBALS_MAX> globals;
+		Value globals[GLOBALS_MAX];
 
 		Obj* objects;
 	};

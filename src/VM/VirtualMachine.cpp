@@ -628,6 +628,7 @@ namespace Pomme
         printf("%-16s %4d '", name, constant);
         printValue(chunk->constants.values[constant]);
         printf("'\n");
+        return offset + 2;
     }
 
     int VirtualMachine::byteInstruction(const char* name, Chunk* chunk, int offset)
