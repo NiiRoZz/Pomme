@@ -27,6 +27,8 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTinput *node, void * data) 
     {
+        line = node->getLineNumber();
+        
         function = static_cast<ObjFunction*>(data);
 
         node->jjtChildrenAccept(this, nullptr);
@@ -248,23 +250,15 @@ namespace Pomme
         int thenJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
-        beginScope();
-
         //Statement
         node->jjtChildAccept(1, this, data);
-
-        endScope();
 
         int elseJump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
 
         patchJump(thenJump);
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
-        beginScope();
-
         node->jjtChildAccept(2, this, data);
-
-        endScope();
 
         patchJump(elseJump);
     }
@@ -542,15 +536,17 @@ namespace Pomme
 
         beginScope(); 
 
+        addLocal("");
+
         //2: parameters
         node->jjtChildAccept(2, this, data);
 
         //3: instrs
         node->jjtChildAccept(3, this, data);
 
-        endScope();
-
         emitReturn();
+
+        endScope();
 
         ObjFunction* compiledFunction = function;
         function = currentFunction;
@@ -580,6 +576,8 @@ namespace Pomme
         //2: expression value
         ASTomega* defaultValue = dynamic_cast<ASTomega*>(node->jjtGetChild(2));
 
+        addLocal(name);
+
         if (defaultValue != nullptr)
         {
             emitDefaultValue(typeName);
@@ -588,8 +586,6 @@ namespace Pomme
         {
             node->jjtGetChild(2)->jjtAccept(this, data);
         }
-
-        emitBytes(AS_OPCODE(OpCode::OP_SET_LOCAL), addLocal(name));
     }
 
     void CompilerVisitor::visit(const ASTpommeConstant *node, void * data)

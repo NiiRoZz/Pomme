@@ -27,7 +27,6 @@ namespace Pomme
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
     {
         push(OBJ_VAL(function));
-        function->name = copyString("<SCRIPT>", 8);
         call(function, 0);
 
         return run();
@@ -48,19 +47,27 @@ namespace Pomme
             return InterpretResult::INTERPRET_RUNTIME_ERROR; 
         }
 
-        push(OBJ_VAL(function));
+        ObjFunction* callFunction = newFunction();
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_GET_GLOBAL), 0);
+        callFunction->chunk.writeChunk(it->second, 0);
 
         for (int i = 0; i < params.size(); ++i)
         {
-            push(params[i]);
-        }
-        
-        if (!call(function, function->arity))
-        {
-            return InterpretResult::INTERPRET_RUNTIME_ERROR; 
+            int id = callFunction->chunk.addConstant(params[i]);
+            callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
+            callFunction->chunk.writeChunk(id, 1);
         }
 
-        return run();
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
+        callFunction->chunk.writeChunk(params.size(), 1);
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_POP), 0);
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_NULL), 0);
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_RETURN), 0);
+        
+        return interpret(callFunction);
     }
 
     void VirtualMachine::defineGlobalNative(std::string name, NativeFn function)
@@ -146,6 +153,11 @@ namespace Pomme
         printf("\n");
     }
 
+    int VirtualMachine::stackSize()
+    {
+        return stackTop - stack;
+    }
+
     InterpretResult VirtualMachine::run()
     {
         CallFrame* frame = &frames[frameCount - 1];
@@ -208,6 +220,7 @@ namespace Pomme
                 {
 					uint8_t slot = READ_BYTE();
                     globals[slot] = peek(0);
+                    pop();
                     break;
                 }
 
@@ -222,7 +235,7 @@ namespace Pomme
                 {
 					uint8_t slot = READ_BYTE();
                     frame->slots[slot] = peek(0);
-                    //pop();
+                    pop();
                     break;
                 }
 
@@ -467,7 +480,7 @@ namespace Pomme
 
         frame->function = function;
         frame->ip = function->chunk.code;
-        frame->slots = stackTop - argCount;
+        frame->slots = stackTop - argCount - 1;
 
         return true;
     }
@@ -513,6 +526,12 @@ namespace Pomme
 
     void VirtualMachine::printFunction(ObjFunction* function)
     {
+        if (function->name == NULL)
+        {
+            printf("<script>");
+            return;
+        }
+
         printf("<fn %s>", function->name->chars);
     }
 
@@ -594,10 +613,11 @@ namespace Pomme
                 return simpleInstruction("OP_PRINT", offset);
             case AS_OPCODE(OpCode::OP_POP):
                 return simpleInstruction("OP_POP", offset);
-            case AS_OPCODE(OpCode::OP_GET_GLOBAL):
+            /*case AS_OPCODE(OpCode::OP_GET_GLOBAL):
                 return constantInstruction("OP_GET_GLOBAL", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_GLOBAL):
                 return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+            */
             case AS_OPCODE(OpCode::OP_GET_LOCAL):
                 return byteInstruction("OP_GET_LOCAL", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_LOCAL):

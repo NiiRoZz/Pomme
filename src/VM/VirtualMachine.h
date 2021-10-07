@@ -57,6 +57,7 @@ namespace Pomme
 		std::size_t addGlobal(const std::string& name);
 
 		void printStack();
+		int stackSize();
 		
 	private:
 		InterpretResult run();

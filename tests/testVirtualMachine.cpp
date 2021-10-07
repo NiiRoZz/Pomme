@@ -27,7 +27,7 @@ using namespace Pomme;
 
 TEST(TEST_VM, BasicTest)
 {
-    TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; print(a + 20.0 + b); print(\"Hello world, My name is Lucas\"); \n if (1 == 1) {print(\"if!!\");\n}; if (0 == 1) {print(\"if 2!!\");\n} else {print(\"else!!\");\n}; print(\"finish\");\n };\n");
+    TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; print(a + 20.0 + b); print(\"Hello world, My name is Lucas\"); if (1 == 1) {print(10.0);}; if (0 == 1) {print(20.0);}; float d = 50.0; \n };\n");
 
     std::cout << text << std::endl;
 
@@ -43,6 +43,7 @@ TEST(TEST_VM, BasicTest)
 	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
 }
 
 TEST(TEST_VM, GlobalFunctionTest)
@@ -63,11 +64,12 @@ TEST(TEST_VM, GlobalFunctionTest)
 	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
 }
 
 TEST(TEST_VM, ScopeTest)
 {
-	TEST_VM_TEST("void f(float x) { print(x); float c = 0.0; c = 1.0; };};\n");
+	TEST_VM_TEST("void f(float b) { float c = 0.0; c = 1.0; c = 2.0; print(b); };};\n");
 
     std::cout << text << std::endl;
 
@@ -80,17 +82,10 @@ TEST(TEST_VM, ScopeTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
  
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(500.0)});
-
-	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
-
-	vm.printStack();
-
 	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(100.0)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
-
-	vm.printStack();
+	EXPECT_EQ(vm.stackSize(), 0);
 }
 
 #undef TEST_VM_TEST
