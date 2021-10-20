@@ -111,7 +111,7 @@ TEST(TEST_VM, IfTest)
 
 TEST(TEST_VM, GlobalNativeTest)
 {
-	TEST_VM_TEST("native void t(); void f() { print(t(10, 20, 30, 40.5)); };\n");
+	TEST_VM_TEST("native double t(); void f() { print(t(10, 20, 30, 40.5)); };\n");
 
     std::cout << text << std::endl;
 

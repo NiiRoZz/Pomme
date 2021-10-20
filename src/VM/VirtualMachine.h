@@ -6,6 +6,7 @@
 
 #include <array>
 #include <unordered_map>
+#include <optional>
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
@@ -56,7 +57,7 @@ namespace Pomme
 		ObjNative* newGlobalNative();
 
 		std::size_t addGlobal(const std::string& name);
-		std::size_t getGlobal(const std::string& name);
+		std::optional<std::size_t> getGlobal(const std::string& name);
 
 		void printStack();
 		int stackSize();

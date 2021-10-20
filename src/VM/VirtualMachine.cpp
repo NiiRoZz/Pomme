@@ -154,12 +154,12 @@ namespace Pomme
         return idx;
     }
 
-    std::size_t VirtualMachine::getGlobal(const std::string& name)
+    std::optional<std::size_t> VirtualMachine::getGlobal(const std::string& name)
     {
         auto it = globalsIndices.find(name);
         if (it == globalsIndices.end())
         {
-            return globalsIndices.size();
+            return {};
         }
 
         return it->second;

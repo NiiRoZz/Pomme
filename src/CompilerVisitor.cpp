@@ -672,7 +672,14 @@ namespace Pomme
 
         op = (assign) ? OpCode::OP_SET_GLOBAL : OpCode::OP_GET_GLOBAL;
 
-        emitBytes(AS_OPCODE(op), m_Vm.getGlobal(name));
+        std::optional<std::size_t> idx = m_Vm.getGlobal(name);
+
+        if (!idx)
+        {
+            assert(false);
+        }
+
+        emitBytes(AS_OPCODE(op), *idx);
 
         funcNode->jjtAccept(this, nullptr);
     }
@@ -695,8 +702,6 @@ namespace Pomme
 
             exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
         }
-
-        std::cout << "ASTaccessMethode argCount : " << unsigned(argCount) << std::endl;
 
         emitBytes(AS_OPCODE(OpCode::OP_CALL), argCount);
     }
