@@ -519,18 +519,15 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeGlobalFunction *node, void * data)
     {
-        //0: type
-        std::string typeName = getTypeName(node->jjtGetChild(0));
-
         //1: name
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
         //2: parameters
         std::string parametersType = getParametersType(node->jjtGetChild(2));
 
-        std::string nameFunc = typeName + TYPE_FUNC_SEPARATOR + name + NAME_FUNC_SEPARATOR + parametersType;
+        std::string nameFunc = name + NAME_FUNC_SEPARATOR + parametersType;
 
-        uint8_t global = makeConstant(NUMBER_VAL((double) m_Vm.addGlobal(nameFunc)));
+        uint8_t global = m_Vm.addGlobal(nameFunc);
 
         ObjFunction* currentFunction = function;
         function = m_Vm.newFunction();
@@ -560,7 +557,18 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeGlobalFunctionNative *node, void * data)
     {
-        
+        //1: name
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+        //2: parameters
+        std::string parametersType = getParametersType(node->jjtGetChild(2));
+
+        std::string nameFunc = name + NAME_FUNC_SEPARATOR + parametersType;
+
+        uint8_t global = m_Vm.addGlobal(nameFunc);
+
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newGlobalNative())));
+        emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
     void CompilerVisitor::visit(const ASTpommeCase *node, void * data)
@@ -629,7 +637,17 @@ namespace Pomme
             op = OpCode::OP_SET_LOCAL;
         }
 
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string name;
+        ASTaccessMethode* funcNode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
+
+        if (funcNode != nullptr)
+        {
+            name = dynamic_cast<ASTident*>(funcNode->jjtGetChild(0))->m_Identifier;
+        }
+        else
+        {
+            name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        }
 
         for (uint8_t i = localCount - 1; i >= 0; i--)
         {
@@ -647,7 +665,16 @@ namespace Pomme
             }
         }
 
-        assert(false);
+        //We have only global functions, no global variables
+        assert(funcNode != nullptr);
+
+        name += NAME_FUNC_SEPARATOR;
+
+        op = (assign) ? OpCode::OP_SET_GLOBAL : OpCode::OP_GET_GLOBAL;
+
+        emitBytes(AS_OPCODE(op), m_Vm.getGlobal(name));
+
+        funcNode->jjtAccept(this, nullptr);
     }
 
     void CompilerVisitor::visit(const ASTacnil *node, void * data)
@@ -657,7 +684,21 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTaccessMethode *node, void * data)
     {
-        
+        uint8_t argCount = 0;
+
+        ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+
+        while (exp != nullptr)
+        {
+            argCount++;
+            exp->jjtGetChild(0)->jjtAccept(this, nullptr);
+
+            exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
+        }
+
+        std::cout << "ASTaccessMethode argCount : " << unsigned(argCount) << std::endl;
+
+        emitBytes(AS_OPCODE(OpCode::OP_CALL), argCount);
     }
 
     std::string CompilerVisitor::getTypeName(Pomme::Node* node)

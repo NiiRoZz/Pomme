@@ -35,12 +35,12 @@ namespace Pomme
 		InterpretResult interpret(ObjFunction* function);
 		InterpretResult interpretGlobalFunction(const std::string& name, const std::vector<Value>& params);
 
-		void defineGlobalNative(std::string name, NativeFn function);
+		bool linkGlobalNative(const std::string& name, GlobalNativeFn function);
 
 		template<typename ... Strings>
-		std::string getFunctionName(std::string type, std::string name, const Strings&... rest)
+		std::string getFunctionName(std::string name, const Strings&... rest)
 		{
-			return type + TYPE_FUNC_SEPARATOR + name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
+			return name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
 		}
 
 		void push(Value value);
@@ -53,8 +53,10 @@ namespace Pomme
 		ObjString* copyString(const char* chars, int length);
 
 		ObjFunction* newFunction();
+		ObjNative* newGlobalNative();
 
 		std::size_t addGlobal(const std::string& name);
+		std::size_t getGlobal(const std::string& name);
 
 		void printStack();
 		int stackSize();

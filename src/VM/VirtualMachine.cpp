@@ -2,6 +2,7 @@
 #include "Memory.h"
 
 #include <iostream>
+#include <assert.h>
 
 namespace Pomme
 {
@@ -42,6 +43,8 @@ namespace Pomme
 
         ObjFunction* function = AS_FUNCTION(globals[it->second]);
 
+        assert(IS_FUNCTION(globals[it->second]));
+
         if (function->arity != params.size())
         {
             return InterpretResult::INTERPRET_RUNTIME_ERROR; 
@@ -70,13 +73,14 @@ namespace Pomme
         return interpret(callFunction);
     }
 
-    void VirtualMachine::defineGlobalNative(std::string name, NativeFn function)
+    bool VirtualMachine::linkGlobalNative(const std::string& name, GlobalNativeFn function)
     {
-        //push(OBJ_VAL(copyString(name, (int)strlen(name))));
-        //push(OBJ_VAL(newNative(function)));
-        //tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
-        pop();
-        pop();
+        auto it = globalsIndices.find(name);
+        if (it == globalsIndices.end()) return false;
+
+        assert(IS_GLOBAL_NATIVE(globals[it->second]));
+ 
+        AS_GLOBAL_NATIVE(globals[it->second]) = function;
     }
 
     void VirtualMachine::push(Value value)
@@ -133,12 +137,32 @@ namespace Pomme
         return function;
     }
 
+    ObjNative* VirtualMachine::newGlobalNative()
+    {
+        ObjNative* native = ALLOCATE_OBJ(this, ObjNative, ObjType::OBJ_GLOBAL_NATIVE);
+        new (native) ObjNative();
+        native->obj.type = ObjType::OBJ_GLOBAL_NATIVE;
+
+        return native;
+    }
+
     std::size_t VirtualMachine::addGlobal(const std::string& name)
     {
         std::size_t idx = globalsIndicesCount;
         globalsIndices.emplace(name, idx);
         globalsIndicesCount++;
         return idx;
+    }
+
+    std::size_t VirtualMachine::getGlobal(const std::string& name)
+    {
+        auto it = globalsIndices.find(name);
+        if (it == globalsIndices.end())
+        {
+            return globalsIndices.size();
+        }
+
+        return it->second;
     }
 
     void VirtualMachine::printStack()
@@ -387,6 +411,12 @@ namespace Pomme
                 break;
             }
 
+            case ObjType::OBJ_GLOBAL_NATIVE:
+            {
+                FREE(ObjNative, object);
+                break;
+            }
+
             case ObjType::OBJ_STRING:
             {
                 ObjString* string = (ObjString*)object;
@@ -443,9 +473,9 @@ namespace Pomme
                 case ObjType::OBJ_FUNCTION: 
                     return call(AS_FUNCTION(callee), argCount);
                 
-                case ObjType::OBJ_NATIVE:
+                case ObjType::OBJ_GLOBAL_NATIVE:
                 {
-                    std::function<Value(int, Value*)>& native = AS_NATIVE(callee);
+                    std::function<Value(int, Value*)>& native = AS_GLOBAL_NATIVE(callee);
                     Value result = native(argCount, stackTop - argCount);
                     
                     stackTop -= argCount + 1;
@@ -515,7 +545,7 @@ namespace Pomme
             case ObjType::OBJ_INSTANCE:
                 printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
                 break;
-            case ObjType::OBJ_NATIVE:
+            case ObjType::OBJ_GLOBAL_NATIVE:
                 printf("<native fn>");
                 break;
             case ObjType::OBJ_STRING:

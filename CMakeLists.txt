@@ -25,6 +25,10 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
+if(NOT MSVC)
+  add_definitions(-Wall -Wextra -g -pedantic)
+endif()
+
 include(GNUInstallDirs)
 
 # Add directories for generated include files

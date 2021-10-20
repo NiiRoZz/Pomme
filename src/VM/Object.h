@@ -15,18 +15,18 @@ namespace Pomme
 {
     #define OBJ_TYPE(value)        (AS_OBJ(value)->type)
 
-    #define IS_BOUND_METHOD(value) isObjType(value, OBJ_BOUND_METHOD)
-    #define IS_CLASS(value)        isObjType(value, OBJ_CLASS)
-    #define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
-    #define IS_INSTANCE(value)     isObjType(value, OBJ_INSTANCE)
-    #define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)
-    #define IS_STRING(value)       isObjType(value, OBJ_STRING)
+    #define IS_BOUND_METHOD(value)  isObjType(value, ObjType::OBJ_BOUND_METHOD)
+    #define IS_CLASS(value)         isObjType(value, ObjType::OBJ_CLASS)
+    #define IS_FUNCTION(value)      isObjType(value, ObjType::OBJ_FUNCTION)
+    #define IS_INSTANCE(value)      isObjType(value, ObjType::OBJ_INSTANCE)
+    #define IS_GLOBAL_NATIVE(value) isObjType(value, ObjType::OBJ_GLOBAL_NATIVE)
+    #define IS_STRING(value)        isObjType(value, ObjType::OBJ_STRING)
 
     #define AS_BOUND_METHOD(value) ((ObjBoundMethod*)AS_OBJ(value))
     #define AS_CLASS(value)        ((ObjClass*)AS_OBJ(value))
     #define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
     #define AS_INSTANCE(value)     ((ObjInstance*)AS_OBJ(value))
-    #define AS_NATIVE(value) \
+    #define AS_GLOBAL_NATIVE(value) \
         (((ObjNative*)AS_OBJ(value))->function)
     #define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
     #define AS_CSTRING(value)      (((ObjString*)AS_OBJ(value))->chars)
@@ -37,7 +37,7 @@ namespace Pomme
         OBJ_CLASS,
         OBJ_FUNCTION,
         OBJ_INSTANCE,
-        OBJ_NATIVE,
+        OBJ_GLOBAL_NATIVE,
         OBJ_STRING,
     };
 
@@ -54,12 +54,12 @@ namespace Pomme
         char* chars;
     };
 
-    using NativeFn = std::function<Value(int, Value*)>;
+    using GlobalNativeFn = std::function<Value(int, Value*)>;
 
     struct ObjNative
     {
         Obj obj;
-        NativeFn function;
+        GlobalNativeFn function;
     };
 
     struct ObjFunction

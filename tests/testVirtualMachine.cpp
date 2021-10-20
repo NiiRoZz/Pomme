@@ -40,7 +40,7 @@ TEST(TEST_VM, BasicTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"), {});
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -61,7 +61,7 @@ TEST(TEST_VM, GlobalFunctionTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f"), {});
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -69,7 +69,7 @@ TEST(TEST_VM, GlobalFunctionTest)
 
 TEST(TEST_VM, ScopeTest)
 {
-	TEST_VM_TEST("void f(float b) { float c = 0.0; c = 1.0; c = 2.0; print(b); };};\n");
+	TEST_VM_TEST("void f(float b) { float c = 0.0; c = 1.0; c = 2.0; print(b); print(c); };};\n");
 
     std::cout << text << std::endl;
 
@@ -82,7 +82,7 @@ TEST(TEST_VM, ScopeTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
  
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(100.0)});
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f", "float"), {NUMBER_VAL(100.0)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -103,7 +103,39 @@ TEST(TEST_VM, IfTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
  
-	result = vm.interpretGlobalFunction(vm.getFunctionName("void", "f", "float"), {NUMBER_VAL(100.0)});
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f", "float"), {NUMBER_VAL(100.0)});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, GlobalNativeTest)
+{
+	TEST_VM_TEST("native void t(); void f() { print(t(10, 20, 30, 40.5)); };\n");
+
+    std::cout << text << std::endl;
+
+    VirtualMachine vm;
+    Compiler compiler(vm);
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	vm.linkGlobalNative(vm.getFunctionName("t"), [](int argCount, Value* args) {
+		std::cout << "From native argcount : " << argCount << std::endl; 
+
+		for (int i = 0; i < argCount; ++i)
+		{
+			std::cout << "AS_NUMBER arg " << i << " : " << AS_NUMBER(args[i]) << std::endl;
+		}
+	
+		return NUMBER_VAL(500.0);
+	});
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
