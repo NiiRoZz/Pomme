@@ -92,6 +92,7 @@ namespace Pomme
 		void defineMethod(uint16_t slot, ObjString* name);
 		void defineField(uint16_t slot, ObjString* name);
 
+		ObjClass* newClass(ObjString* name);
 		ObjInstance* newInstance(ObjClass* klass);
 		ObjBoundMethod* newBoundMethod(Value receiver, ObjFunction* method);
 

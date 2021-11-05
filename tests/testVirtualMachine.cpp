@@ -141,4 +141,25 @@ TEST(TEST_VM, GlobalNativeTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ClassTest)
+{
+	TEST_VM_TEST("class TestClass {}; void f() { TestClass oui = new TestClass(); print(oui); };\n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

@@ -425,7 +425,29 @@ namespace Pomme
 
     void CompilerVisitor::visit(const ASTpommeNew *node, void * data) 
     {
+        uint8_t argCount = 0;
 
+        ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+
+        while (exp != nullptr)
+        {
+            argCount++;
+            exp->jjtGetChild(0)->jjtAccept(this, nullptr);
+
+            exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
+        }
+
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+
+        std::optional<std::size_t> global = m_Vm.getGlobal(name);
+
+        if (!global)
+        {
+            assert(false);
+        }
+
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *global);
+        emitBytes(AS_OPCODE(OpCode::OP_NEW), argCount);
     }
 
     void CompilerVisitor::visit(const ASTpommeTrue *node, void * data) 
@@ -452,9 +474,16 @@ namespace Pomme
     {
         
     }
+    
     void CompilerVisitor::visit(const ASTpommeClass *node, void * data)
     {
-        
+        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+
+        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
+        uint8_t global = m_Vm.addGlobal(name);
+
+        emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
+        emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
     void CompilerVisitor::visit(const ASTpommeClassChild *node, void * data)
@@ -666,9 +695,9 @@ namespace Pomme
         }
 
         //We have only global functions, no global variables
-        assert(funcNode != nullptr);
+        //assert(funcNode != nullptr);
 
-        name += NAME_FUNC_SEPARATOR;
+        if (funcNode != nullptr) name += NAME_FUNC_SEPARATOR;
 
         op = (assign) ? OpCode::OP_SET_GLOBAL : OpCode::OP_GET_GLOBAL;
 
@@ -681,7 +710,7 @@ namespace Pomme
 
         emitBytes(AS_OPCODE(op), *idx);
 
-        funcNode->jjtAccept(this, nullptr);
+        if (funcNode != nullptr) funcNode->jjtAccept(this, nullptr);
     }
 
     void CompilerVisitor::visit(const ASTacnil *node, void * data)

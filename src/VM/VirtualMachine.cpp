@@ -389,6 +389,25 @@ namespace Pomme
                     push(BOOL_VAL(isFalsey(pop())));
                     break;
                 }
+
+                case AS_OPCODE(OpCode::OP_CLASS):
+                {
+                    push(OBJ_VAL(newClass(READ_STRING())));
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_NEW):
+                {
+                    int argCount = READ_BYTE();
+                    ObjClass* klass = AS_CLASS(peek(0));
+                    stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                    /*if (klass->constructorIdx > -1)
+                    {
+                        return call(AS_FUNCTION(klass->methods[klass->constructorIdx]), argCount);
+                    }
+                    */
+                    break;
+                }
             }
         }
 
@@ -411,6 +430,12 @@ namespace Pomme
                 break;
             }
 
+            case ObjType::OBJ_CLASS:
+            {
+                FREE(ObjClass, object);
+                break;
+            } 
+
             case ObjType::OBJ_GLOBAL_NATIVE:
             {
                 FREE(ObjNative, object);
@@ -422,6 +447,12 @@ namespace Pomme
                 ObjString* string = (ObjString*)object;
                 FREE_ARRAY(char, string->chars, string->length + 1);
                 FREE(ObjString, object);
+                break;
+            }
+
+            case ObjType::OBJ_INSTANCE:
+            {
+                FREE(ObjInstance, object);
                 break;
             }
         }
@@ -456,18 +487,6 @@ namespace Pomme
                     ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
                     stackTop[-argCount - 1] = bound->receiver;
                     return call(bound->method, argCount);
-                }
-
-                case ObjType::OBJ_CLASS:
-                {
-                    ObjClass* klass = AS_CLASS(callee);
-                    stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
-                    /*if (klass->constructorIdx > -1)
-                    {
-                        return call(AS_FUNCTION(klass->methods[klass->constructorIdx]), argCount);
-                    }
-                    */
-                    return true;
                 }
 
                 case ObjType::OBJ_FUNCTION: 
@@ -537,7 +556,7 @@ namespace Pomme
                 printFunction(AS_BOUND_METHOD(value)->method);
                 break;
             case ObjType::OBJ_CLASS:
-                printf("%s", AS_CLASS(value)->name->chars);
+                printf("class %s", AS_CLASS(value)->name->chars);
                 break;
             case ObjType::OBJ_FUNCTION:
                 printFunction(AS_FUNCTION(value));
@@ -579,6 +598,13 @@ namespace Pomme
         ObjClass* klass = AS_CLASS(peek(0));
         klass->fieldsIndices[name->chars] = slot;
         pop();
+    }
+
+    ObjClass* VirtualMachine::newClass(ObjString* name)
+    {
+        ObjClass* klass = ALLOCATE_OBJ(this, ObjClass, ObjType::OBJ_CLASS);
+        klass->name = name; 
+        return klass;
     }
 
     ObjInstance* VirtualMachine::newInstance(ObjClass* klass)
@@ -660,6 +686,8 @@ namespace Pomme
                 return jumpInstruction("OP_LOOP", -1, chunk, offset);
             case AS_OPCODE(OpCode::OP_CALL):
                 return byteInstruction("OP_CALL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_CLASS):
+                return constantInstruction("OP_CLASS", chunk, offset);
             default:
                 printf("Unknown opcode %d\n", instruction);
             return offset + 1;

@@ -66,6 +66,7 @@ namespace Pomme
         OP_AND_EQ,
         OP_OR_EQ,
         OP_CLASS,
+        OP_NEW,
     };
 
     struct Chunk
