@@ -31,10 +31,13 @@
 *.out
 *.app
 
+#idea
+*.idea
 
 #visual studio
 .vs/
 
-out/
 build/
+out/
+cmake-build-debug/
 .vscode/

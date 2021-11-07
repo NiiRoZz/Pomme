@@ -40,7 +40,9 @@ add_library(${APP}
   "src/VM/Chunk.cpp"
   "src/VM/Value.cpp"
   "src/Compiler.cpp"
+  "src/TypeChecker.cpp"
   "src/CompilerVisitor.cpp"
+  "src/TypeCheckerVisitor.cpp"
   "src/PommeNode.cpp"
 )
 
