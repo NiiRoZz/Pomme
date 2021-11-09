@@ -41,7 +41,7 @@ TEST(TEST_LEXER_PARSER, BasicFuncs)
 
 TEST(TEST_LEXER_PARSER, BasicDeclsFuncs)
 {
-	TEST_PARSER_FILE("void func() { int64_t a; int64_t a = 5; int64_t a[2]; float b; float b = 5; float b[5]; };\n", "tests/basicDeclsFuncs.txt");
+	TEST_PARSER_FILE("void func() { int64_t a; int64_t a = 5; float b; float b = 5; };\n", "tests/basicDeclsFuncs.txt");
 }
 
 TEST(TEST_LEXER_PARSER, BasicEnums)
@@ -75,7 +75,7 @@ TEST(TEST_LEXER_PARSER, 1Class2Methods)
 
 TEST(TEST_LEXER_PARSER, 1Class1Method1Function)
 {
-	TEST_PARSER_FILE("class test{ void funcTest(){}; }; void test1(){};\n", "tests/1Class1Method1Function.txt");
+	TEST_PARSER_FILE("class test{ int funcTest(){}; int testAtt; }; void test1(){};\n", "tests/1Class1Method1Function.txt");
 }
 
 TEST(TEST_LEXER_PARSER, 3Functions1Return)
@@ -153,34 +153,19 @@ TEST(TEST_LEXER_PARSER, TestOperator8)
 	TEST_PARSER_FILE("void main(){ int64_t a = 1111; int64_t b = ~a;};\n", "tests/TestOperator8.txt");
 }
 
-TEST(TEST_LEXER_PARSER, TestArray1)
-{
-	TEST_PARSER_FILE("void main(){ int64_t a[10]; a[3] = 2; };\n", "tests/TestArray1.txt");
-}
-
-TEST(TEST_LEXER_PARSER, TestArray2)
-{
-	TEST_PARSER_FILE("void main(){ int64_t a[10-5]; a[3] = 2; };\n", "tests/TestArray2.txt");
-}
-
-TEST(TEST_LEXER_PARSER, TestArray3)
-{
-	TEST_PARSER_FILE("void main(){ int64_t a[10+5]; a[3+2] = 2; };\n", "tests/TestArray3.txt");
-}
-
 TEST(TEST_LEXER_PARSER, TestNull)
 {
-	TEST_PARSER_FILE("class Array{ int64_t array[10]; Array arrayTest = new Array(); }; void test(){ Array a = null; a.array[3] = 8; a.arrayTest.array[0] = 10; };\n", "tests/TestNull.txt");
+	TEST_PARSER_FILE("class Array{ Array arrayTest = new Array(); }; void test(){ Array a = null; };\n", "tests/TestNull.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestThis)
 {
-	TEST_PARSER_FILE("class Array{ int64_t array[10]; void test(){ this.array[1] = 0; };  void test2(){ this.test(); }; };\n", "tests/TestThis.txt");
+	TEST_PARSER_FILE("class Array{ int a; void test(){ a = 10; };  void test2(){ this.test(); }; };\n", "tests/TestThis.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestClassSpecific)
 {
-	TEST_PARSER_FILE("class Array extends ArrayC { override void test(){ super.test(); }; static void x(){}; private void y(){}; protected void z(){}; };\n", "tests/TestClassSpecific.txt");
+	TEST_PARSER_FILE("class Array extends ArrayC { override int test(){ super.test(); }; static void x(){}; private void y(){}; protected void z(){}; };\n", "tests/TestClassSpecific.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestConst)

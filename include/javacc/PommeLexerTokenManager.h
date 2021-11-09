@@ -28,7 +28,7 @@ int  jjStartNfa_0(int pos, unsigned long long active0, unsigned long long active
  int  jjMoveStringLiteralDfa5_0(unsigned long long old0, unsigned long long active0, unsigned long long old1, unsigned long long active1);
  int  jjMoveStringLiteralDfa6_0(unsigned long long old0, unsigned long long active0, unsigned long long old1, unsigned long long active1);
  int  jjMoveStringLiteralDfa7_0(unsigned long long old0, unsigned long long active0, unsigned long long old1, unsigned long long active1);
- int  jjMoveStringLiteralDfa8_0(unsigned long long old1, unsigned long long active1);
+ int  jjMoveStringLiteralDfa8_0(unsigned long long old0, unsigned long long active0, unsigned long long old1, unsigned long long active1);
 int jjStartNfaWithStates_0(int pos, int kind, int state);
 int jjMoveNfa_0(int startState, int curPos);
 Token * jjFillToken();

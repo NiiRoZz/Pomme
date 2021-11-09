@@ -8,11 +8,16 @@ input
       snil
       vinil
       onil
-     voidType
+     ident
      ident
      enil
      inil
-    dnil
+    decls
+     pommeVariable
+      ident
+      ident
+      omega
+     dnil
   scopes
    pommeGlobalFunction
     voidType

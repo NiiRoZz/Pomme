@@ -156,7 +156,6 @@ namespace Pomme
         void visit(ASTexnil *node, void * data);
         void visit(ASTpommeVariable *node, void * data);
         void visit(ASTpommeConstant *node, void * data);
-        void visit(ASTpommeArray *node, void * data);
         void visit(ASTomega *node, void * data);
         void visit(ASTheaders *node, void * data);
         void visit(ASTenil *node, void * data);
@@ -187,7 +186,6 @@ namespace Pomme
         void visit(ASTpommeNull *node, void * data);
         void visit(ASTlistacces *node, void * data);
         void visit(ASTacnil *node, void * data);
-        void visit(ASTaccessTab *node, void * data);
         void visit(ASTaccessMethode *node, void * data);
 
 	};

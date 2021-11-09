@@ -80,75 +80,71 @@ const  int BRACEL = 39;
   /** RegularExpression Id. */
 const  int BRACER = 40;
   /** RegularExpression Id. */
-const  int BRACKETL = 41;
+const  int COLON = 41;
   /** RegularExpression Id. */
-const  int BRACKETR = 42;
+const  int SEMICOLON = 42;
   /** RegularExpression Id. */
-const  int COLON = 43;
+const  int COMMA = 43;
   /** RegularExpression Id. */
-const  int SEMICOLON = 44;
+const  int POINT = 44;
   /** RegularExpression Id. */
-const  int COMMA = 45;
+const  int EXCLAMATION = 45;
   /** RegularExpression Id. */
-const  int POINT = 46;
+const  int TILDE = 46;
   /** RegularExpression Id. */
-const  int EXCLAMATION = 47;
+const  int EQ = 47;
   /** RegularExpression Id. */
-const  int TILDE = 48;
+const  int NEQ = 48;
   /** RegularExpression Id. */
-const  int EQ = 49;
+const  int GT = 49;
   /** RegularExpression Id. */
-const  int NEQ = 50;
+const  int GET = 50;
   /** RegularExpression Id. */
-const  int GT = 51;
+const  int LT = 51;
   /** RegularExpression Id. */
-const  int GET = 52;
+const  int LET = 52;
   /** RegularExpression Id. */
-const  int LT = 53;
+const  int OR = 53;
   /** RegularExpression Id. */
-const  int LET = 54;
+const  int AND = 54;
   /** RegularExpression Id. */
-const  int OR = 55;
+const  int VOID = 55;
   /** RegularExpression Id. */
-const  int AND = 56;
+const  int CONST = 56;
   /** RegularExpression Id. */
-const  int VOID = 57;
+const  int NATIVE = 57;
   /** RegularExpression Id. */
-const  int CONST = 58;
+const  int EXTENDS = 58;
   /** RegularExpression Id. */
-const  int NATIVE = 59;
+const  int MODDED = 59;
   /** RegularExpression Id. */
-const  int EXTENDS = 60;
+const  int STATIC = 60;
   /** RegularExpression Id. */
-const  int MODDED = 61;
+const  int PUBLIC = 61;
   /** RegularExpression Id. */
-const  int STATIC = 62;
+const  int PRIVATE = 62;
   /** RegularExpression Id. */
-const  int PUBLIC = 63;
+const  int PROTECTED = 63;
   /** RegularExpression Id. */
-const  int PRIVATE = 64;
+const  int OVERRIDE = 64;
   /** RegularExpression Id. */
-const  int PROTECTED = 65;
+const  int TRUE = 65;
   /** RegularExpression Id. */
-const  int OVERRIDE = 66;
+const  int FALSE = 66;
   /** RegularExpression Id. */
-const  int TRUE = 67;
+const  int NULLEXP = 67;
   /** RegularExpression Id. */
-const  int FALSE = 68;
+const  int NEWEXP = 68;
   /** RegularExpression Id. */
-const  int NULLEXP = 69;
+const  int INT = 69;
   /** RegularExpression Id. */
-const  int NEWEXP = 70;
+const  int IDENTIFIEROPERATOR = 70;
   /** RegularExpression Id. */
-const  int INT = 71;
+const  int IDENTIFIER = 71;
   /** RegularExpression Id. */
-const  int IDENTIFIEROPERATOR = 72;
+const  int STRING = 72;
   /** RegularExpression Id. */
-const  int IDENTIFIER = 73;
-  /** RegularExpression Id. */
-const  int STRING = 74;
-  /** RegularExpression Id. */
-const  int FLOAT = 75;
+const  int FLOAT = 73;
 
   /** Lexical state. */
 const  int DEFAULT = 0;
@@ -237,74 +233,70 @@ const  int DEFAULT = 0;
   static const JJChar tokenImage_arr_40[] = 
 {0x22, 0x7d, 0x22, 0};
   static const JJChar tokenImage_arr_41[] = 
-{0x22, 0x5b, 0x22, 0};
-  static const JJChar tokenImage_arr_42[] = 
-{0x22, 0x5d, 0x22, 0};
-  static const JJChar tokenImage_arr_43[] = 
 {0x22, 0x3a, 0x22, 0};
-  static const JJChar tokenImage_arr_44[] = 
+  static const JJChar tokenImage_arr_42[] = 
 {0x22, 0x3b, 0x22, 0};
-  static const JJChar tokenImage_arr_45[] = 
+  static const JJChar tokenImage_arr_43[] = 
 {0x22, 0x2c, 0x22, 0};
-  static const JJChar tokenImage_arr_46[] = 
+  static const JJChar tokenImage_arr_44[] = 
 {0x22, 0x2e, 0x22, 0};
-  static const JJChar tokenImage_arr_47[] = 
+  static const JJChar tokenImage_arr_45[] = 
 {0x22, 0x21, 0x22, 0};
-  static const JJChar tokenImage_arr_48[] = 
+  static const JJChar tokenImage_arr_46[] = 
 {0x22, 0x7e, 0x22, 0};
-  static const JJChar tokenImage_arr_49[] = 
+  static const JJChar tokenImage_arr_47[] = 
 {0x22, 0x3d, 0x3d, 0x22, 0};
-  static const JJChar tokenImage_arr_50[] = 
+  static const JJChar tokenImage_arr_48[] = 
 {0x22, 0x21, 0x3d, 0x22, 0};
-  static const JJChar tokenImage_arr_51[] = 
+  static const JJChar tokenImage_arr_49[] = 
 {0x22, 0x3e, 0x22, 0};
-  static const JJChar tokenImage_arr_52[] = 
+  static const JJChar tokenImage_arr_50[] = 
 {0x22, 0x3e, 0x3d, 0x22, 0};
-  static const JJChar tokenImage_arr_53[] = 
+  static const JJChar tokenImage_arr_51[] = 
 {0x22, 0x3c, 0x22, 0};
-  static const JJChar tokenImage_arr_54[] = 
+  static const JJChar tokenImage_arr_52[] = 
 {0x22, 0x3c, 0x3d, 0x22, 0};
-  static const JJChar tokenImage_arr_55[] = 
+  static const JJChar tokenImage_arr_53[] = 
 {0x22, 0x7c, 0x7c, 0x22, 0};
-  static const JJChar tokenImage_arr_56[] = 
+  static const JJChar tokenImage_arr_54[] = 
 {0x22, 0x26, 0x26, 0x22, 0};
-  static const JJChar tokenImage_arr_57[] = 
+  static const JJChar tokenImage_arr_55[] = 
 {0x22, 0x76, 0x6f, 0x69, 0x64, 0x22, 0};
-  static const JJChar tokenImage_arr_58[] = 
+  static const JJChar tokenImage_arr_56[] = 
 {0x22, 0x63, 0x6f, 0x6e, 0x73, 0x74, 0x22, 0};
-  static const JJChar tokenImage_arr_59[] = 
+  static const JJChar tokenImage_arr_57[] = 
 {0x22, 0x6e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x22, 0};
-  static const JJChar tokenImage_arr_60[] = 
+  static const JJChar tokenImage_arr_58[] = 
 {0x22, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x73, 0x22, 0};
-  static const JJChar tokenImage_arr_61[] = 
+  static const JJChar tokenImage_arr_59[] = 
 {0x22, 0x6d, 0x6f, 0x64, 0x64, 0x65, 0x64, 0x22, 0};
-  static const JJChar tokenImage_arr_62[] = 
+  static const JJChar tokenImage_arr_60[] = 
 {0x22, 0x73, 0x74, 0x61, 0x74, 0x69, 0x63, 0x22, 0};
-  static const JJChar tokenImage_arr_63[] = 
+  static const JJChar tokenImage_arr_61[] = 
 {0x22, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x22, 0};
-  static const JJChar tokenImage_arr_64[] = 
+  static const JJChar tokenImage_arr_62[] = 
 {0x22, 0x70, 0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x22, 0};
-  static const JJChar tokenImage_arr_65[] = 
+  static const JJChar tokenImage_arr_63[] = 
 {0x22, 0x70, 0x72, 0x6f, 0x74, 0x65, 0x63, 0x74, 0x65, 0x64, 0x22, 0};
-  static const JJChar tokenImage_arr_66[] = 
+  static const JJChar tokenImage_arr_64[] = 
 {0x22, 0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x22, 0};
-  static const JJChar tokenImage_arr_67[] = 
+  static const JJChar tokenImage_arr_65[] = 
 {0x22, 0x74, 0x72, 0x75, 0x65, 0x22, 0};
-  static const JJChar tokenImage_arr_68[] = 
+  static const JJChar tokenImage_arr_66[] = 
 {0x22, 0x66, 0x61, 0x6c, 0x73, 0x65, 0x22, 0};
-  static const JJChar tokenImage_arr_69[] = 
+  static const JJChar tokenImage_arr_67[] = 
 {0x22, 0x6e, 0x75, 0x6c, 0x6c, 0x22, 0};
-  static const JJChar tokenImage_arr_70[] = 
+  static const JJChar tokenImage_arr_68[] = 
 {0x22, 0x6e, 0x65, 0x77, 0x22, 0};
-  static const JJChar tokenImage_arr_71[] = 
+  static const JJChar tokenImage_arr_69[] = 
 {0x22, 0x3c, 0x49, 0x4e, 0x54, 0x3e, 0x22, 0};
-  static const JJChar tokenImage_arr_72[] = 
+  static const JJChar tokenImage_arr_70[] = 
 {0x22, 0x3c, 0x49, 0x44, 0x45, 0x4e, 0x54, 0x49, 0x46, 0x49, 0x45, 0x52, 0x4f, 0x50, 0x45, 0x52, 0x41, 0x54, 0x4f, 0x52, 0x3e, 0x22, 0};
-  static const JJChar tokenImage_arr_73[] = 
+  static const JJChar tokenImage_arr_71[] = 
 {0x22, 0x3c, 0x49, 0x44, 0x45, 0x4e, 0x54, 0x49, 0x46, 0x49, 0x45, 0x52, 0x3e, 0x22, 0};
-  static const JJChar tokenImage_arr_74[] = 
+  static const JJChar tokenImage_arr_72[] = 
 {0x22, 0x3c, 0x53, 0x54, 0x52, 0x49, 0x4e, 0x47, 0x3e, 0x22, 0};
-  static const JJChar tokenImage_arr_75[] = 
+  static const JJChar tokenImage_arr_73[] = 
 {0x22, 0x3c, 0x46, 0x4c, 0x4f, 0x41, 0x54, 0x3e, 0x22, 0};
   static const JJChar* const tokenImage[] = {
 tokenImage_arr_0, 
@@ -381,8 +373,6 @@ tokenImage_arr_70,
 tokenImage_arr_71, 
 tokenImage_arr_72, 
 tokenImage_arr_73, 
-tokenImage_arr_74, 
-tokenImage_arr_75, 
   };
 
 }

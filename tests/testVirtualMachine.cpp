@@ -143,7 +143,7 @@ TEST(TEST_VM, GlobalNativeTest)
 
 TEST(TEST_VM, ClassTest)
 {
-	TEST_VM_TEST("class TestClass {}; void f() { TestClass oui = new TestClass(); print(oui); };\n");
+	TEST_VM_TEST("class TestClass { Int f() {}; }; void f() { TestClass oui = new TestClass(); print(oui); };\n");
 
     std::cout << text << std::endl;
 

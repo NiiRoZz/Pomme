@@ -482,10 +482,6 @@ namespace Pomme
     {
 
     }
-    void TypeCheckerVisitor::visit(ASTpommeArray *node, void * data)
-    {
-
-    }
     void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {
 
@@ -603,10 +599,6 @@ namespace Pomme
 
     }
     void TypeCheckerVisitor::visit(ASTacnil *node, void * data)
-    {
-
-    }
-    void TypeCheckerVisitor::visit(ASTaccessTab *node, void * data)
     {
 
     }
