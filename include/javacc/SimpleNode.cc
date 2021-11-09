@@ -54,18 +54,18 @@ void* SimpleNode::jjtGetValue() const {
     return value;
 }
 
-void  SimpleNode::jjtAccept(PommeLexerVisitor *visitor, void * data) const
+void  SimpleNode::jjtAccept(PommeLexerVisitor *visitor, void * data)
 {
     return visitor->visit(this, data);
 }
 
-void SimpleNode::jjtChildrenAccept(PommeLexerVisitor *visitor, void * data) const {
+void SimpleNode::jjtChildrenAccept(PommeLexerVisitor *visitor, void * data) {
     for (int i = 0; i < children.size(); ++i) {
       children[i]->jjtAccept(visitor, data);
     }
 }
 
-void SimpleNode::jjtChildAccept(int childNo, PommeLexerVisitor *visitor, void * data) const {
+void SimpleNode::jjtChildAccept(int childNo, PommeLexerVisitor *visitor, void * data) {
     if (0 <= childNo && childNo < children.size())
       children[childNo]->jjtAccept(visitor, data);
 }    	

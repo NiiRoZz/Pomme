@@ -15,7 +15,7 @@ public:
   virtual ~ASTpommeString();
 
   /** Accept the visitor. **/
-  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data) const ;
+  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
 
   std::string m_Value;
 };

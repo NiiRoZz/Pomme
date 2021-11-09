@@ -109,47 +109,47 @@ namespace Pomme
         return parameters;
     }
 
-    void TypeCheckerVisitor::visit(const SimpleNode *node, void * data)
+    void TypeCheckerVisitor::visit(SimpleNode *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTinput *node, void * data)
+    void TypeCheckerVisitor::visit(ASTinput *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTident *node, void * data)
+    void TypeCheckerVisitor::visit(ASTident *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTidentOp *node, void * data)
+    void TypeCheckerVisitor::visit(ASTidentOp *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeInt *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeInt *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeFloat *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeFloat *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeString *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeString *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTscopes *node, void * data)
+    void TypeCheckerVisitor::visit(ASTscopes *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTscinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTscinil *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTpommeTypeDef *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeTypeDef *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeClass *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeClass *node, void * data)
     {
         std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
         data = &context;
@@ -158,19 +158,19 @@ namespace Pomme
         node->jjtChildrenAccept(this, data);
         class_context = false;
     }
-    void TypeCheckerVisitor::visit(const ASTpommeClassChild *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeModdedClass *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTdecls *node, void * data)
+    void TypeCheckerVisitor::visit(ASTdecls *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTpommeVariable *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
         std::string &context = *static_cast<std::string*>(data);
 
@@ -197,11 +197,11 @@ namespace Pomme
             // todo
         }
     }
-    void TypeCheckerVisitor::visit(const ASTdnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTpommeMethode *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeMethode *node, void * data)
     {
         // node->indexMethode; //todo
 
@@ -246,75 +246,75 @@ namespace Pomme
         }
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeMethodeNative *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTidentFuncs *node, void * data)
+    void TypeCheckerVisitor::visit(ASTidentFuncs *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeStatic *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeStatic *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTsnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTsnil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommePublic *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommePublic *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommePrivate *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommePrivate *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeProtected *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeProtected *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTvinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTvinil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeOverride *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeOverride *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTonil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTonil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeEnum *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeEnum *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeExtendsEnum *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeExtendsEnum *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeModdedEnum *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeModdedEnum *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTdeclenums *node, void * data)
+    void TypeCheckerVisitor::visit(ASTdeclenums *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTennil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTennil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTenumassign *node, void * data)
+    void TypeCheckerVisitor::visit(ASTenumassign *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTenumdefault *node, void * data)
+    void TypeCheckerVisitor::visit(ASTenumdefault *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeGlobalFunction *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
     {
 
         std::cout << "before " <<std::endl;
@@ -342,251 +342,251 @@ namespace Pomme
 
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(const ASTpommeGlobalFunctionNative *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTinstrs *node, void * data)
+    void TypeCheckerVisitor::visit(ASTinstrs *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTinil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTincrementPre *node, void * data)
+    void TypeCheckerVisitor::visit(ASTincrementPre *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTdecrementPre *node, void * data)
+    void TypeCheckerVisitor::visit(ASTdecrementPre *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeReturn *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeReturn *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeWhile *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeWhile *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeBreak *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeBreak *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeIf *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeIf *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommePrint *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommePrint *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeSwitch *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeSwitch *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTassignement *node, void * data)
+    void TypeCheckerVisitor::visit(ASTassignement *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTaddeq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTaddeq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTminuseq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTminuseq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTdiveq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTdiveq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTmulteq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTmulteq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASToreq *node, void * data)
+    void TypeCheckerVisitor::visit(ASToreq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTandeq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTandeq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTshiftleq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTshiftleq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTshiftreq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTshiftreq *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTincrementPost *node, void * data)
+    void TypeCheckerVisitor::visit(ASTincrementPost *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTdecrementPost *node, void * data)
+    void TypeCheckerVisitor::visit(ASTdecrementPost *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeCases *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeCases *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeDefault *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeDefault *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTswinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTswinil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeCase *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeCase *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTlistexp *node, void * data)
+    void TypeCheckerVisitor::visit(ASTlistexp *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTexnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTexnil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeConstant *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeArray *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeArray *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTomega *node, void * data)
+    void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTheaders *node, void * data)
+    void TypeCheckerVisitor::visit(ASTheaders *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTenil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTenil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTheader *node, void * data)
+    void TypeCheckerVisitor::visit(ASTheader *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTvoidType *node, void * data)
+    void TypeCheckerVisitor::visit(ASTvoidType *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeDestructor *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeDestructor *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeAnd *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeAnd *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeOr *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeOr *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeEQ *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeEQ *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeNEQ *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeNEQ *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeGT *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeGT *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeGET *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeGET *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeLT *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeLT *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeLET *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeLET *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeAdd *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeAdd *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeMinus *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeMinus *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeShiftR *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeShiftR *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeShiftL *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeShiftL *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeMult *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeMult *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeDiv *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeDiv *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeModulo *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeModulo *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeUnary *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeUnary *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeNot *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeNot *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeTilde *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeTilde *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeNew *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeNew *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeTrue *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeTrue *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeFalse *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeFalse *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTpommeNull *node, void * data)
+    void TypeCheckerVisitor::visit(ASTpommeNull *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTlistacces *node, void * data)
+    void TypeCheckerVisitor::visit(ASTlistacces *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTacnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTacnil *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTaccessTab *node, void * data)
+    void TypeCheckerVisitor::visit(ASTaccessTab *node, void * data)
     {
 
     }
-    void TypeCheckerVisitor::visit(const ASTaccessMethode *node, void * data)
+    void TypeCheckerVisitor::visit(ASTaccessMethode *node, void * data)
     {
 
     }

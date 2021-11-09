@@ -26,7 +26,7 @@ protected:
 public: 
            SimpleNode(int id);
            SimpleNode(PommeLexer* parser, int id);
-  virtual ~SimpleNode();
+    virtual ~SimpleNode();
 
 //#if !NODE_FACTORY
 //\#define jjtCreate(id) new SimpleNode(id)
@@ -43,9 +43,9 @@ public:
   virtual void           jjtSetValue(void * value);
   virtual void*          jjtGetValue() const;
 
-  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data) const;
-  virtual void           jjtChildrenAccept(PommeLexerVisitor *visitor, void * data) const;
-  virtual void           jjtChildAccept(int childNo, PommeLexerVisitor *visitor, void * data) const;
+  virtual void           jjtAccept(PommeLexerVisitor *visitor, void * data);
+  virtual void           jjtChildrenAccept(PommeLexerVisitor *visitor, void * data);
+  virtual void           jjtChildAccept(int childNo, PommeLexerVisitor *visitor, void * data);
 
   /* You can override these two methods in subclasses of SimpleNode to
      customize the way the node appears when the tree is dumped.  If

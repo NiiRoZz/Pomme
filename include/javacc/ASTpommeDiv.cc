@@ -13,7 +13,7 @@ namespace Pomme {
   }
 
   /** Accept the visitor. **/
-  void  ASTpommeDiv::jjtAccept(PommeLexerVisitor *visitor, void * data) const {
+  void  ASTpommeDiv::jjtAccept(PommeLexerVisitor *visitor, void * data) {
     return 
     visitor->visit(this, data);
   }

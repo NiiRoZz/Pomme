@@ -15,7 +15,7 @@ public:
   virtual ~ASTpommeInt();
 
   /** Accept the visitor. **/
-  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data) const ;
+  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
 
   int64_t m_Value;
 };

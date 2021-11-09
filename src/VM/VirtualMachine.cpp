@@ -266,7 +266,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_GET_PROPERTY):
                 {
                     ObjInstance* instance = AS_INSTANCE(peek(0));
-					uint16_t slot = READ_INT16();
+					uint8_t slot = READ_BYTE();
 
                     pop(); // Instance.
                     push(instance->fields[slot]);
@@ -277,7 +277,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_SET_PROPERTY):
                 {
 					ObjInstance* instance = AS_INSTANCE(peek(1));
-                    uint16_t slot = READ_INT16();
+                    uint8_t slot = READ_BYTE();
                     instance->fields[slot] = peek(0);
 
                     Value value = pop();
@@ -453,6 +453,12 @@ namespace Pomme
             case ObjType::OBJ_INSTANCE:
             {
                 FREE(ObjInstance, object);
+                break;
+            }
+
+            case ObjType::OBJ_BOUND_METHOD:
+            {
+                FREE(ObjBoundMethod, object);
                 break;
             }
         }

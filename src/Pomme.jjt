@@ -4,7 +4,7 @@ options
 	OUTPUT_LANGUAGE="c++";
 	STATIC=false;
   	NODE_SCOPE_HOOK=true;
-	VISITOR=true;
+	VISITOR=false;
 	NAMESPACE="Pomme";
   	NODE_CLASS="PommeNode";
 }

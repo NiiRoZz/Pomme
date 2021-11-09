@@ -15,7 +15,7 @@ public:
   virtual ~ASTident();
 
   /** Accept the visitor. **/
-  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data) const ;
+  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
 
   std::string m_Identifier;
 };

@@ -43,7 +43,7 @@ public:
   virtual int     getId() const = 0;
 
   /** Accept the visitor. **/
-  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data) const = 0;
+  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data) = 0;
 
   /** Clear list of children, and return children that we have before.
       Used in destructor to do linear destruction of tree.
