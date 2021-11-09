@@ -6,8 +6,7 @@ input
     pommeVariable
      ident
      ident
-     pommeArray
-      pommeInt
+     omega
     decls
      pommeMethode
       identFuncs
@@ -21,11 +20,7 @@ input
        assignement
         listacces
          ident
-         listacces
-          accessTab
-           ident
-           pommeInt
-          acnil
+         acnil
         pommeInt
        inil
      decls

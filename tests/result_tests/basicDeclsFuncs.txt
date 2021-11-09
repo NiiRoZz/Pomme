@@ -18,23 +18,11 @@ input
       pommeVariable
        ident
        ident
-       pommeArray
-        pommeInt
+       omega
       instrs
        pommeVariable
         ident
         ident
-        omega
-       instrs
-        pommeVariable
-         ident
-         ident
-         pommeInt
-        instrs
-         pommeVariable
-          ident
-          ident
-          pommeArray
-           pommeInt
-         inil
+        pommeInt
+       inil
   scinil

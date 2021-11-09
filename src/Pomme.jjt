@@ -4,23 +4,23 @@ options
 	OUTPUT_LANGUAGE="c++";
 	STATIC=false;
   	NODE_SCOPE_HOOK=true;
-	VISITOR=false;
+	VISITOR=true;
 	NAMESPACE="Pomme";
   	NODE_CLASS="PommeNode";
 }
 
 PARSER_BEGIN(PommeLexer)
 
-void jjtreeOpenNodeScope(PommeNode *n)
-{
-  if (n == nullptr) return;
-  n->setLineNumber( getToken(1)->beginLine );
-  n->setLineColumn( getToken(1)->beginColumn );
-}
+	void jjtreeOpenNodeScope(PommeNode *n)
+	{
+	if (n == nullptr) return;
+	n->setLineNumber( getToken(1)->beginLine );
+	n->setLineColumn( getToken(1)->beginColumn );
+	}
 
-void jjtreeCloseNodeScope(PommeNode *n)
-{
-}
+	void jjtreeCloseNodeScope(PommeNode *n)
+	{
+	}
 
 PARSER_END(PommeLexer)
 
@@ -77,9 +77,7 @@ TOKEN:
 	<PARENTL : "("> 
 	| <PARENTR : ")"> 
 	| <BRACEL : "{"> 
-	| <BRACER : "}"> 
-	| <BRACKETL : "["> 
-	| <BRACKETR : "]"> 
+	| <BRACER : "}">
 	| <COLON : ":">
 	| <SEMICOLON : ";"> 
 	| <COMMA : ","> 
@@ -193,8 +191,8 @@ void decls() #void :
 void decl() #void :
 {}
 {
-	LOOKAHEAD(3) var()
-	| methode()
+	LOOKAHEAD(8) methode()
+	| var()
 }
 
 void methode() #void :
@@ -346,7 +344,6 @@ void vexp() #void :
 {}
 {
 	<ASSIGNEMENT> exp()
-	| <BRACKETL> exp() <BRACKETR> #pommeArray(1)
 	| {}	#omega
 }
 
@@ -493,8 +490,7 @@ void listaccesP() #void :
 void access() #void :
 {}
 {
-	LOOKAHEAD(2) ident() <BRACKETL> exp() <BRACKETR> #accessTab(2)
-	| LOOKAHEAD(2) identmeth() <PARENTL> listexp() <PARENTR> #accessMethode(2)
+	LOOKAHEAD(2) identmeth() <PARENTL> listexp() <PARENTR> #accessMethode(2)
 	| ident()
 }
 

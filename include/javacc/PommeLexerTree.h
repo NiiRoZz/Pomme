@@ -26,7 +26,6 @@
 #include "ASTacnil.h"
 #include "ASTpommeProtected.h"
 #include "ASTswinil.h"
-#include "ASTaccessTab.h"
 #include "ASTpommePrivate.h"
 #include "ASTpommeModdedEnum.h"
 #include "ASTpommeAnd.h"
@@ -58,7 +57,6 @@
 #include "ASTaddeq.h"
 #include "ASTomega.h"
 #include "ASTpommeOr.h"
-#include "ASTpommeArray.h"
 #include "ASTminuseq.h"
 #include "ASTsnil.h"
 #include "ASTpommeClass.h"
@@ -100,4 +98,4 @@
 #include "ASTassignement.h"
 #include "ASTpommeEQ.h"
 #endif
-/* JavaCC - OriginalChecksum=12c87aa51be7b06e67ab59e8a2966e40 (do not edit this line) */
+/* JavaCC - OriginalChecksum=3a4db96546154081cd03a9b7e6d73713 (do not edit this line) */

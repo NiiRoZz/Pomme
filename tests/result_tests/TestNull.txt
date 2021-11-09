@@ -6,16 +6,10 @@ input
     pommeVariable
      ident
      ident
-     pommeArray
-      pommeInt
-    decls
-     pommeVariable
+     pommeNew
       ident
-      ident
-      pommeNew
-       ident
-       exnil
-     dnil
+      exnil
+    dnil
   scopes
    pommeGlobalFunction
     voidType
@@ -26,27 +20,5 @@ input
       ident
       ident
       pommeNull
-     instrs
-      assignement
-       listacces
-        ident
-        listacces
-         accessTab
-          ident
-          pommeInt
-         acnil
-       pommeInt
-      instrs
-       assignement
-        listacces
-         ident
-         listacces
-          ident
-          listacces
-           accessTab
-            ident
-            pommeInt
-           acnil
-        pommeInt
-       inil
+     inil
    scinil

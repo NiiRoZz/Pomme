@@ -465,11 +465,6 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_NULL));
     }
 
-    void CompilerVisitor::visit(ASTaccessTab *node, void * data) 
-    {
-
-    }
-
     void CompilerVisitor::visit(ASTpommeTypeDef *node, void * data)
     {
         
@@ -635,11 +630,6 @@ namespace Pomme
     }
 
     void CompilerVisitor::visit(ASTpommeConstant *node, void * data)
-    {
-        
-    }
-
-    void CompilerVisitor::visit(ASTpommeArray *node, void * data)
     {
         
     }

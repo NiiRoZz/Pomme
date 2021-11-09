@@ -26,7 +26,7 @@ protected:
 public: 
            SimpleNode(int id);
            SimpleNode(PommeLexer* parser, int id);
-    virtual ~SimpleNode();
+  virtual ~SimpleNode();
 
 //#if !NODE_FACTORY
 //\#define jjtCreate(id) new SimpleNode(id)

@@ -189,7 +189,7 @@ namespace Pomme
         #define READ_BYTE() (*frame->ip++)
         #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
-        #define READ_INT16() \
+        #define READ_UINT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 
 		#define BINARY_OP(valueType, op) \
@@ -266,7 +266,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_GET_PROPERTY):
                 {
                     ObjInstance* instance = AS_INSTANCE(peek(0));
-					uint8_t slot = READ_BYTE();
+					uint16_t slot = READ_UINT16();
 
                     pop(); // Instance.
                     push(instance->fields[slot]);
@@ -277,7 +277,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_SET_PROPERTY):
                 {
 					ObjInstance* instance = AS_INSTANCE(peek(1));
-                    uint8_t slot = READ_BYTE();
+                    uint16_t slot = READ_UINT16();
                     instance->fields[slot] = peek(0);
 
                     Value value = pop();
@@ -289,21 +289,21 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_JUMP):
                 {
-					uint16_t offset = READ_INT16();
+					uint16_t offset = READ_UINT16();
                     frame->ip += offset;
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_JUMP_IF_FALSE):
                 {
-					uint16_t offset = READ_INT16();
+					uint16_t offset = READ_UINT16();
                     if (isFalsey(peek(0))) frame->ip += offset;
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_LOOP):
                 {
-					uint16_t offset = READ_INT16();
+					uint16_t offset = READ_UINT16();
                     frame->ip -= offset;
                     break;
                 }
@@ -367,13 +367,13 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_METHOD):
                 {
-                    defineMethod(READ_INT16(), READ_STRING());
+                    defineMethod(READ_UINT16(), READ_STRING());
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_FIELD):
                 {
-                    defineField(READ_INT16(), READ_STRING());
+                    defineField(READ_UINT16(), READ_STRING());
                     break;
                 }
 
@@ -581,7 +581,7 @@ namespace Pomme
 
     void VirtualMachine::printFunction(ObjFunction* function)
     {
-        if (function->name == NULL)
+        if (function->name == nullptr)
         {
             printf("<script>");
             return;
