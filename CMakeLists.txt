@@ -44,7 +44,7 @@ add_library(${APP}
   "src/CompilerVisitor.cpp"
   "src/TypeCheckerVisitor.cpp"
   "src/PommeNode.cpp"
-)
+  "src/CommonVisitorFunction.cpp")
 
 #[[add_custom_target(
   JavaCCTarget

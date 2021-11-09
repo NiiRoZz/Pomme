@@ -5,3 +5,4 @@
 
 #define NAME_FUNC_SEPARATOR "!"
 #define HEADER_FUNC_SEPARATOR ";"
+#define TYPE_FUNC_SEPARATOR "?"

@@ -139,7 +139,7 @@ TEST(TEST_TYPECHECKER, CompleteClass)
 
 TEST(TEST_TYPECHECKER, GlobalFunctionOverloading)
 {
-    TEST_TYPECHECKER_TEST(" void meth(int n){}; void meth(){};\n");
+    TEST_TYPECHECKER_TEST(" int meth(int n){}; int meth(){};\n");
 
     std::cout << text << std::endl;
 
@@ -153,4 +153,45 @@ TEST(TEST_TYPECHECKER, GlobalFunctionOverloading)
         std::cout << error << std::endl;
     }
     // todo store full signature of function instead of just name
+}
+
+TEST(TEST_TYPECHECKER, ParametersRedefinitionWithDifferentType)
+{
+    TEST_TYPECHECKER_TEST(" int meth(int n, bool n){};\n");
+    std::cout << text << std::endl;
+    VirtualMachine vm;
+    TypeChecker typeChecker(vm);
+
+    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    EXPECT_EQ(errors.size(), 1);
+}
+TEST(TEST_TYPECHECKER, FunctionRedefinitionWithDifferentType)
+{
+    TEST_TYPECHECKER_TEST(" int meth(int n){}; void meth(){};\n");
+    std::cout << text << std::endl;
+    VirtualMachine vm;
+    TypeChecker typeChecker(vm);
+
+    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    EXPECT_EQ(errors.size(), 1);
+    for(const auto& error : errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, random)
+{
+    TEST_TYPECHECKER_TEST(" \n");
+
+    std::cout << text << std::endl;
+
+    VirtualMachine vm;
+    TypeChecker typeChecker(vm);
+
+    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(errors.size(), 0);
+    for(const auto& error : errors ){
+        std::cout << error << std::endl;
+    }
 }

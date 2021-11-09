@@ -125,8 +125,6 @@ namespace Pomme
 		void visit(ASTaccessMethode *node, void * data);
 
 	private:
-		std::string getTypeName(Pomme::Node* node);
-		std::string getParametersType(Pomme::Node* node);
 
 		void emitByte(uint8_t byte);
 		void emitBytes(uint8_t byte1, uint8_t byte2);

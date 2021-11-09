@@ -1,4 +1,6 @@
 #include "TypeCheckerVisitor.h"
+#include "CompilerVisitor.h"
+#include "CommonVisitorFunction.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
 #include "VM/Memory.h"
@@ -14,17 +16,24 @@ namespace Pomme
 	{
 	}
 
-    void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName,
-                                               std::set<std::string> parameters)
+    void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent,
+                                               std::unordered_set<std::string> parameters)
     {
         std::cout << "Adding global function " << functionName << " with type " << functionType << std::endl;
         auto access = globalFunctionsMap.find(functionName);
         if(access != globalFunctionsMap.end())
         {
-            errors.push_back("global function "+functionName+" already defined");
+            if(access->second.functionIdent == functionIdent)
+            {
+                errors.push_back("global function "+functionName+" already defined");
+
+            }else if(access->second.returnType != functionType)
+            {
+                errors.push_back("global function "+functionName+" already defined with a different type. Expected "+access->second.returnType +" but got " + functionType);
+            }
         }else
         {
-            FunctionClass function(functionType, functionName, std::move(parameters));
+            FunctionClass function(functionType, functionName, functionIdent, std::move(parameters));
             globalFunctionsMap.insert(std::pair<std::string,FunctionClass>(functionName, function));
         }
     }
@@ -62,48 +71,47 @@ namespace Pomme
     }
 
     void TypeCheckerVisitor::ClassClass::addFunction(const std::string &functionType, const std::string &functionName,
-                                                     std::set<std::string> parameters,
+                                                     std::unordered_set<std::string> parameters,
                                                      TypeCheckerVisitor *typeCheckerVisitor) {
 
         std::cout << "Adding function " << functionName << " with type " << functionType << std::endl;
         auto access = this->functions.find(functionName);
         if(access == this->functions.end())
         {
-            FunctionClass function(functionType, functionName, std::move(parameters));
+            FunctionClass function(functionType, functionName, std::string(), std::move(parameters));
             this->functions.insert(std::pair<std::string, FunctionClass>(functionName, function));
             std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
         }else
         {
             typeCheckerVisitor->errors.push_back(functionName + " already defined");
-            std::cout << "ERROR DETECTED while adding attribute " << functionName << " : attribute already defined" << std::endl;
+            std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
         }
 
     }
 
-    std::set<std::string> TypeCheckerVisitor::buildSignature(ASTheaders *headers) {
-        std::set<std::string> parameters;
+    std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTheaders *headers) {
+        std::unordered_set<std::string> parameters;
         ASTheader* header;
 
-        std::string parameterType;
         std::string parameterName;
+        std::string delimiter = " ";
 
         std::cout << "buildSignature" << std::endl;
         while(headers != nullptr){
             header = dynamic_cast<ASTheader*>(headers->jjtGetChild(0));
-
-            parameterType = dynamic_cast<ASTident*>(header->jjtGetChild(0))->m_Identifier;
             parameterName = dynamic_cast<ASTident*>(header->jjtGetChild(1))->m_Identifier;
 
-            auto it = parameters.insert(parameterType.append(" ").append(parameterName));
-            if(!it.second){
+            auto it = parameters.insert(parameterName);
+            if(!it.second) {
                 errors.push_back(parameterName + " already defined");
-                std::cout << "ERROR DETECTED while adding parameter " << parameterName << " : parameter already defined" << std::endl;
+                std::cout << "ERROR DETECTED while adding parameter " << parameterName << " : parameter already defined"
+                          << std::endl;
             }
             headers = dynamic_cast<ASTheaders*>(headers->jjtGetChild(1));
         }
 
         std::cout << "-------------parameters--------------" <<std::endl;
-        for(auto it : parameters){
+        for(const auto& it : parameters){
             std::cout << it << std::endl;
         }
         return parameters;
@@ -186,6 +194,8 @@ namespace Pomme
                 std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
                 it->second.addAttribute(attributeType,context+"::"+attributeName,this);
+
+                // todo add index
             }else
             {
 
@@ -193,8 +203,7 @@ namespace Pomme
                 errors.push_back("ERRORS DETECTED : class "+ context +" not defined ");
             }
         }else{ // methode
-
-            // todo
+            //todo
         }
     }
     void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
@@ -220,29 +229,34 @@ namespace Pomme
         std::string &context = *static_cast<std::string*>(data);
 
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
-
-        std::cout <<" ? ?? ? ?? ? ?? ? ?? " << std::endl;
         if(headers != nullptr){
 
             std::cout <<" headers != nullptr " << std::endl;
-            std::set<std::string> parameters = buildSignature(headers);
+            std::unordered_set<std::string> parameters = buildSignature(headers);
 
+            std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+            functionIdent = functionIdent + NAME_FUNC_SEPARATOR + signatureParameter;
+
+            std::cout << "fucntion ident = " << functionIdent <<std::endl;
             auto it = classMap.find(context);
             if( it != classMap.end()){
                 std::cout << "it != end() -----------------------------" <<std::endl;
                 std::cout << it->first << " = = = = = " << it->second << std::endl;
                 std::cout << functionIdent << " ? ," << functionType << std::endl;
                 it->second.addFunction(functionType, functionIdent, parameters, this);
-                std::cout << "it != end() 2 2 2 2  2 2 2 22 2 2 -----------------------------" <<std::endl;
+
+                // todo add index
             }
         }else
         {
             std::cout <<" headers ==== nullptr " << std::endl;
-            std::set<std::string> emptyParameters;
+            std::unordered_set<std::string> emptyParameters;
             auto it = classMap.find(context);
             if( it != classMap.end()){
                 it->second.addFunction(functionType, functionIdent, emptyParameters, this);
             }
+
+            // todo add index
         }
 
     }
@@ -328,16 +342,26 @@ namespace Pomme
             functionType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
             auto headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
 
-            std::set<std::string> parameters = buildSignature(headers);
+            std::unordered_set<std::string> parameters = buildSignature(headers);
+            std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+            std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
-            addGlobalFunction(functionType, functionName, parameters);
+            std::cout << "parameters ___________________________" << std::endl;
+            for(const auto& it : parameters){
+                std::cout << it << std::endl;
+            }
+            addGlobalFunction(functionType, functionName, functionIdent, parameters);
+
         }else{
             std::cout << "void " <<std::endl;
 
             auto headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
-            std::set<std::string> parameters = buildSignature(headers);
+            std::unordered_set<std::string> parameters = buildSignature(headers);
+            std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+            functionType = "void";
+            std::string functionIdent = functionName +  NAME_FUNC_SEPARATOR + signatureParameter;
 
-            addGlobalFunction("void", functionName,parameters);
+            addGlobalFunction("void", functionName, functionIdent, parameters);
         }
 
         node->jjtChildrenAccept(this, data);

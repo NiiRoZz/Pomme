@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <set>
+#include <unordered_set>
 
 namespace Pomme
 {
@@ -22,26 +23,31 @@ namespace Pomme
         {
         public:
 
-            FunctionClass(std::string returnType, std::string functionName, std::set<std::string> parameters)
+            FunctionClass(std::string returnType, std::string functionName, std::string functionIdent,
+                          std::unordered_set<std::string> parameters)
             : returnType(std::move(returnType)),
             functionName(std::move(functionName)),
+            functionIdent(std::move(functionIdent)),
             parameters(std::move(parameters))
             {
             }
 
             std::string returnType;
             std::string functionName;
-            std::set<std::string> parameters;
+            std::string functionIdent;
+            std::unordered_set<std::string> parameters;
             std::map<std::string, std::string> variables;
 
             friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass){
-
+                str << klass.functionIdent << std::endl;
                 str << klass.returnType << " " << klass.functionName << "(";
                 for(const auto& it : klass.parameters)
                 {
                     str << it << ",";
                 }
-                str << "\b \b"; // remove last ,
+                if(!klass.parameters.empty()){
+                    str << "\b \b"; // remove last ,
+                }
                 str << ");";
                 return str;
             }
@@ -65,7 +71,8 @@ namespace Pomme
                 return str;
             }
             void addAttribute(const std::string& attributeType, const std::string& attributeName, TypeCheckerVisitor* typeCheckerVisitor);
-            void addFunction(const std::string& functionType, const std::string& functionName, std::set<std::string> parameters, TypeCheckerVisitor* typeCheckerVisitor);
+            void addFunction(const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, TypeCheckerVisitor* typeCheckerVisitor);
+            void addVariable(const std::string& attributeType, const std::string& attributeName, TypeCheckerVisitor* typeCheckerVisitor);
 
         };
 
@@ -78,9 +85,10 @@ namespace Pomme
         bool class_context;
         int path_number = 0;
 
-        void addGlobalFunction(const std::string& functionType, const std::string& functionName, std::set<std::string> parameters);
+        void addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent,
+                               std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
-        std::set<std::string> buildSignature(ASTheaders *headers);
+        std::unordered_set<std::string> buildSignature(ASTheaders *headers);
 
     public:
         // Inherited via TestLexerVisitor

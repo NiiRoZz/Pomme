@@ -1,4 +1,5 @@
 #include "CompilerVisitor.h"
+#include "CommonVisitorFunction.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
 #include "VM/Memory.h"
@@ -558,7 +559,7 @@ namespace Pomme
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
         //2: parameters
-        std::string parametersType = getParametersType(node->jjtGetChild(2));
+        std::string parametersType = CommonVisitorFunction::getParametersType(node->jjtGetChild(2));
 
         std::string nameFunc = name + NAME_FUNC_SEPARATOR + parametersType;
 
@@ -596,7 +597,7 @@ namespace Pomme
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
         //2: parameters
-        std::string parametersType = getParametersType(node->jjtGetChild(2));
+        std::string parametersType = CommonVisitorFunction::getParametersType(node->jjtGetChild(2));
 
         std::string nameFunc = name + NAME_FUNC_SEPARATOR + parametersType;
 
@@ -739,31 +740,6 @@ namespace Pomme
         }
 
         emitBytes(AS_OPCODE(OpCode::OP_CALL), argCount);
-    }
-
-    std::string CompilerVisitor::getTypeName(Pomme::Node* node)
-    {
-        ASTident* identType = dynamic_cast<ASTident*>(node);
-
-        return ((identType != nullptr) ? identType->m_Identifier : "void");
-    }
-
-    std::string CompilerVisitor::getParametersType(Pomme::Node* node)
-    {
-        ASTheaders* currHeaders = dynamic_cast<ASTheaders*>(node);
-        std::string parametersType = "";
-
-        while (currHeaders != nullptr)
-        {
-            ASTheader* currHeader = dynamic_cast<ASTheader*>(currHeaders->jjtGetChild(0));
-            ASTident* identHeader = dynamic_cast<ASTident*>(currHeader->jjtGetChild(0));
-
-            parametersType += identHeader->m_Identifier + HEADER_FUNC_SEPARATOR;
-
-            currHeaders = dynamic_cast<ASTheaders*>(currHeaders->jjtGetChild(1));
-        }
-
-        return parametersType;
     }
 
 	void CompilerVisitor::emitByte(uint8_t byte)
