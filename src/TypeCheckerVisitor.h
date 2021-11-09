@@ -39,7 +39,6 @@ namespace Pomme
             std::map<std::string, std::string> variables;
 
             friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass){
-                str << klass.functionIdent << std::endl;
                 str << klass.returnType << " " << klass.functionName << "(";
                 for(const auto& it : klass.parameters)
                 {
@@ -53,26 +52,49 @@ namespace Pomme
             }
         };
 
+        class VariableClass
+        {
+        public:
+            VariableClass(std::string  variableType, std::string  variableName, bool isConst)
+            : isConst(isConst),
+            variableName(std::move(variableName)),
+            variableType(std::move(variableType))
+            {
+            }
+
+            bool isConst;
+            std::string variableName;
+            std::string variableType;
+
+            friend std::ostream & operator<<(std::ostream & str, const VariableClass & klass){
+                if(klass.isConst){
+                    str << "const ";
+                }
+                str <<  klass.variableType << " "<< klass.variableName << std::endl;
+
+                return str;
+            }
+        };
         class ClassClass
         {
-           std::map<std::string, std::string> attributes;
-           std::map<std::string, FunctionClass> functions;
-
             public:
+            std::map<std::string, VariableClass> attributes;
+            std::map<std::string, FunctionClass> functions;
+
             friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass){
                 for(const auto& it : klass.attributes)
                 {
-                    str << "\t" << it.first << " " << it.second << std::endl;
+                    str << "\t" << it.second << std::endl;
                 }
                 for(const auto& it : klass.functions)
                 {
-                    str << "\t" << it.first << " " << it.second << std::endl;
+                    str << "\t" << it.second << std::endl;
                 }
                 return str;
             }
-            void addAttribute(const std::string& attributeType, const std::string& attributeName, TypeCheckerVisitor* typeCheckerVisitor);
+            void addAttribute(const std::string &attributeType, const std::string &attributeName, bool isConst,
+                              TypeCheckerVisitor *typeCheckerVisitor);
             void addFunction(const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, TypeCheckerVisitor* typeCheckerVisitor);
-            void addVariable(const std::string& attributeType, const std::string& attributeName, TypeCheckerVisitor* typeCheckerVisitor);
 
         };
 
@@ -82,13 +104,34 @@ namespace Pomme
         std::map<std::string, ClassClass> classMap;
         std::vector<std::string> errors;
 
-        bool class_context;
+        bool class_context{};
         int path_number = 0;
 
-        void addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent,
+        void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
         std::unordered_set<std::string> buildSignature(ASTheaders *headers);
+        void VisiteVariable(Node * node, void* data, bool isConst);
+
+        friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass){
+            str << "------------------------" << std::endl;
+            str << "----------END----------" << std::endl;
+            str << "------------------------" << std::endl;
+
+            str << "--------GLOBAL-----------" << std::endl;
+            for(const auto& it : klass.globalFunctionsMap){
+                str << "global function "<< it.second << std::endl;
+            }
+
+            str << "--------CLASS-----------" << std::endl;
+            str << "classMap :" << std::endl;
+            for(const auto& it : klass.classMap){
+                str << "class " << it.first << "{ \n"
+                          << it.second << " };\n "<< std::endl;
+            }
+
+            return str;
+        }
 
     public:
         // Inherited via TestLexerVisitor

@@ -10,11 +10,47 @@
 
 namespace Pomme
 {
-    // todo header function
 
     TypeCheckerVisitor::TypeCheckerVisitor()
 	{
 	}
+
+    void TypeCheckerVisitor::VisiteVariable(Node * node, void* data, bool isConst){
+        std::string &context = *static_cast<std::string*>(data);
+
+        for (const auto& it : classMap) {
+            std::cout << it.first << std::endl;
+        }
+
+        if(class_context){
+            auto it = classMap.find(context);
+            if( it != classMap.end()){
+
+                std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+                it->second.addAttribute(attributeType, context + "::" + attributeName, isConst, this);
+
+                // todo add index
+
+                auto* constant = dynamic_cast<ASTpommeConstant*>(node);
+                if(constant != nullptr){
+                    constant->index = it->second.attributes.size() - 1;
+                    std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << constant->index << std::endl;
+                }else{
+                    auto* variable = dynamic_cast<ASTpommeVariable*>(node);
+                    variable->index = it->second.attributes.size() -1;
+                    std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << variable->index << std::endl;
+                }
+            }else
+            {
+                std::cout << "ERRORS DETECTED : class " << context << " not defined " << std::endl;
+                errors.push_back("ERRORS DETECTED : class "+ context +" not defined ");
+            }
+        }else{ // methode
+            //todo
+        }
+    }
 
     void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent,
                                                std::unordered_set<std::string> parameters)
@@ -55,13 +91,17 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::ClassClass::addAttribute(const std::string& attributeType, const std::string& attributeName, TypeCheckerVisitor* typeCheckerVisitor)
+    void
+    TypeCheckerVisitor::ClassClass::addAttribute(const std::string &attributeType, const std::string &attributeName,
+                                                 bool isConst,
+                                                 TypeCheckerVisitor *typeCheckerVisitor)
     {
         std::cout << "Adding attribute " << attributeName <<  " with type " << attributeType << std::endl;
         auto access = this->attributes.find(attributeName);
         if(access == this->attributes.end())
         {
-            this->attributes.insert(std::pair<std::string, std::string>(attributeName, attributeType));
+            VariableClass variable(attributeType,attributeName,isConst);
+            this->attributes.insert(std::pair<std::string, VariableClass>(attributeName, variable));
             std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
         }else
         {
@@ -180,31 +220,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
-        std::string &context = *static_cast<std::string*>(data);
-
-        for (const auto& it : classMap) {
-            std::cout << it.first << std::endl;
-        }
-
-        if(class_context){
-            auto it = classMap.find(context);
-            if( it != classMap.end()){
-
-                std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-                std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
-
-                it->second.addAttribute(attributeType,context+"::"+attributeName,this);
-
-                // todo add index
-            }else
-            {
-
-                std::cout << "ERRORS DETECTED : class " << context << " not defined " <<std::endl;
-                errors.push_back("ERRORS DETECTED : class "+ context +" not defined ");
-            }
-        }else{ // methode
-            //todo
-        }
+        VisiteVariable(node, data, false);
     }
     void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
     {
@@ -224,8 +240,8 @@ namespace Pomme
             functionType = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
         }
 
-        std::string &functionIdent = dynamic_cast<ASTident*>(node->jjtGetChild(2))->m_Identifier;
-
+        std::string &functionName = dynamic_cast<ASTident*>(node->jjtGetChild(2))->m_Identifier;
+        std::string functionIdent;
         std::string &context = *static_cast<std::string*>(data);
 
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
@@ -235,17 +251,15 @@ namespace Pomme
             std::unordered_set<std::string> parameters = buildSignature(headers);
 
             std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
-            functionIdent = functionIdent + NAME_FUNC_SEPARATOR + signatureParameter;
+            functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
-            std::cout << "fucntion ident = " << functionIdent <<std::endl;
             auto it = classMap.find(context);
             if( it != classMap.end()){
                 std::cout << "it != end() -----------------------------" <<std::endl;
-                std::cout << it->first << " = = = = = " << it->second << std::endl;
-                std::cout << functionIdent << " ? ," << functionType << std::endl;
-                it->second.addFunction(functionType, functionIdent, parameters, this);
+                it->second.addFunction(functionType, functionName, parameters, this);
 
-                // todo add index
+                node->index = it->second.functions.size() - 1;
+                std::cout << "INDEX FOR FUNCTION" << functionName << " = " << node->index << std::endl;
             }
         }else
         {
@@ -253,10 +267,10 @@ namespace Pomme
             std::unordered_set<std::string> emptyParameters;
             auto it = classMap.find(context);
             if( it != classMap.end()){
-                it->second.addFunction(functionType, functionIdent, emptyParameters, this);
+                it->second.addFunction(functionType, functionName, emptyParameters, this);
+                node->index = it->second.functions.size() - 1;
+                std::cout << "INDEX FOR FUNCTION" << functionIdent << " = " << node->index << std::endl;
             }
-
-            // todo add index
         }
 
     }
@@ -353,12 +367,11 @@ namespace Pomme
             addGlobalFunction(functionType, functionName, functionIdent, parameters);
 
         }else{
-            std::cout << "void " <<std::endl;
+            std::cout << "void " << std::endl;
 
             auto headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
             std::unordered_set<std::string> parameters = buildSignature(headers);
             std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
-            functionType = "void";
             std::string functionIdent = functionName +  NAME_FUNC_SEPARATOR + signatureParameter;
 
             addGlobalFunction("void", functionName, functionIdent, parameters);
@@ -480,7 +493,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
     {
-
+        VisiteVariable(node, data, true);
     }
     void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {

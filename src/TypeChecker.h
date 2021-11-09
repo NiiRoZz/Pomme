@@ -10,11 +10,8 @@ namespace Pomme
 	class TypeChecker
 	{
 	public:
-        TypeChecker(VirtualMachine& vm);
+        TypeChecker();
 
         std::vector<std::string> typeCheck(SimpleNode* tree);
-
-	private:
-		VirtualMachine& m_Vm;
 	};
 }

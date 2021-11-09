@@ -2,7 +2,6 @@
 
 #include "PommeLexer.h"
 #include "TypeChecker.h"
-#include "VM/VirtualMachine.h"
 #include "PommeLexerTokenManager.h"
 #include "MyErrorHandler.h"
 
@@ -32,8 +31,19 @@ TEST(TEST_TYPECHECKER, ClassComplete)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
+    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, FileComplete)
+{
+    TEST_TYPECHECKER_TEST("void meth(){};  void xd(int j){}; class test { int a = 8;  boolean b = 8; void meth(int abc){ int b = 7; }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(errors.size(), 0);
@@ -45,8 +55,7 @@ TEST(TEST_TYPECHECKER, Class)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(errors.size(), 0);
@@ -58,8 +67,7 @@ TEST(TEST_TYPECHECKER, ClassAttributeRedefinition)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(errors.size(), 1);
@@ -71,8 +79,7 @@ TEST(TEST_TYPECHECKER, ClassRedefinition)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(errors.size(), 1);
@@ -84,8 +91,7 @@ TEST(TEST_TYPECHECKER, GlobalFunction)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
@@ -98,8 +104,7 @@ TEST(TEST_TYPECHECKER, ClassMethodRedefinition)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
@@ -112,8 +117,7 @@ TEST(TEST_TYPECHECKER, GlobalFunctionRedefinition)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
@@ -126,8 +130,7 @@ TEST(TEST_TYPECHECKER, CompleteClass)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
@@ -143,8 +146,7 @@ TEST(TEST_TYPECHECKER, GlobalFunctionOverloading)
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
@@ -159,8 +161,7 @@ TEST(TEST_TYPECHECKER, ParametersRedefinitionWithDifferentType)
 {
     TEST_TYPECHECKER_TEST(" int meth(int n, bool n){};\n");
     std::cout << text << std::endl;
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
     EXPECT_EQ(errors.size(), 1);
@@ -169,8 +170,7 @@ TEST(TEST_TYPECHECKER, FunctionRedefinitionWithDifferentType)
 {
     TEST_TYPECHECKER_TEST(" int meth(int n){}; void meth(){};\n");
     std::cout << text << std::endl;
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
     EXPECT_EQ(errors.size(), 1);
@@ -178,15 +178,26 @@ TEST(TEST_TYPECHECKER, FunctionRedefinitionWithDifferentType)
         std::cout << error << std::endl;
     }
 }
-
-TEST(TEST_TYPECHECKER, random)
+TEST(TEST_TYPECHECKER, TestIndex)
 {
-    TEST_TYPECHECKER_TEST(" \n");
+    TEST_TYPECHECKER_TEST("class Test{ int a = 8; int j = 7; int meth(int n){}; int j(){}; };\n");
+    std::cout << text << std::endl;
+    TypeChecker typeChecker;
+
+    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    EXPECT_EQ(errors.size(), 0);
+    for(const auto& error : errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, Constant)
+{
+    TEST_TYPECHECKER_TEST("class test { const int k = 10;  const int v = 8;}; \n");
 
     std::cout << text << std::endl;
 
-    VirtualMachine vm;
-    TypeChecker typeChecker(vm);
+    TypeChecker typeChecker;
 
     std::vector<std::string> errors = typeChecker.typeCheck(tree);
 
