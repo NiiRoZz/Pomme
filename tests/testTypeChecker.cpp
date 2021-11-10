@@ -32,9 +32,9 @@ TEST(TEST_TYPECHECKER, ClassComplete)
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
+    EXPECT_EQ(visitor.errors.size(), 0);
 }
 
 TEST(TEST_TYPECHECKER, FileComplete)
@@ -44,9 +44,9 @@ TEST(TEST_TYPECHECKER, FileComplete)
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
+    EXPECT_EQ(visitor.errors.size(), 0);
 }
 
 TEST(TEST_TYPECHECKER, Class)
@@ -56,9 +56,9 @@ TEST(TEST_TYPECHECKER, Class)
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
+    EXPECT_EQ(visitor.errors.size(), 0);
 }
 
 TEST(TEST_TYPECHECKER, ClassAttributeRedefinition)
@@ -68,9 +68,9 @@ TEST(TEST_TYPECHECKER, ClassAttributeRedefinition)
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, ClassRedefinition)
@@ -80,9 +80,9 @@ TEST(TEST_TYPECHECKER, ClassRedefinition)
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, GlobalFunction)
@@ -93,9 +93,9 @@ TEST(TEST_TYPECHECKER, GlobalFunction)
 
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
+    EXPECT_EQ(visitor.errors.size(), 0);
 }
 
 TEST(TEST_TYPECHECKER, ClassMethodRedefinition)
@@ -106,9 +106,9 @@ TEST(TEST_TYPECHECKER, ClassMethodRedefinition)
 
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, GlobalFunctionRedefinition)
@@ -119,9 +119,9 @@ TEST(TEST_TYPECHECKER, GlobalFunctionRedefinition)
 
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, CompleteClass)
@@ -132,10 +132,10 @@ TEST(TEST_TYPECHECKER, CompleteClass)
 
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
-    for(const auto& error : errors ){
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
 }
@@ -148,10 +148,10 @@ TEST(TEST_TYPECHECKER, GlobalFunctionOverloading)
 
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
-    for(const auto& error : errors ){
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
     // todo store full signature of function instead of just name
@@ -163,8 +163,8 @@ TEST(TEST_TYPECHECKER, ParametersRedefinitionWithDifferentType)
     std::cout << text << std::endl;
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
-    EXPECT_EQ(errors.size(), 1);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 TEST(TEST_TYPECHECKER, FunctionRedefinitionWithDifferentType)
 {
@@ -172,9 +172,9 @@ TEST(TEST_TYPECHECKER, FunctionRedefinitionWithDifferentType)
     std::cout << text << std::endl;
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
-    EXPECT_EQ(errors.size(), 1);
-    for(const auto& error : errors ){
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
 }
@@ -184,9 +184,9 @@ TEST(TEST_TYPECHECKER, TestIndex)
     std::cout << text << std::endl;
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
-    EXPECT_EQ(errors.size(), 0);
-    for(const auto& error : errors ){
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
 }
@@ -199,10 +199,70 @@ TEST(TEST_TYPECHECKER, Constant)
 
     TypeChecker typeChecker;
 
-    std::vector<std::string> errors = typeChecker.typeCheck(tree);
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(errors.size(), 0);
-    for(const auto& error : errors ){
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
 }
+
+TEST(TEST_TYPECHECKER, StaticMethod)
+{
+    TEST_TYPECHECKER_TEST("class test { static int test(){}; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("static"));
+}
+
+TEST(TEST_TYPECHECKER, VisibilityMethod)
+{
+    TEST_TYPECHECKER_TEST("class test { public int testPublic(){}; private int testPrivate(){}; protected int testProtected(){}; int testPrivate2(){}; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPublic")->second.keywords.count("public"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPrivate")->second.keywords.count("private"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPrivate2")->second.keywords.count("private"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testProtected")->second.keywords.count("protected"));
+
+}
+TEST(TEST_TYPECHECKER, OverrideMethod)
+{
+    TEST_TYPECHECKER_TEST("class test { override int test(){}; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("override"));
+}
+TEST(TEST_TYPECHECKER, StaticVisibilityMethod)
+{
+    TEST_TYPECHECKER_TEST("class test { static public int test(){}; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("static"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("public"));
+}
+

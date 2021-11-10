@@ -11,15 +11,14 @@ namespace Pomme
 	{
 	}
 
-	std::vector<std::string> TypeChecker::typeCheck(SimpleNode* tree)
+    TypeCheckerVisitor TypeChecker::typeCheck(SimpleNode* tree)
 	{
 		TypeCheckerVisitor visitor;
 		tree->jjtAccept(&visitor, nullptr); // 1st pathing -> check double definition
         // tree->jjtAccept(&visitor, nullptr); // todo 2nd pathing -> type resolving
 
-
         std::cout << visitor << std::endl;
 
-        return visitor.errors;
+        return visitor;
 	}
 }

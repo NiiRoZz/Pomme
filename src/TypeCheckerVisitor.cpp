@@ -15,39 +15,44 @@ namespace Pomme
 	{
 	}
 
-    void TypeCheckerVisitor::VisiteVariable(Node * node, void* data, bool isConst){
+    void TypeCheckerVisitor::VisiteVariable(Node * node, void* data, bool isConst)
+    {
         std::string &context = *static_cast<std::string*>(data);
 
-        for (const auto& it : classMap) {
+        for (const auto& it : classMap)
+        {
             std::cout << it.first << std::endl;
         }
 
-        if(class_context){
+        if(class_context)
+        {
             auto it = classMap.find(context);
-            if( it != classMap.end()){
+            if( it != classMap.end())
+            {
 
                 std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
                 std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
                 it->second.addAttribute(attributeType, context + "::" + attributeName, isConst, this);
 
-                // todo add index
-
                 auto* constant = dynamic_cast<ASTpommeConstant*>(node);
-                if(constant != nullptr){
+                if(constant != nullptr)
+                {
                     constant->index = it->second.attributes.size() - 1;
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << constant->index << std::endl;
-                }else{
+                }else
+                {
                     auto* variable = dynamic_cast<ASTpommeVariable*>(node);
                     variable->index = it->second.attributes.size() -1;
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << variable->index << std::endl;
                 }
-            }else
+            }else // todo check coverage to remove this branche
             {
                 std::cout << "ERRORS DETECTED : class " << context << " not defined " << std::endl;
                 errors.push_back("ERRORS DETECTED : class "+ context +" not defined ");
             }
-        }else{ // methode
+        }else
+        { // methode variable
             //todo
         }
     }
@@ -69,12 +74,14 @@ namespace Pomme
             }
         }else
         {
-            FunctionClass function(functionType, functionName, functionIdent, std::move(parameters));
+            FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
+                                   std::unordered_set<std::string>());
             globalFunctionsMap.insert(std::pair<std::string,FunctionClass>(functionName, function));
         }
     }
 
-    void TypeCheckerVisitor::addClass(const std::string& className){
+    void TypeCheckerVisitor::addClass(const std::string& className)
+    {
 
         std::cout << "Adding class " << className << std::endl;
 
@@ -92,7 +99,7 @@ namespace Pomme
     }
 
     void
-    TypeCheckerVisitor::ClassClass::addAttribute(const std::string &attributeType, const std::string &attributeName,
+    TypeCheckerVisitor::ClassClass::addAttribute(std::string &attributeType, std::string attributeName,
                                                  bool isConst,
                                                  TypeCheckerVisitor *typeCheckerVisitor)
     {
@@ -110,15 +117,16 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::ClassClass::addFunction(const std::string &functionType, const std::string &functionName,
-                                                     std::unordered_set<std::string> parameters,
+    void TypeCheckerVisitor::ClassClass::addFunction(std::string &functionType, std::string &functionName,
+                                                     std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords,
                                                      TypeCheckerVisitor *typeCheckerVisitor) {
 
         std::cout << "Adding function " << functionName << " with type " << functionType << std::endl;
         auto access = this->functions.find(functionName);
         if(access == this->functions.end())
         {
-            FunctionClass function(functionType, functionName, std::string(), std::move(parameters));
+            FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
+                                   std::move(keywords));
             this->functions.insert(std::pair<std::string, FunctionClass>(functionName, function));
             std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
         }else
@@ -137,12 +145,14 @@ namespace Pomme
         std::string delimiter = " ";
 
         std::cout << "buildSignature" << std::endl;
-        while(headers != nullptr){
+        while(headers != nullptr)
+        {
             header = dynamic_cast<ASTheader*>(headers->jjtGetChild(0));
             parameterName = dynamic_cast<ASTident*>(header->jjtGetChild(1))->m_Identifier;
 
             auto it = parameters.insert(parameterName);
-            if(!it.second) {
+            if(!it.second)
+            {
                 errors.push_back(parameterName + " already defined");
                 std::cout << "ERROR DETECTED while adding parameter " << parameterName << " : parameter already defined"
                           << std::endl;
@@ -151,10 +161,44 @@ namespace Pomme
         }
 
         std::cout << "-------------parameters--------------" <<std::endl;
-        for(const auto& it : parameters){
+        for(const auto& it : parameters)
+        {
             std::cout << it << std::endl;
         }
         return parameters;
+    }
+
+    std::unordered_set<std::string> TypeCheckerVisitor::buildKeyword(ASTidentFuncs *node)
+    {
+
+        std::unordered_set<std::string> keywords;
+
+        auto* nodeStatic = dynamic_cast<ASTpommeStatic*>(node->jjtGetChild(0));
+        if(nodeStatic != nullptr)
+        {
+            keywords.insert("static");
+        }
+
+        node->jjtChildAccept(1, this, &keywords); // public protected or private
+        if(!keywords.count("protected") && !keywords.count("public") && !keywords.count("private"))
+        {
+            keywords.insert("private");
+        }
+
+        auto* nodeOverride = dynamic_cast<ASTpommeOverride*>(node->jjtGetChild(2));
+        if(nodeOverride != nullptr)
+        {
+            keywords.insert("override");
+        }
+
+        std::cout << "keyword :::::: " << std::endl;
+        for(const auto& keyword : keywords )
+        {
+            std::cout << keyword << " ";
+        }
+        std::cout << std::endl;
+
+        return keywords;
     }
 
     void TypeCheckerVisitor::visit(SimpleNode *node, void * data)
@@ -208,11 +252,11 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
-
+        //todo check extended class existence
     }
     void TypeCheckerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
-
+        //todo check modded class existence
     }
     void TypeCheckerVisitor::visit(ASTdecls *node, void * data)
     {
@@ -228,15 +272,15 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeMethode *node, void * data)
     {
-        // node->indexMethode; //todo
-
-        // std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier; // todo static etc
+        std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
         auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(1));
         std::string functionType;
 
-        if(type == nullptr){
+        if(type == nullptr)
+        {
             functionType = "void";
-        }else{
+        }else
+        {
             functionType = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
         }
 
@@ -245,7 +289,8 @@ namespace Pomme
         std::string &context = *static_cast<std::string*>(data);
 
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
-        if(headers != nullptr){
+        if(headers != nullptr)
+        {
 
             std::cout <<" headers != nullptr " << std::endl;
             std::unordered_set<std::string> parameters = buildSignature(headers);
@@ -254,9 +299,10 @@ namespace Pomme
             functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
             auto it = classMap.find(context);
-            if( it != classMap.end()){
+            if( it != classMap.end())
+            {
                 std::cout << "it != end() -----------------------------" <<std::endl;
-                it->second.addFunction(functionType, functionName, parameters, this);
+                it->second.addFunction(functionType, functionName, parameters, keywords, this);
 
                 node->index = it->second.functions.size() - 1;
                 std::cout << "INDEX FOR FUNCTION" << functionName << " = " << node->index << std::endl;
@@ -266,8 +312,9 @@ namespace Pomme
             std::cout <<" headers ==== nullptr " << std::endl;
             std::unordered_set<std::string> emptyParameters;
             auto it = classMap.find(context);
-            if( it != classMap.end()){
-                it->second.addFunction(functionType, functionName, emptyParameters, this);
+            if( it != classMap.end())
+            {
+                it->second.addFunction(functionType, functionName, emptyParameters, keywords, this);
                 node->index = it->second.functions.size() - 1;
                 std::cout << "INDEX FOR FUNCTION" << functionIdent << " = " << node->index << std::endl;
             }
@@ -280,11 +327,11 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTidentFuncs *node, void * data)
     {
-
+        // delete
     }
     void TypeCheckerVisitor::visit(ASTpommeStatic *node, void * data)
     {
-
+        // delete
     }
     void TypeCheckerVisitor::visit(ASTsnil *node, void * data)
     {
@@ -292,15 +339,15 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommePublic *node, void * data)
     {
-
+        static_cast<std::unordered_set<std::string>*>(data)->insert("public");
     }
     void TypeCheckerVisitor::visit(ASTpommePrivate *node, void * data)
     {
-
+        static_cast<std::unordered_set<std::string>*>(data)->insert("private");
     }
     void TypeCheckerVisitor::visit(ASTpommeProtected *node, void * data)
     {
-
+        static_cast<std::unordered_set<std::string>*>(data)->insert("protected");
     }
     void TypeCheckerVisitor::visit(ASTvinil *node, void * data)
     {
@@ -308,7 +355,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeOverride *node, void * data)
     {
-
+        // delete
     }
     void TypeCheckerVisitor::visit(ASTonil *node, void * data)
     {
@@ -344,13 +391,13 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
     {
-
         std::cout << "before " <<std::endl;
         std::string functionType;
         std::string functionName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
         auto* identNode = dynamic_cast<ASTvoidType *>(node->jjtGetChild(0));
-        if(identNode == nullptr){
+        if(identNode == nullptr)
+        {
 
             std::cout << "not void " <<std::endl;
             functionType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
@@ -361,12 +408,14 @@ namespace Pomme
             std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
             std::cout << "parameters ___________________________" << std::endl;
-            for(const auto& it : parameters){
+            for(const auto& it : parameters)
+            {
                 std::cout << it << std::endl;
             }
             addGlobalFunction(functionType, functionName, functionIdent, parameters);
 
-        }else{
+        }else
+        {
             std::cout << "void " << std::endl;
 
             auto headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));

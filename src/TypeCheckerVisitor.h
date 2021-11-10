@@ -23,12 +23,13 @@ namespace Pomme
         {
         public:
 
-            FunctionClass(std::string returnType, std::string functionName, std::string functionIdent,
-                          std::unordered_set<std::string> parameters)
+            FunctionClass(std::string  returnType, std::string  functionName,std::string  functionIdent,
+                          std::unordered_set<std::string>  parameters, std::unordered_set<std::string>  keywords)
             : returnType(std::move(returnType)),
             functionName(std::move(functionName)),
             functionIdent(std::move(functionIdent)),
-            parameters(std::move(parameters))
+            parameters(std::move(parameters)),
+            keywords(std::move(keywords))
             {
             }
 
@@ -36,15 +37,18 @@ namespace Pomme
             std::string functionName;
             std::string functionIdent;
             std::unordered_set<std::string> parameters;
+            std::unordered_set<std::string> keywords;
             std::map<std::string, std::string> variables;
 
-            friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass){
+            friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass)
+            {
                 str << klass.returnType << " " << klass.functionName << "(";
                 for(const auto& it : klass.parameters)
                 {
                     str << it << ",";
                 }
-                if(!klass.parameters.empty()){
+                if(!klass.parameters.empty())
+                {
                     str << "\b \b"; // remove last ,
                 }
                 str << ");";
@@ -66,8 +70,10 @@ namespace Pomme
             std::string variableName;
             std::string variableType;
 
-            friend std::ostream & operator<<(std::ostream & str, const VariableClass & klass){
-                if(klass.isConst){
+            friend std::ostream & operator<<(std::ostream & str, const VariableClass & klass)
+            {
+                if(klass.isConst)
+                {
                     str << "const ";
                 }
                 str <<  klass.variableType << " "<< klass.variableName << std::endl;
@@ -81,20 +87,26 @@ namespace Pomme
             std::map<std::string, VariableClass> attributes;
             std::map<std::string, FunctionClass> functions;
 
-            friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass){
+            friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass)
+            {
                 for(const auto& it : klass.attributes)
                 {
                     str << "\t" << it.second << std::endl;
                 }
                 for(const auto& it : klass.functions)
                 {
-                    str << "\t" << it.second << std::endl;
+                    str << "\t";
+                    for(const auto& keyword : it.second.keywords)
+                    {
+                        str << keyword << " ";
+                    }
+                    str << it.second << std::endl;
                 }
                 return str;
             }
-            void addAttribute(const std::string &attributeType, const std::string &attributeName, bool isConst,
+            void addAttribute(std::string &attributeType, std::string attributeName, bool isConst,
                               TypeCheckerVisitor *typeCheckerVisitor);
-            void addFunction(const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, TypeCheckerVisitor* typeCheckerVisitor);
+            void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, TypeCheckerVisitor* typeCheckerVisitor);
 
         };
 
@@ -107,25 +119,29 @@ namespace Pomme
         bool class_context{};
         int path_number = 0;
 
+        void VisiteVariable(Node * node, void* data, bool isConst);
         void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
         std::unordered_set<std::string> buildSignature(ASTheaders *headers);
-        void VisiteVariable(Node * node, void* data, bool isConst);
+        std::unordered_set<std::string> buildKeyword(ASTidentFuncs *node);
 
-        friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass){
+        friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass)
+        {
             str << "------------------------" << std::endl;
             str << "----------END----------" << std::endl;
             str << "------------------------" << std::endl;
 
             str << "--------GLOBAL-----------" << std::endl;
-            for(const auto& it : klass.globalFunctionsMap){
+            for(const auto& it : klass.globalFunctionsMap)
+            {
                 str << "global function "<< it.second << std::endl;
             }
 
             str << "--------CLASS-----------" << std::endl;
             str << "classMap :" << std::endl;
-            for(const auto& it : klass.classMap){
+            for(const auto& it : klass.classMap)
+            {
                 str << "class " << it.first << "{ \n"
                           << it.second << " };\n "<< std::endl;
             }

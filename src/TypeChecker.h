@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VM/Object.h"
+#include "TypeCheckerVisitor.h"
 
 namespace Pomme
 {
@@ -11,7 +12,6 @@ namespace Pomme
 	{
 	public:
         TypeChecker();
-
-        std::vector<std::string> typeCheck(SimpleNode* tree);
+        TypeCheckerVisitor typeCheck(SimpleNode* tree);
 	};
 }

@@ -40,4 +40,5 @@
 build/
 out/
 cmake-build-debug/
+cmake-build-debug-coverage/
 .vscode/
