@@ -86,6 +86,26 @@ namespace Pomme
             public:
             std::map<std::string, VariableClass> attributes;
             std::map<std::string, FunctionClass> functions;
+            std::unordered_set<std::string> keywords;
+            std::unordered_set<std::string> children;
+            std::string parent;
+
+            void addAttribute(std::string &attributeType, std::string attributeName, bool isConst,
+                              TypeCheckerVisitor *typeCheckerVisitor);
+            void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, TypeCheckerVisitor* typeCheckerVisitor);
+
+            ClassClass& operator=(const ClassClass& other)
+            {
+                std::cout << " = operator ClassClass "<< std::endl;
+                if (this != &other)
+                {
+                    this->attributes = other.attributes;
+                    this->functions = other.functions;
+                    this->keywords = other.keywords;
+                    this->children = other.children;
+                }
+                return *this;
+            }
 
             friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass)
             {
@@ -104,10 +124,6 @@ namespace Pomme
                 }
                 return str;
             }
-            void addAttribute(std::string &attributeType, std::string attributeName, bool isConst,
-                              TypeCheckerVisitor *typeCheckerVisitor);
-            void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, TypeCheckerVisitor* typeCheckerVisitor);
-
         };
 
 	public:
@@ -117,9 +133,10 @@ namespace Pomme
         std::vector<std::string> errors;
 
         bool class_context{};
-        int path_number = 0;
+        bool child_context{};
+        int path_number = 1;
 
-        void VisiteVariable(Node * node, void* data, bool isConst);
+        void visiteVariable(Node * node, void* data, bool isConst);
         void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);

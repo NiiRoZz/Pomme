@@ -15,7 +15,7 @@ namespace Pomme
 	{
 	}
 
-    void TypeCheckerVisitor::VisiteVariable(Node * node, void* data, bool isConst)
+    void TypeCheckerVisitor::visiteVariable(Node * node, void* data, bool isConst)
     {
         std::string &context = *static_cast<std::string*>(data);
 
@@ -24,7 +24,31 @@ namespace Pomme
             std::cout << it.first << std::endl;
         }
 
-        if(class_context)
+        if(child_context)
+        {
+            auto child = classMap.find(context);
+            auto parent = classMap.find(child->second.parent);
+
+            if( parent != classMap.end())
+            {
+                std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+                auto variable = parent->second.attributes.find(child->second.parent + "::" +attributeName);
+                if(variable != parent->second.attributes.end())
+                {
+                    if(variable->second.variableType != attributeType)
+                    {
+                        errors.push_back("variable " + attributeName
+                        + " is already defined in parent class with a different type. Expected type "
+                        + variable->second.variableType + " but got "+ attributeType );
+                    }
+                }else
+                {
+                    child->second.addAttribute(attributeType, context + "::" + attributeName, isConst, this);
+                }
+            }
+        }else if(class_context)
         {
             auto it = classMap.find(context);
             if( it != classMap.end())
@@ -66,11 +90,11 @@ namespace Pomme
         {
             if(access->second.functionIdent == functionIdent)
             {
-                errors.push_back("global function "+functionName+" already defined");
+                errors.push_back("Global function "+functionName+" already defined");
 
             }else if(access->second.returnType != functionType)
             {
-                errors.push_back("global function "+functionName+" already defined with a different type. Expected "+access->second.returnType +" but got " + functionType);
+                errors.push_back("Global function "+functionName+" already defined with a different type. Expected "+access->second.returnType +" but got " + functionType);
             }
         }else
         {
@@ -88,8 +112,8 @@ namespace Pomme
         auto access = classMap.find(className);
         if(access != classMap.end())
         {
-            errors.push_back("ERROR DETECTED while adding class "+ className +" : Class already defined");
-            std::cout << "ERROR DETECTED while adding class " << className << " : Class already defined" <<  std::endl;
+            errors.push_back("Adding class "+ className +" : Class already defined");
+            std::cout << "Adding class " << className << " : Class already defined" <<  std::endl;
         }else
         {
             ClassClass classClass;
@@ -98,10 +122,8 @@ namespace Pomme
         }
     }
 
-    void
-    TypeCheckerVisitor::ClassClass::addAttribute(std::string &attributeType, std::string attributeName,
-                                                 bool isConst,
-                                                 TypeCheckerVisitor *typeCheckerVisitor)
+    void TypeCheckerVisitor::ClassClass::addAttribute(std::string &attributeType, std::string attributeName,
+                                                 bool isConst, TypeCheckerVisitor *typeCheckerVisitor)
     {
         std::cout << "Adding attribute " << attributeName <<  " with type " << attributeType << std::endl;
         auto access = this->attributes.find(attributeName);
@@ -119,8 +141,8 @@ namespace Pomme
 
     void TypeCheckerVisitor::ClassClass::addFunction(std::string &functionType, std::string &functionName,
                                                      std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords,
-                                                     TypeCheckerVisitor *typeCheckerVisitor) {
-
+                                                     TypeCheckerVisitor *typeCheckerVisitor)
+    {
         std::cout << "Adding function " << functionName << " with type " << functionType << std::endl;
         auto access = this->functions.find(functionName);
         if(access == this->functions.end())
@@ -128,7 +150,7 @@ namespace Pomme
             FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
                                    std::move(keywords));
             this->functions.insert(std::pair<std::string, FunctionClass>(functionName, function));
-            std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
+                std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
         }else
         {
             typeCheckerVisitor->errors.push_back(functionName + " already defined");
@@ -250,9 +272,42 @@ namespace Pomme
         node->jjtChildrenAccept(this, data);
         class_context = false;
     }
+
     void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
-        //todo check extended class existence
+        /*if(path_number != 2){ // todo
+            return;
+        }*/
+        std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        data = &context;
+
+        ClassClass classClass;
+        classClass = classMap.find(extendedClass)->second;
+        classClass.parent = extendedClass;
+
+        if(classMap.count(context)){
+            errors.push_back("ERROR DETECTED while adding class "+ context +" : Class already defined");
+            std::cout << "ERROR DETECTED while adding class " << context << " : Class already defined" <<  std::endl;
+        }
+
+        classMap.insert(std::pair<std::string,ClassClass>(context, classClass));
+
+        auto it = classMap.find(extendedClass);
+        if(it != classMap.end()){
+            classMap.find(context)->second.keywords.insert("extends");
+        }
+        if(it == classMap.end())
+        {
+            errors.push_back(context + " is extending a non existing class " + extendedClass);
+        }
+        classMap.find(context) = it;
+
+        class_context = true;
+        child_context = true;
+        node->jjtChildrenAccept(this, data);
+        child_context = false;
+        class_context = false;
     }
     void TypeCheckerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
@@ -264,7 +319,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
-        VisiteVariable(node, data, false);
+        visiteVariable(node, data, false);
     }
     void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
     {
@@ -275,50 +330,49 @@ namespace Pomme
         std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
         auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(1));
         std::string functionType;
+        std::string &functionName = dynamic_cast<ASTident*>(node->jjtGetChild(2))->m_Identifier;
+        std::string functionIdent = functionName;
+        std::string &context = *static_cast<std::string*>(data);
+
+        auto it = classMap.find(context);
+        if(it == classMap.end()){
+            errors.push_back("method" + functionName + "not defined in class");
+        }
+
+        // todo child_context
+
+        if(keywords.count("override"))
+        {
+            if(!it->second.keywords.count("extends") && !it->second.keywords.count("modded")){
+                errors.push_back("Overriding method " + functionName + " while your class don't extends/mod any other class");
+            }
+            auto parent = classMap.find(it->second.parent);
+            if(parent != classMap.end()){
+                auto function = parent->second.functions.find(functionName);
+                if(function == parent->second.functions.end()){
+                    errors.push_back("Overriding method " + functionName + " while your parent class don't have this method defined");
+                }
+            }
+        }
 
         if(type == nullptr)
         {
             functionType = "void";
         }else
         {
-            functionType = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+            functionType = dynamic_cast<ASTident *>(node->jjtGetChild(1))->m_Identifier;
         }
-
-        std::string &functionName = dynamic_cast<ASTident*>(node->jjtGetChild(2))->m_Identifier;
-        std::string functionIdent;
-        std::string &context = *static_cast<std::string*>(data);
 
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
-        if(headers != nullptr)
+        std::unordered_set<std::string> parameters = buildSignature(headers);
+        std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+
+        if(!parameters.empty())
         {
-
-            std::cout <<" headers != nullptr " << std::endl;
-            std::unordered_set<std::string> parameters = buildSignature(headers);
-
-            std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
             functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
-
-            auto it = classMap.find(context);
-            if( it != classMap.end())
-            {
-                std::cout << "it != end() -----------------------------" <<std::endl;
-                it->second.addFunction(functionType, functionName, parameters, keywords, this);
-
-                node->index = it->second.functions.size() - 1;
-                std::cout << "INDEX FOR FUNCTION" << functionName << " = " << node->index << std::endl;
-            }
-        }else
-        {
-            std::cout <<" headers ==== nullptr " << std::endl;
-            std::unordered_set<std::string> emptyParameters;
-            auto it = classMap.find(context);
-            if( it != classMap.end())
-            {
-                it->second.addFunction(functionType, functionName, emptyParameters, keywords, this);
-                node->index = it->second.functions.size() - 1;
-                std::cout << "INDEX FOR FUNCTION" << functionIdent << " = " << node->index << std::endl;
-            }
         }
+        it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
+        node->index = it->second.functions.size() - 1;
 
     }
     void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -542,7 +596,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
     {
-        VisiteVariable(node, data, true);
+        visiteVariable(node, data, true);
     }
     void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {

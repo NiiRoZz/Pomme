@@ -15,7 +15,8 @@ namespace Pomme
 	{
 		TypeCheckerVisitor visitor;
 		tree->jjtAccept(&visitor, nullptr); // 1st pathing -> check double definition
-        // tree->jjtAccept(&visitor, nullptr); // todo 2nd pathing -> type resolving
+        visitor.path_number++;
+        //tree->jjtAccept(&visitor, nullptr); // todo 2nd pathing -> type resolving + child class
 
         std::cout << visitor << std::endl;
 
