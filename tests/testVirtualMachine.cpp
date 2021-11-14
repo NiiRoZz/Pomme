@@ -170,7 +170,7 @@ TEST(TEST_VM, ClassTest)
 
 TEST(TEST_VM, ClassMethodTest)
 {
-	TEST_VM_TEST("class TestClass { public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50);  };\n");
+	TEST_VM_TEST("class StructClass { int h = 10; public int g(int a) {print(a);}; };  class TestClass { StructClass h = new StructClass(); public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.h.g(25); print(oui.h); print(oui.h.h);  };\n");
 
     std::cout << text << std::endl;
 

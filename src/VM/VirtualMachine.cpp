@@ -286,6 +286,7 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_GET_METHOD):
                 {
+                    assert(IS_INSTANCE(peek(0)));
                     ObjInstance* instance = AS_INSTANCE(peek(0));
 					uint16_t slot = READ_UINT16();
 
@@ -723,12 +724,12 @@ namespace Pomme
                 return byteInstruction("OP_CALL", chunk, offset);
             case AS_OPCODE(OpCode::OP_CLASS):
                 return constantInstruction("OP_CLASS", chunk, offset);
-            case AS_OPCODE(OpCode::OP_GET_PROPERTY):
+            /*case AS_OPCODE(OpCode::OP_GET_PROPERTY):
                 return constantInstruction("OP_GET_PROPERTY", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_PROPERTY):
                 return constantInstruction("OP_SET_PROPERTY", chunk, offset);
             case AS_OPCODE(OpCode::OP_GET_METHOD):
-                return constantInstruction("OP_GET_METHOD", chunk, offset);
+                return constantInstruction("OP_GET_METHOD", chunk, offset);*/
             default:
                 printf("Unknown opcode %d\n", instruction);
             return offset + 1;

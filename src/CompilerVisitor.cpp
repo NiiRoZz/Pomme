@@ -484,8 +484,7 @@ namespace Pomme
 
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
-
-        namedVariable(name, false);
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
 
         m_InClass = true;
 
@@ -728,12 +727,65 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
     {
+        bool assign = (data == nullptr) ? false : *(bool*)data;
 
+        ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
+        if (methode != nullptr)
+        {
+            assert(!assign);
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(0);
+
+            methode->jjtAccept(this, &assign);
+        }
+        else
+        {
+            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+            emitByte(AS_OPCODE(code));
+            //TODO: get the index directly from here
+            emit16Bits(0);
+        }
+
+        methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1));
+        if (methode != nullptr)
+        {
+            assert(!assign);
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(0);
+
+            methode->jjtAccept(this, &assign);
+        }
+        else
+        {
+            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+            emitByte(AS_OPCODE(code));
+            //TODO: get the index directly from here
+            emit16Bits(0);
+        }
+
+        node->jjtChildAccept(2, this, data);
     }
 
     void CompilerVisitor::visit(ASTpommeProperty *node, void * data)
     {
+        bool assign = (data == nullptr) ? false : *(bool*)data;
 
+        ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
+        if (methode != nullptr)
+        {
+            assert(!assign);
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(0);
+
+            methode->jjtAccept(this, &assign);
+        }
+        else
+        {
+            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+            emitByte(AS_OPCODE(code));
+            //TODO: get the index directly from here
+            emit16Bits(0);
+        }
     }
 
     void CompilerVisitor::visit(ASTacnil *node, void * data)
