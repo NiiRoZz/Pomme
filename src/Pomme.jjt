@@ -477,14 +477,23 @@ void fact() #void :
 void listacces() #void :
 {}
 {
-  	access() listaccesP() #listacces(2)
+  	access() ( 	<POINT> access() listaccesP() #listacces(3)
+				| {}
+	  		)
 }
 
 void listaccesP() #void :
 {}
 {
-	<POINT> access() listaccesP() #listacces(2)
-	| {} #acnil
+	(
+		<POINT> ( 
+				access() (	
+							<POINT> access() listaccesP() #listacces(3)
+							| {} #pommeProperty(1)
+						)
+			)
+		| {} #acnil
+	)
 }
 
 void access() #void :

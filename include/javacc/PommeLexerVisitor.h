@@ -101,6 +101,7 @@ class PommeLexerVisitor
   virtual void  visit(ASTpommeFalse *node, void * data) = 0;
   virtual void  visit(ASTpommeNull *node, void * data) = 0;
   virtual void  visit(ASTlistacces *node, void * data) = 0;
+  virtual void  visit(ASTpommeProperty *node, void * data) = 0;
   virtual void  visit(ASTacnil *node, void * data) = 0;
   virtual void  visit(ASTaccessMethode *node, void * data) = 0;
   virtual ~PommeLexerVisitor() { }
@@ -387,6 +388,9 @@ public:
   virtual void  visit(ASTlistacces *node, void * data) {
     defaultVisit(node, data);
   }
+  virtual void  visit(ASTpommeProperty *node, void * data) {
+    defaultVisit(node, data);
+  }
   virtual void  visit(ASTacnil *node, void * data) {
     defaultVisit(node, data);
   }
@@ -397,4 +401,4 @@ public:
 };
 }
 #endif
-/* JavaCC - OriginalChecksum=9296bb421c4b37ddf6c66f2cf0b0a471 (do not edit this line) */
+/* JavaCC - OriginalChecksum=b1948ec10147bf758a4b8a26be763b4c (do not edit this line) */

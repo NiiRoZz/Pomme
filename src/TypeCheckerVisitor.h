@@ -261,6 +261,7 @@ namespace Pomme
         void visit(ASTpommeFalse *node, void * data);
         void visit(ASTpommeNull *node, void * data);
         void visit(ASTlistacces *node, void * data);
+        void visit(ASTpommeProperty *node, void * data);
         void visit(ASTacnil *node, void * data);
         void visit(ASTaccessMethode *node, void * data);
 

@@ -1,62 +1,63 @@
 input
  scopes
-  pommeClass
+  pommeGlobalFunction
    ident
-   decls
-    pommeVariable
-     ident
-     ident
-     pommeInt
+   ident
+   enil
+   instrs
+    pommeReturn
+     pommeNew
+      ident
+      exnil
+    inil
+  scopes
+   pommeClass
+    ident
     decls
      pommeVariable
       ident
       ident
-      pommeNew
+      pommeInt
+     decls
+      pommeVariable
        ident
-       exnil
-     dnil
-  scopes
-   pommeGlobalFunction
-    voidType
-    ident
-    enil
-    instrs
-     pommeVariable
-      ident
-      ident
-      pommeNew
        ident
-       exnil
+       pommeNew
+        ident
+        exnil
+      dnil
+   scopes
+    pommeGlobalFunction
+     voidType
+     ident
+     enil
      instrs
       pommeVariable
        ident
        ident
-       listacces
+       pommeNew
         ident
-        listacces
-         ident
-         acnil
+        exnil
       instrs
        pommeVariable
         ident
         ident
         listacces
          ident
-         listacces
-          ident
-          listacces
-           ident
-           acnil
+         ident
+         acnil
        instrs
-        listacces
+        pommeVariable
+         ident
          ident
          listacces
-          accessMethode
-           identOp
-           exnil
-          acnil
+          ident
+          ident
+          pommeProperty
+           ident
         instrs
          listacces
+          ident
           accessMethode
            identOp
            exnil
@@ -64,13 +65,13 @@ input
          instrs
           listacces
            ident
-           listacces
-            accessMethode
-             identOp
-             exnil
-            acnil
+           accessMethode
+            identOp
+            exnil
+           acnil
           instrs
            listacces
+            ident
             accessMethode
              identOp
              exnil
@@ -78,22 +79,32 @@ input
            instrs
             listacces
              ident
-             listacces
-              ident
-              listacces
-               accessMethode
-                ident
-                exnil
-               acnil
+             accessMethode
+              identOp
+              exnil
+             acnil
             instrs
              listacces
               ident
-              listacces
+              ident
+              pommeProperty
                accessMethode
                 ident
                 exnil
+             instrs
+              listacces
+               ident
+               accessMethode
+                ident
+                exnil
+               pommeProperty
+                ident
+              instrs
                listacces
+                accessMethode
+                 ident
+                 exnil
                 ident
                 acnil
-             inil
-   scinil
+               inil
+    scinil

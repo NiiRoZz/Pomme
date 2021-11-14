@@ -16,6 +16,7 @@ public:
 
   /** Accept the visitor. **/
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
+
   uint16_t index;
 };
 

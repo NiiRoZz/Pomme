@@ -15,11 +15,10 @@ input
      instrs
       listacces
        ident
-       listacces
-        accessMethode
-         ident
-         exnil
-        acnil
+       accessMethode
+        ident
+        exnil
+       acnil
       inil
     decls
      pommeMethode

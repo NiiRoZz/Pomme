@@ -14,8 +14,6 @@ input
       ident
       ident
       pommeTilde
-       listacces
-        ident
-        acnil
+       ident
      inil
   scinil

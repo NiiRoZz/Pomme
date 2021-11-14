@@ -4,11 +4,11 @@
 #include "SimpleNode.h"
 namespace Pomme {
   unsigned int jj_la1_0[] = {
-0xe000000,0xc000000,0x0,0x2000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x4000000,0x0,0x0,0x80,0x0,0xd0c00000,0xebaa80,0xd0c00000,0x0,0x20000000,0x400,0x0,0x0,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x140500,0x1005000,0x400,0x0,0x0,0x0,0x0,};
+0xe000000,0xc000000,0x0,0x2000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x4000000,0x0,0x0,0x80,0x0,0xd0c00000,0xebaa80,0xd0c00000,0x0,0x20000000,0x400,0x0,0x0,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x140500,0x1005000,0x400,0x0,0x0,0x0,0x0,0x0,0x0,};
   unsigned int jj_la1_1[] = {
-0xa800000,0xa800000,0x4000080,0x8000000,0xf3800000,0x1000000,0xf2800000,0x10000000,0xe0000000,0x0,0x4000080,0x8000000,0x800,0x0,0x0,0x2800000,0x1004007,0x0,0x4007,0x18,0x0,0x6020,0x800,0x1000000,0x0,0x0,0x800,0x800000,0x4000,0x600000,0x1f8000,0x0,0x0,0x6020,0x4000,0x1000,0x0,0x0,};
+0xa800000,0xa800000,0x4000080,0x8000000,0xf3800000,0x1000000,0xf2800000,0x10000000,0xe0000000,0x0,0x4000080,0x8000000,0x800,0x0,0x0,0x2800000,0x1004007,0x0,0x4007,0x18,0x0,0x6020,0x800,0x1000000,0x0,0x0,0x800,0x800000,0x4000,0x600000,0x1f8000,0x0,0x0,0x6020,0x4000,0x1000,0x1000,0x1000,0x0,0x0,};
   unsigned int jj_la1_2[] = {
-0x80,0x80,0x0,0x0,0x81,0x80,0x81,0x0,0x0,0x1,0x0,0x0,0x0,0x80,0x0,0x80,0xc0,0x0,0xc0,0x0,0x0,0x3fe,0x0,0x80,0x0,0x80,0x0,0x80,0xc0,0x0,0x0,0x0,0x0,0x0,0x3fe,0x0,0x80,0x220,};
+0x80,0x80,0x0,0x0,0x81,0x80,0x81,0x0,0x0,0x1,0x0,0x0,0x0,0x80,0x0,0x80,0xc0,0x0,0xc0,0x0,0x0,0x3fe,0x0,0x80,0x0,0x80,0x0,0x80,0xc0,0x0,0x0,0x0,0x0,0x0,0x3fe,0x0,0x0,0x0,0x80,0x220,};
 
   /** Constructor with user supplied TokenManager. */
 
@@ -2925,26 +2925,36 @@ if (jjtc004) {
 
 void PommeLexer::listacces() {
     access();
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case POINT:{
+      jj_consume_token(POINT);
+      access();
 ASTlistacces *jjtn001 = new ASTlistacces(JJTLISTACCES);
-                   bool jjtc001 = true;
-                   jjtree.openNodeScope(jjtn001);
-                   jjtreeOpenNodeScope(jjtn001);
-    try {
-      listaccesP();
-    } catch ( ...) {
+                                           bool jjtc001 = true;
+                                           jjtree.openNodeScope(jjtn001);
+                                           jjtreeOpenNodeScope(jjtn001);
+      try {
+        listaccesP();
+      } catch ( ...) {
 if (jjtc001) {
-                     jjtree.clearNodeScope(jjtn001);
-                     jjtc001 = false;
-                   } else {
-                     jjtree.popNode();
-                   }
+                                             jjtree.clearNodeScope(jjtn001);
+                                             jjtc001 = false;
+                                           } else {
+                                             jjtree.popNode();
+                                           }
+      }
+if (jjtc001) {
+                                             jjtree.closeNodeScope(jjtn001,  3);
+                                             if (jjtree.nodeCreated()) {
+                                              jjtreeCloseNodeScope(jjtn001);
+                                             }
+                                           }
+      break;
+      }
+    default:
+      jj_la1[35] = jj_gen;
+
     }
-if (jjtc001) {
-                     jjtree.closeNodeScope(jjtn001,  2);
-                     if (jjtree.nodeCreated()) {
-                      jjtreeCloseNodeScope(jjtn001);
-                     }
-                   }
 }
 
 
@@ -2953,55 +2963,89 @@ void PommeLexer::listaccesP() {
     case POINT:{
       jj_consume_token(POINT);
       access();
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case POINT:{
+        jj_consume_token(POINT);
+        access();
 ASTlistacces *jjtn001 = new ASTlistacces(JJTLISTACCES);
-                           bool jjtc001 = true;
-                           jjtree.openNodeScope(jjtn001);
-                           jjtreeOpenNodeScope(jjtn001);
-      try {
-        listaccesP();
-      } catch ( ...) {
+                                                                           bool jjtc001 = true;
+                                                                           jjtree.openNodeScope(jjtn001);
+                                                                           jjtreeOpenNodeScope(jjtn001);
+        try {
+          listaccesP();
+        } catch ( ...) {
 if (jjtc001) {
-                             jjtree.clearNodeScope(jjtn001);
-                             jjtc001 = false;
-                           } else {
-                             jjtree.popNode();
-                           }
+                                                                             jjtree.clearNodeScope(jjtn001);
+                                                                             jjtc001 = false;
+                                                                           } else {
+                                                                             jjtree.popNode();
+                                                                           }
+        }
+if (jjtc001) {
+                                                                             jjtree.closeNodeScope(jjtn001,  3);
+                                                                             if (jjtree.nodeCreated()) {
+                                                                              jjtreeCloseNodeScope(jjtn001);
+                                                                             }
+                                                                           }
+        break;
+        }
+      default:
+        jj_la1[36] = jj_gen;
+ASTpommeProperty *jjtn002 = new ASTpommeProperty(JJTPOMMEPROPERTY);
+                                                            bool jjtc002 = true;
+                                                            jjtree.openNodeScope(jjtn002);
+                                                            jjtreeOpenNodeScope(jjtn002);
+        try {
+jjtree.closeNodeScope(jjtn002,  1);
+                                                            jjtc002 = false;
+                                                            if (jjtree.nodeCreated()) {
+                                                             jjtreeCloseNodeScope(jjtn002);
+                                                            }
+
+        } catch ( ...) {
+if (jjtc002) {
+                                                              jjtree.clearNodeScope(jjtn002);
+                                                              jjtc002 = false;
+                                                            } else {
+                                                              jjtree.popNode();
+                                                            }
+        }
+if (jjtc002) {
+                                                              jjtree.closeNodeScope(jjtn002,  1);
+                                                              if (jjtree.nodeCreated()) {
+                                                               jjtreeCloseNodeScope(jjtn002);
+                                                              }
+                                                            }
       }
-if (jjtc001) {
-                             jjtree.closeNodeScope(jjtn001,  2);
-                             if (jjtree.nodeCreated()) {
-                              jjtreeCloseNodeScope(jjtn001);
-                             }
-                           }
       break;
       }
     default:
-      jj_la1[35] = jj_gen;
-ASTacnil *jjtn002 = new ASTacnil(JJTACNIL);
-            bool jjtc002 = true;
-            jjtree.openNodeScope(jjtn002);
-            jjtreeOpenNodeScope(jjtn002);
+      jj_la1[37] = jj_gen;
+ASTacnil *jjtn003 = new ASTacnil(JJTACNIL);
+                    bool jjtc003 = true;
+                    jjtree.openNodeScope(jjtn003);
+                    jjtreeOpenNodeScope(jjtn003);
       try {
-jjtree.closeNodeScope(jjtn002, true);
-            jjtc002 = false;
-            if (jjtree.nodeCreated()) {
-             jjtreeCloseNodeScope(jjtn002);
-            }
+jjtree.closeNodeScope(jjtn003, true);
+                    jjtc003 = false;
+                    if (jjtree.nodeCreated()) {
+                     jjtreeCloseNodeScope(jjtn003);
+                    }
 
       } catch ( ...) {
-if (jjtc002) {
-              jjtree.clearNodeScope(jjtn002);
-              jjtc002 = false;
-            } else {
-              jjtree.popNode();
-            }
+if (jjtc003) {
+                      jjtree.clearNodeScope(jjtn003);
+                      jjtc003 = false;
+                    } else {
+                      jjtree.popNode();
+                    }
       }
-if (jjtc002) {
-              jjtree.closeNodeScope(jjtn002, true);
-              if (jjtree.nodeCreated()) {
-               jjtreeCloseNodeScope(jjtn002);
-              }
-            }
+if (jjtc003) {
+                      jjtree.closeNodeScope(jjtn003, true);
+                      if (jjtree.nodeCreated()) {
+                       jjtreeCloseNodeScope(jjtn003);
+                      }
+                    }
     }
 }
 
@@ -3038,7 +3082,7 @@ if (jjtc001) {
         break;
         }
       default:
-        jj_la1[36] = jj_gen;
+        jj_la1[38] = jj_gen;
         jj_consume_token(-1);
         errorHandler->handleParseError(token, getToken(1), __FUNCTION__, this), hasError = true;
       }
@@ -3057,7 +3101,7 @@ void PommeLexer::number() {
       break;
       }
     default:
-      jj_la1[37] = jj_gen;
+      jj_la1[39] = jj_gen;
       jj_consume_token(-1);
       errorHandler->handleParseError(token, getToken(1), __FUNCTION__, this), hasError = true;
     }
@@ -3092,7 +3136,7 @@ void PommeLexer::ReInit(TokenManager* tokenManager){
     jj_ntk = -1;
     jjtree.reset();
     jj_gen = 0;
-    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
   }
 
 

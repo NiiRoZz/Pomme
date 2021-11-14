@@ -481,7 +481,7 @@ namespace Pomme
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
 
-        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
+        namedVariable(name, false);
 
         node->jjtChildAccept(1, this, nullptr);
 
@@ -701,11 +701,12 @@ namespace Pomme
             name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
         }
 
-        if (funcNode != nullptr) name += NAME_FUNC_SEPARATOR;
-
         namedVariable(name, assign);
+    }
 
-        if (funcNode != nullptr) funcNode->jjtAccept(this, nullptr);
+    void CompilerVisitor::visit(ASTpommeProperty *node, void * data)
+    {
+
     }
 
     void CompilerVisitor::visit(ASTacnil *node, void * data)
@@ -715,6 +716,14 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTaccessMethode *node, void * data)
     {
+        //If we don't have GET_PROPERTY before, we are accessing method of current class or global variable
+        if (data == nullptr)
+        {
+            std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier + NAME_FUNC_SEPARATOR;
+
+            namedVariable(name, false);
+        }
+
         uint8_t argCount = 0;
 
         ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));

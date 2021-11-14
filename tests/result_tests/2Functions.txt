@@ -11,10 +11,8 @@ input
     ident
     enil
     instrs
-     listacces
-      accessMethode
-       ident
-       exnil
-      acnil
+     accessMethode
+      ident
+      exnil
      inil
    scinil

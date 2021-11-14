@@ -13,9 +13,7 @@ input
       pommeFalse
     instrs
      assignement
-      listacces
-       ident
-       acnil
+      ident
       pommeOr
        pommeTrue
        pommeFalse

@@ -23,6 +23,7 @@
 #include "ASTvoidType.h"
 #include "ASTpommeTypeDef.h"
 #include "ASTpommeUnary.h"
+#include "ASTpommeProperty.h"
 #include "ASTacnil.h"
 #include "ASTpommeProtected.h"
 #include "ASTswinil.h"
@@ -98,4 +99,4 @@
 #include "ASTassignement.h"
 #include "ASTpommeEQ.h"
 #endif
-/* JavaCC - OriginalChecksum=3a4db96546154081cd03a9b7e6d73713 (do not edit this line) */
+/* JavaCC - OriginalChecksum=e2ce76c487a81536d52601cb3051d1c1 (do not edit this line) */

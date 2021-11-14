@@ -16,19 +16,11 @@ input
       pommeTrue
      instrs
       oreq
-       listacces
-        ident
-        acnil
-       listacces
-        ident
-        acnil
+       ident
+       ident
       instrs
        andeq
-        listacces
-         ident
-         acnil
-        listacces
-         ident
-         acnil
+        ident
+        ident
        inil
   scinil

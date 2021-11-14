@@ -14,9 +14,7 @@ input
       pommeTrue
       instrs
        assignement
-        listacces
-         ident
-         acnil
+        ident
         pommeInt
        inil
       inil

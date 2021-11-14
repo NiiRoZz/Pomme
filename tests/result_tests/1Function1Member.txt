@@ -15,10 +15,8 @@ input
      pommeVariable
       ident
       ident
-      listacces
-       accessMethode
-        ident
-        exnil
-       acnil
+      accessMethode
+       ident
+       exnil
      dnil
    scinil

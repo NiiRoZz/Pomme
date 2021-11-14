@@ -704,6 +704,10 @@ namespace Pomme
     {
 
     }
+    void TypeCheckerVisitor::visit(ASTpommeProperty *node, void * data)
+    {
+
+    }
     void TypeCheckerVisitor::visit(ASTacnil *node, void * data)
     {
 

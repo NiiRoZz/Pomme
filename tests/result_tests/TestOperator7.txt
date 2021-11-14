@@ -14,28 +14,18 @@ input
       ident
       ident
       pommeEQ
-       listacces
-        ident
-        acnil
+       ident
        pommeInt
      instrs
       assignement
-       listacces
-        ident
-        acnil
+       ident
        pommeNEQ
-        listacces
-         ident
-         acnil
+        ident
         pommeInt
       instrs
        assignement
-        listacces
-         ident
-         acnil
+        ident
         pommeNot
-         listacces
-          ident
-          acnil
+         ident
        inil
   scinil

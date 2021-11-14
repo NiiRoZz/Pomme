@@ -18,9 +18,7 @@ input
       enil
       instrs
        assignement
-        listacces
-         ident
-         acnil
+        ident
         pommeInt
        inil
      decls
@@ -35,11 +33,10 @@ input
        instrs
         listacces
          ident
-         listacces
-          accessMethode
-           ident
-           exnil
-          acnil
+         accessMethode
+          ident
+          exnil
+         acnil
         inil
       dnil
   scinil

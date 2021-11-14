@@ -16,39 +16,23 @@ input
       pommeInt
      instrs
       shiftleq
-       listacces
-        ident
-        acnil
-       listacces
-        ident
-        acnil
+       ident
+       ident
       instrs
        shiftreq
-        listacces
-         ident
-         acnil
-        listacces
-         ident
-         acnil
+        ident
+        ident
        instrs
         incrementPost
-         listacces
-          ident
-          acnil
+         ident
         instrs
          incrementPre
-          listacces
-           ident
-           acnil
+          ident
          instrs
           decrementPost
-           listacces
-            ident
-            acnil
+           ident
           instrs
            decrementPre
-            listacces
-             ident
-             acnil
+            ident
            inil
   scinil
