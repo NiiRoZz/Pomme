@@ -704,6 +704,11 @@ namespace Pomme
         namedVariable(name, assign);
     }
 
+    void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
+    {
+
+    }
+
     void CompilerVisitor::visit(ASTpommeProperty *node, void * data)
     {
 

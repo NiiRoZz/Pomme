@@ -488,7 +488,7 @@ void listaccesP() #void :
 	(
 		<POINT> ( 
 				access() (	
-							<POINT> access() listaccesP() #listacces(3)
+							<POINT> access() listaccesP() #listaccesP(3)
 							| {} #pommeProperty(1)
 						)
 			)

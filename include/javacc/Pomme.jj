@@ -2979,9 +2979,9 @@ void listaccesP()       :
 	(
 		<POINT> ( 
 				access() (	
-							<POINT> access()/*@bgen(jjtree) #listacces( 3) */
+							<POINT> access()/*@bgen(jjtree) #listaccesP( 3) */
                                                                          {
-                                                                           ASTlistacces *jjtn001 = new ASTlistacces(JJTLISTACCES);
+                                                                           ASTlistaccesP *jjtn001 = new ASTlistaccesP(JJTLISTACCESP);
                                                                            bool jjtc001 = true;
                                                                            jjtree.openNodeScope(jjtn001);
                                                                            jjtreeOpenNodeScope(jjtn001);
@@ -3003,7 +3003,7 @@ void listaccesP()       :
                                                                              }
                                                                            }
                                                                          }
-/*@egen*/              
+/*@egen*/               
 							|/*@bgen(jjtree) #pommeProperty( 1) */
                                                           {
                                                             ASTpommeProperty *jjtn002 = new ASTpommeProperty(JJTPOMMEPROPERTY);

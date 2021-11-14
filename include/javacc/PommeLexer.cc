@@ -2967,7 +2967,7 @@ void PommeLexer::listaccesP() {
       case POINT:{
         jj_consume_token(POINT);
         access();
-ASTlistacces *jjtn001 = new ASTlistacces(JJTLISTACCES);
+ASTlistaccesP *jjtn001 = new ASTlistaccesP(JJTLISTACCESP);
                                                                            bool jjtc001 = true;
                                                                            jjtree.openNodeScope(jjtn001);
                                                                            jjtreeOpenNodeScope(jjtn001);

@@ -74,6 +74,7 @@
 #include "ASTpommeBreak.h"
 #include "ASTpommeInt.h"
 #include "ASTpommeClassChild.h"
+#include "ASTlistaccesP.h"
 #include "ASTenumassign.h"
 #include "ASTpommeTrue.h"
 #include "ASTpommePrint.h"
@@ -99,4 +100,4 @@
 #include "ASTassignement.h"
 #include "ASTpommeEQ.h"
 #endif
-/* JavaCC - OriginalChecksum=e2ce76c487a81536d52601cb3051d1c1 (do not edit this line) */
+/* JavaCC - OriginalChecksum=66cbdf25be3f60ff64cf58e3f8c30516 (do not edit this line) */
