@@ -25,8 +25,9 @@ using namespace Pomme;
 	std::cout.rdbuf(old);\
 	std::ifstream t(file);\
 	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());\
+	std::cout << "File : " << str << std::endl;\
+	std::cout << "Text : " << text << std::endl;\
 	EXPECT_EQ(text, str);\
-	std::cout << text << std::endl;
 
 
 TEST(TEST_LEXER_PARSER, BasicClass)
