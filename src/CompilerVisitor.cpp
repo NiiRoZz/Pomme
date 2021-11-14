@@ -500,7 +500,39 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeMethode *node, void * data)
     {
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(2))->m_Identifier;
+        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+        std::string& ident = name->m_MethodIdentifier;
+        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(ident.c_str(), ident.length())));
+
+        std::cout << "ASTpommeMethode index : " << node->index << " ident : " << ident << std::endl;
+
+        ObjFunction* currentFunction = function;
+        function = m_Vm.newFunction();
+
+        function->name = m_Vm.copyString(name->m_Identifier.c_str(), name->m_Identifier.length());
+
+        beginScope(); 
+
+        addLocal("");
+
+        //2: parameters
+        node->jjtChildAccept(2, this, data);
+
+        //3: instrs
+        node->jjtChildAccept(3, this, data);
+
+        emitReturn();
+
+        endScope();
+
+        ObjFunction* compiledFunction = function;
+        function = currentFunction;
+
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
+
+        emitByte(AS_OPCODE(OpCode::OP_METHOD));
+        emit16Bits(node->index);
+        emitByte(identConstant);
     }
 
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -655,13 +687,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTlistacces *node, void * data)
     {
-        OpCode op = OpCode::OP_GET_LOCAL;
         bool assign = (data == nullptr) ? false : *(bool*)data;
-
-        if (assign)
-        {
-            op = OpCode::OP_SET_LOCAL;
-        }
 
         std::string name;
         ASTaccessMethode* funcNode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
@@ -675,37 +701,9 @@ namespace Pomme
             name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
         }
 
-        for (uint8_t i = localCount - 1; i >= 0; i--)
-        {
-            Local& local = locals[i];
-
-            if (local.depth != -1 && local.depth < scopeDepth)
-            {
-                break; 
-            }
-
-            if (name == local.name)
-            {
-                emitBytes(AS_OPCODE(op), i);
-                return;
-            }
-        }
-
-        //We have only global functions, no global variables
-        //assert(funcNode != nullptr);
-
         if (funcNode != nullptr) name += NAME_FUNC_SEPARATOR;
 
-        op = (assign) ? OpCode::OP_SET_GLOBAL : OpCode::OP_GET_GLOBAL;
-
-        std::optional<std::size_t> idx = m_Vm.getGlobal(name);
-
-        if (!idx)
-        {
-            assert(false);
-        }
-
-        emitBytes(AS_OPCODE(op), *idx);
+        namedVariable(name, assign);
 
         if (funcNode != nullptr) funcNode->jjtAccept(this, nullptr);
     }
@@ -839,5 +837,44 @@ namespace Pomme
         local->depth = scopeDepth;
 
         return idx;
+    }
+
+    void CompilerVisitor::namedVariable(const std::string& name, bool assign)
+    {
+        OpCode op = OpCode::OP_GET_LOCAL;
+
+        if (assign)
+        {
+            op = OpCode::OP_SET_LOCAL;
+        }
+
+        //LOCALS
+        for (uint8_t i = localCount - 1; i >= 0; i--)
+        {
+            Local& local = locals[i];
+
+            if (local.depth != -1 && local.depth < scopeDepth)
+            {
+                break; 
+            }
+
+            if (name == local.name)
+            {
+                emitBytes(AS_OPCODE(op), i);
+                return;
+            }
+        }
+
+        //GLOBALS
+        op = (assign) ? OpCode::OP_SET_GLOBAL : OpCode::OP_GET_GLOBAL;
+
+        std::optional<std::size_t> idx = m_Vm.getGlobal(name);
+
+        if (!idx)
+        {
+            assert(false);
+        }
+
+        emitBytes(AS_OPCODE(op), *idx);
     }
 }

@@ -2,6 +2,7 @@
 
 #include "PommeLexer.h"
 #include "Compiler.h"
+#include "TypeChecker.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
 #include "PommeLexerTokenManager.h"
@@ -143,12 +144,43 @@ TEST(TEST_VM, GlobalNativeTest)
 
 TEST(TEST_VM, ClassTest)
 {
-	TEST_VM_TEST("class TestClass { Int f() {}; }; void f() { TestClass oui = new TestClass(); print(oui); };\n");
+	TEST_VM_TEST("class TestClass { int g() {}; }; void f() { TestClass oui = new TestClass(); print(oui); };\n");
 
     std::cout << text << std::endl;
 
 	VirtualMachine vm;
     Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ClassMethodTest)
+{
+	TEST_VM_TEST("class TestClass { public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50);  };\n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
 
 	ObjFunction *function = compiler.compile(tree);
 

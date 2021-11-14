@@ -330,7 +330,8 @@ namespace Pomme
         std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
         auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(1));
         std::string functionType;
-        std::string &functionName = dynamic_cast<ASTident*>(node->jjtGetChild(2))->m_Identifier;
+        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+        std::string &functionName = name->m_Identifier;
         std::string functionIdent = functionName;
         std::string &context = *static_cast<std::string*>(data);
 
@@ -373,6 +374,7 @@ namespace Pomme
         }
         it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
         node->index = it->second.functions.size() - 1;
+        name->m_MethodIdentifier = functionIdent;
 
     }
     void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -445,40 +447,28 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
     {
-        std::cout << "before " <<std::endl;
-        std::string functionType;
         std::string functionName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
+        std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+        std::unordered_set<std::string> parameters = buildSignature(headers);
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
-        auto* identNode = dynamic_cast<ASTvoidType *>(node->jjtGetChild(0));
-        if(identNode == nullptr)
+        std::cout << "parameters ___________________________" << std::endl;
+        for(const auto& it : parameters)
         {
-
-            std::cout << "not void " <<std::endl;
-            functionType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-            auto headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
-
-            std::unordered_set<std::string> parameters = buildSignature(headers);
-            std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
-            std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
-
-            std::cout << "parameters ___________________________" << std::endl;
-            for(const auto& it : parameters)
-            {
-                std::cout << it << std::endl;
-            }
-            addGlobalFunction(functionType, functionName, functionIdent, parameters);
-
-        }else
-        {
-            std::cout << "void " << std::endl;
-
-            auto headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
-            std::unordered_set<std::string> parameters = buildSignature(headers);
-            std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
-            std::string functionIdent = functionName +  NAME_FUNC_SEPARATOR + signatureParameter;
-
-            addGlobalFunction("void", functionName, functionIdent, parameters);
+            std::cout << it << std::endl;
         }
+
+        auto* identNode = dynamic_cast<ASTvoidType*>(node->jjtGetChild(0));
+        addGlobalFunction ( (
+                                (identNode == nullptr) ? 
+                                (dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier) //get return type
+                                : "void"
+                            ),
+                            functionName,
+                            functionIdent,
+                            parameters
+                        );
 
         node->jjtChildrenAccept(this, data);
     }

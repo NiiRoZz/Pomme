@@ -75,12 +75,12 @@ namespace Pomme
         //Runtime
         Obj obj;
         ObjString* name;
-        std::array<Value, METHODS_MAX> methods; 
+        Value methods[METHODS_MAX]; 
         int deconstructorIdx = -1;
 
         //Used for C++->Pomme call
-        std::unordered_map<std::string, uint16_t> methodsIndices;
-        std::unordered_map<std::string, uint16_t> fieldsIndices;
+        //std::unordered_map<std::string, uint16_t> methodsIndices;
+        //std::unordered_map<std::string, uint16_t> fieldsIndices;
     };
 
     struct ObjInstance

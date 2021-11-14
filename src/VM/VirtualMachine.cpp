@@ -367,13 +367,19 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_METHOD):
                 {
-                    defineMethod(READ_UINT16(), READ_STRING());
+                    uint16_t slot = READ_UINT16();
+                    ObjString* name = READ_STRING();
+
+                    defineMethod(slot, name);
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_FIELD):
                 {
-                    defineField(READ_UINT16(), READ_STRING());
+                    uint16_t slot = READ_UINT16();
+                    ObjString* name = READ_STRING();
+
+                    defineField(slot, name);
                     break;
                 }
 
@@ -592,17 +598,23 @@ namespace Pomme
 
     void VirtualMachine::defineMethod(uint16_t slot, ObjString* name)
     {
+        std::cout << "VirtualMachine::defineMethod(" << slot << ", " << name->chars << ")" << std::endl;
+
         Value method = peek(0);
+
+        assert(IS_CLASS(peek(1)));
+
         ObjClass* klass = AS_CLASS(peek(1));
+
         klass->methods[slot] = method;
-        klass->methodsIndices[name->chars] = slot;
+        //klass->methodsIndices[name->chars] = slot;
         pop();
     }
 
     void VirtualMachine::defineField(uint16_t slot, ObjString* name)
     {
         ObjClass* klass = AS_CLASS(peek(0));
-        klass->fieldsIndices[name->chars] = slot;
+        //klass->fieldsIndices[name->chars] = slot;
         pop();
     }
 

@@ -18,6 +18,7 @@ public:
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
 
   std::string m_Identifier;
+  std::string m_MethodIdentifier;
 };
 
 }

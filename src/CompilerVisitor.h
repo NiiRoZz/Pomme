@@ -145,6 +145,7 @@ namespace Pomme
 		void endScope();
 
 		int addLocal(const std::string& name);
+		void namedVariable(const std::string& name, bool assign);
 	private:
 		ObjFunction* function;
 		int line;
