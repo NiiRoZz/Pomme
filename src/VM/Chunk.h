@@ -30,6 +30,7 @@ namespace Pomme
         OP_SET_LOCAL,
         OP_GET_PROPERTY,
         OP_SET_PROPERTY,
+        OP_GET_METHOD,
         OP_JUMP,
         OP_JUMP_IF_FALSE,
         OP_LOOP,

@@ -13,6 +13,7 @@ namespace Pomme
 	: m_Vm(vm)
     , localCount(0)
     , scopeDepth(0)
+    , m_InClass(false)
 	{
 
 	}
@@ -40,6 +41,9 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTident *node, void * data) 
     {
+        bool assign = (data == nullptr) ? false : *(bool*)data;
+
+        namedVariable(node->m_Identifier, assign);
     }
 
     void CompilerVisitor::visit(ASTidentOp *node, void * data) 
@@ -483,7 +487,11 @@ namespace Pomme
 
         namedVariable(name, false);
 
+        m_InClass = true;
+
         node->jjtChildAccept(1, this, nullptr);
+
+        m_InClass = false;
 
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
@@ -515,11 +523,11 @@ namespace Pomme
 
         addLocal("");
 
-        //2: parameters
-        node->jjtChildAccept(2, this, data);
-
-        //3: instrs
+        //3: parameters
         node->jjtChildAccept(3, this, data);
+
+        //4: instrs
+        node->jjtChildAccept(4, this, data);
 
         emitReturn();
 
@@ -650,7 +658,7 @@ namespace Pomme
         //2: expression value
         ASTomega* defaultValue = dynamic_cast<ASTomega*>(node->jjtGetChild(2));
 
-        addLocal(name);
+        if (!m_InClass) addLocal(name);
 
         if (defaultValue != nullptr)
         {
@@ -659,6 +667,13 @@ namespace Pomme
         else
         {
             node->jjtGetChild(2)->jjtAccept(this, data);
+        }
+
+        if (m_InClass)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_FIELD));
+            emit16Bits(node->index);
+            emitByte(makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length()))));
         }
     }
 
@@ -689,19 +704,26 @@ namespace Pomme
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
-        std::string name;
-        ASTaccessMethode* funcNode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
-
-        if (funcNode != nullptr)
+        namedVariable(dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier, false);
+        
+        ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1));
+        if (methode != nullptr)
         {
-            name = dynamic_cast<ASTident*>(funcNode->jjtGetChild(0))->m_Identifier;
+            assert(!assign);
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(0);
+
+            methode->jjtAccept(this, &assign);
         }
         else
         {
-            name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+            emitByte(AS_OPCODE(code));
+            //TODO: get the index directly from here
+            emit16Bits(0);
         }
 
-        namedVariable(name, assign);
+        node->jjtChildAccept(2, this, data);
     }
 
     void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
@@ -725,7 +747,6 @@ namespace Pomme
         if (data == nullptr)
         {
             std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier + NAME_FUNC_SEPARATOR;
-
             namedVariable(name, false);
         }
 

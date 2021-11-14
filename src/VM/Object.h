@@ -76,6 +76,7 @@ namespace Pomme
         Obj obj;
         ObjString* name;
         Value methods[METHODS_MAX]; 
+        Value fields_default[FIELDS_MAX]; 
         int deconstructorIdx = -1;
 
         //Used for C++->Pomme call
@@ -87,7 +88,7 @@ namespace Pomme
     {
         Obj obj;
         ObjClass* klass;
-        std::array<Value, FIELDS_MAX> fields; 
+        Value fields[FIELDS_MAX]; 
     };
 
     struct ObjBoundMethod

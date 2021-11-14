@@ -156,5 +156,7 @@ namespace Pomme
   		int localCount;
 
 		int scopeDepth;
+
+		bool m_InClass;
 	};
 }

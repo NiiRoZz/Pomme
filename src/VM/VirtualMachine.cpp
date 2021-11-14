@@ -276,14 +276,22 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_SET_PROPERTY):
                 {
-					ObjInstance* instance = AS_INSTANCE(peek(1));
+					ObjInstance* instance = AS_INSTANCE(peek(0));
                     uint16_t slot = READ_UINT16();
-                    instance->fields[slot] = peek(0);
+                    instance->fields[slot] = peek(1);
 
-                    Value value = pop();
-                    pop();
-                    push(value);
+                    pop(); // Instance.
+                    break;
+                }
 
+                case AS_OPCODE(OpCode::OP_GET_METHOD):
+                {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+					uint16_t slot = READ_UINT16();
+
+                    ObjBoundMethod* bound = newBoundMethod(peek(0), AS_FUNCTION(instance->klass->methods[slot]));
+                    pop(); // Instance.
+                    push(OBJ_VAL(bound));
                     break;
                 }
 
@@ -613,7 +621,15 @@ namespace Pomme
 
     void VirtualMachine::defineField(uint16_t slot, ObjString* name)
     {
-        ObjClass* klass = AS_CLASS(peek(0));
+        std::cout << "VirtualMachine::defineField(" << slot << ", " << name->chars << ")" << std::endl;
+
+        Value value = peek(0);
+
+        assert(IS_CLASS(peek(1)));
+
+        ObjClass* klass = AS_CLASS(peek(1));
+
+        klass->fields_default[slot] = value;
         //klass->fieldsIndices[name->chars] = slot;
         pop();
     }
@@ -629,6 +645,7 @@ namespace Pomme
     {
         ObjInstance* instance = ALLOCATE_OBJ(this, ObjInstance, ObjType::OBJ_INSTANCE);
         instance->klass = klass;
+        std::memcpy(instance->fields, klass->fields_default, sizeof(Value) * FIELDS_MAX);
         return instance;
     }
 
@@ -706,6 +723,12 @@ namespace Pomme
                 return byteInstruction("OP_CALL", chunk, offset);
             case AS_OPCODE(OpCode::OP_CLASS):
                 return constantInstruction("OP_CLASS", chunk, offset);
+            case AS_OPCODE(OpCode::OP_GET_PROPERTY):
+                return constantInstruction("OP_GET_PROPERTY", chunk, offset);
+            case AS_OPCODE(OpCode::OP_SET_PROPERTY):
+                return constantInstruction("OP_SET_PROPERTY", chunk, offset);
+            case AS_OPCODE(OpCode::OP_GET_METHOD):
+                return constantInstruction("OP_GET_METHOD", chunk, offset);
             default:
                 printf("Unknown opcode %d\n", instruction);
             return offset + 1;
