@@ -14,6 +14,7 @@ namespace Pomme
     , localCount(0)
     , scopeDepth(0)
     , m_InClass(false)
+    , m_InMethod(false)
 	{
 
 	}
@@ -511,7 +512,7 @@ namespace Pomme
         std::string& ident = name->m_MethodIdentifier;
         uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(ident.c_str(), ident.length())));
 
-        std::cout << "ASTpommeMethode index : " << node->index << " ident : " << ident << std::endl;
+        m_InMethod = true;
 
         ObjFunction* currentFunction = function;
         function = m_Vm.newFunction();
@@ -540,6 +541,8 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
         emit16Bits(node->index);
         emitByte(identConstant);
+
+        m_InMethod = false;
     }
 
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -657,7 +660,7 @@ namespace Pomme
         //2: expression value
         ASTomega* defaultValue = dynamic_cast<ASTomega*>(node->jjtGetChild(2));
 
-        if (!m_InClass) addLocal(name);
+        if (!m_InClass || (m_InClass && m_InMethod)) addLocal(name);
 
         if (defaultValue != nullptr)
         {
@@ -668,7 +671,7 @@ namespace Pomme
             node->jjtGetChild(2)->jjtAccept(this, data);
         }
 
-        if (m_InClass)
+        if (m_InClass && !m_InMethod)
         {
             emitByte(AS_OPCODE(OpCode::OP_FIELD));
             emit16Bits(node->index);
@@ -703,7 +706,7 @@ namespace Pomme
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
-        namedVariable(dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier, false);
+        node->jjtChildAccept(0, this, nullptr);
         
         ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1));
         if (methode != nullptr)

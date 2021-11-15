@@ -158,5 +158,6 @@ namespace Pomme
 		int scopeDepth;
 
 		bool m_InClass;
+		bool m_InMethod;
 	};
 }
