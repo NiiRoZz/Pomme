@@ -713,7 +713,7 @@ namespace Pomme
         {
             assert(!assign);
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(0);
+            emit16Bits(methode->index);
 
             methode->jjtAccept(this, &assign);
         }
@@ -737,7 +737,7 @@ namespace Pomme
         {
             assert(!assign);
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(0);
+            emit16Bits(methode->index);
 
             methode->jjtAccept(this, &assign);
         }
@@ -754,7 +754,7 @@ namespace Pomme
         {
             assert(!assign);
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(0);
+            emit16Bits(methode->index);
 
             methode->jjtAccept(this, &assign);
         }
@@ -778,7 +778,7 @@ namespace Pomme
         {
             assert(!assign);
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(0);
+            emit16Bits(methode->index);
 
             methode->jjtAccept(this, &assign);
         }
@@ -799,10 +799,9 @@ namespace Pomme
     void CompilerVisitor::visit(ASTaccessMethode *node, void * data)
     {
         //If we don't have GET_PROPERTY before, we are accessing method of current class or global variable
-        if (data == nullptr)
+        if (node->global)
         {
-            std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier + NAME_FUNC_SEPARATOR;
-            namedVariable(name, false);
+            namedVariable(node->name, false);
         }
 
         uint8_t argCount = 0;

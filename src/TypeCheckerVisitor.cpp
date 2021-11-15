@@ -521,7 +521,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommePrint *node, void * data)
     {
-
+        node->jjtChildrenAccept(this, data);
     }
     void TypeCheckerVisitor::visit(ASTpommeSwitch *node, void * data)
     {
@@ -769,7 +769,9 @@ namespace Pomme
             }
         }
 
-        std::cout << "functionName == " << functionIdent << std::endl;
+        std::cout << "functionIdent == " << functionIdent << std::endl;
+
+        node->name = functionIdent;
 
         if(class_name_caller != nullptr && *class_name_caller != "")
         {
@@ -801,6 +803,7 @@ namespace Pomme
                     if( class_name_caller != nullptr)
                     {
                         *class_name_caller = ut->second.returnType;
+                        node->global = true;
                     }
                 } else {
                     node->index = ot->second.index;
@@ -813,6 +816,7 @@ namespace Pomme
             }
         }else // global scope
         {
+            node->global = true;
             auto ut = globalFunctionsMap.find(functionIdent);
             if( ut == globalFunctionsMap.end())
             {
