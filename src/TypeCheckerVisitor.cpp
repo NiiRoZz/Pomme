@@ -48,7 +48,7 @@ namespace Pomme
                     child->second.addAttribute(attributeType, context + "::" + attributeName, isConst, this);
                 }
             }
-        }else if(class_context)
+        }else if(class_context && !instrs_context)
         {
             auto it = classMap.find(context);
             if( it != classMap.end())
@@ -75,9 +75,9 @@ namespace Pomme
                 std::cout << "ERRORS DETECTED : class " << context << " not defined " << std::endl;
                 errors.push_back("ERRORS DETECTED : class "+ context +" not defined ");
             }
-        }else
-        { // methode variable
-            //todo
+        }else if(instrs_context)
+        {
+            std::cout << "instrs_context " << std::endl;
         }
     }
 
@@ -99,7 +99,7 @@ namespace Pomme
         }else
         {
             FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
-                                   std::unordered_set<std::string>());
+                                   std::unordered_set<std::string>(),0); // todo global index
             globalFunctionsMap.insert(std::pair<std::string,FunctionClass>(functionName, function));
         }
     }
@@ -148,7 +148,7 @@ namespace Pomme
         if(access == this->functions.end())
         {
             FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
-                                   std::move(keywords));
+                                   std::move(keywords), this->functions.size());
             this->functions.insert(std::pair<std::string, FunctionClass>(functionName, function));
                 std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
         }else
@@ -241,15 +241,18 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeInt *node, void * data)
     {
-
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = "int";
     }
     void TypeCheckerVisitor::visit(ASTpommeFloat *node, void * data)
     {
-
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = "float";
     }
     void TypeCheckerVisitor::visit(ASTpommeString *node, void * data)
     {
-
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = "string";
     }
     void TypeCheckerVisitor::visit(ASTscopes *node, void * data)
     {
@@ -269,6 +272,7 @@ namespace Pomme
         data = &context;
         addClass(context);
         class_context = true;
+        class_name = context;
         node->jjtChildrenAccept(this, data);
         class_context = false;
     }
@@ -282,26 +286,26 @@ namespace Pomme
         std::string extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
         data = &context;
 
-        ClassClass classClass;
-        classClass = classMap.find(extendedClass)->second;
-        classClass.parent = extendedClass;
-
         if(classMap.count(context)){
             errors.push_back("ERROR DETECTED while adding class "+ context +" : Class already defined");
             std::cout << "ERROR DETECTED while adding class " << context << " : Class already defined" <<  std::endl;
         }
 
-        classMap.insert(std::pair<std::string,ClassClass>(context, classClass));
 
         auto it = classMap.find(extendedClass);
         if(it != classMap.end()){
+
+            ClassClass classClass;
+            classClass = classMap.find(extendedClass)->second;
+            classClass.parent = extendedClass;
+            classMap.insert(std::pair<std::string,ClassClass>(context, classClass));
+
             classMap.find(context)->second.keywords.insert("extends");
         }
         if(it == classMap.end())
         {
             errors.push_back(context + " is extending a non existing class " + extendedClass);
         }
-        classMap.find(context) = it;
 
         class_context = true;
         child_context = true;
@@ -375,6 +379,8 @@ namespace Pomme
         it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
         node->index = it->second.functions.size() - 1;
         name->m_MethodIdentifier = functionIdent;
+
+        node->jjtGetChild(4)->jjtAccept(this, data); // instrs
 
     }
     void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -478,7 +484,12 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTinstrs *node, void * data)
     {
-
+        /*if(path_number != 2){
+            return;  todo
+        }*/
+        instrs_context = true;
+        node->jjtChildrenAccept(this,data);
+        instrs_context = false;
     }
     void TypeCheckerVisitor::visit(ASTinil *node, void * data)
     {
@@ -702,15 +713,25 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTlistacces *node, void * data)
     {
+        // acccess
+        std::string class_name;
+        node->jjtChildAccept(0, this, &class_name);
+
+        // access
+        node->jjtChildAccept(1, this, &class_name);
+
+        //acccesP
+        node->jjtChildAccept(2, this,  &class_name);
+
 
     }
     void TypeCheckerVisitor::visit(ASTlistaccesP *node, void * data)
     {
-
+        node->jjtChildrenAccept(this, data);
     }
     void TypeCheckerVisitor::visit(ASTpommeProperty *node, void * data)
     {
-
+        node->jjtChildrenAccept(this, data);
     }
     void TypeCheckerVisitor::visit(ASTacnil *node, void * data)
     {
@@ -718,7 +739,86 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTaccessMethode *node, void * data)
     {
+        std::string* class_name_caller = nullptr;
+        if(data != nullptr)
+        {
+            class_name_caller = static_cast<std::string*>(data);
+        }
 
+        auto *identNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+        std::string functionName = identNode->m_Identifier;
+        std::string functionIdent = functionName;
+
+        auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+        std::vector<std::string> typeParameters;
+        std::string typeExp;
+
+        while(functionParameters != nullptr)
+        {
+            functionParameters->jjtGetChild(0)->jjtAccept(this, &typeExp);
+            typeParameters.push_back(typeExp);
+            functionParameters = dynamic_cast<ASTlistexp*>(functionParameters->jjtGetChild(1));
+        }
+
+        if(!typeParameters.empty())
+        {
+            functionIdent += NAME_FUNC_SEPARATOR;
+            for(const auto& type : typeParameters)
+            {
+                functionIdent += type + HEADER_FUNC_SEPARATOR;
+            }
+        }
+
+        std::cout << "functionName == " << functionIdent << std::endl;
+
+        if(class_name_caller != nullptr && *class_name_caller != "")
+        {
+            auto it = classMap.find(*class_name_caller);
+            if (it != classMap.end())
+            {
+                auto ot = it->second.functions.find(functionIdent);
+                if (ot != it->second.functions.end())
+                {
+                    node->index = ot->second.index;
+                    *class_name_caller = class_name;
+                    std::cout << " INDEX  == " << node->index << std::endl;
+                }else{
+                    errors.push_back("No function " + functionName + " implemented in class " + *class_name_caller);
+                    return;
+                }
+            }
+        }else if(class_context)
+        {
+            auto it = classMap.find(class_name);
+            if (it != classMap.end()) {
+                auto ot = it->second.functions.find(functionIdent);
+                if (ot == it->second.functions.end()) {
+                    auto ut = globalFunctionsMap.find(functionIdent);
+                    if (ut == globalFunctionsMap.end()) {
+                        errors.push_back("No function " + functionName + " implemented in file ");
+                        return;
+                    }
+                    if( class_name_caller != nullptr)
+                    {
+                        *class_name_caller = ut->second.returnType;
+                    }
+                } else {
+                    node->index = ot->second.index;
+                    if( class_name_caller != nullptr)
+                    {
+                        *class_name_caller = class_name;
+                    }
+                    std::cout << " INDEX  == " << node->index << std::endl;
+                }
+            }
+        }else // global scope
+        {
+            auto ut = globalFunctionsMap.find(functionIdent);
+            if( ut == globalFunctionsMap.end())
+            {
+                errors.push_back("No global function "+functionName+" implemented in file ");
+                return;
+            }
+        }
     }
-
 }

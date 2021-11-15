@@ -24,12 +24,13 @@ namespace Pomme
         public:
 
             FunctionClass(std::string  returnType, std::string  functionName,std::string  functionIdent,
-                          std::unordered_set<std::string>  parameters, std::unordered_set<std::string>  keywords)
+                          std::unordered_set<std::string>  parameters, std::unordered_set<std::string>  keywords, int index)
             : returnType(std::move(returnType)),
             functionName(std::move(functionName)),
             functionIdent(std::move(functionIdent)),
             parameters(std::move(parameters)),
-            keywords(std::move(keywords))
+            keywords(std::move(keywords)),
+            index(index)
             {
             }
 
@@ -39,6 +40,7 @@ namespace Pomme
             std::unordered_set<std::string> parameters;
             std::unordered_set<std::string> keywords;
             std::map<std::string, std::string> variables;
+            int index;
 
             friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass)
             {
@@ -132,8 +134,12 @@ namespace Pomme
         std::map<std::string, ClassClass> classMap;
         std::vector<std::string> errors;
 
-        bool class_context{};
-        bool child_context{};
+        bool class_context = false;
+        std::string class_name;
+        bool child_context = false;
+        std::string child_name;
+
+        bool instrs_context = false;
         int path_number = 1;
 
         void visiteVariable(Node * node, void* data, bool isConst);

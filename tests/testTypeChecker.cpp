@@ -42,7 +42,7 @@ TEST(TEST_TYPECHECKER, ClassComplete)
 
 TEST(TEST_TYPECHECKER, FileComplete)
 {
-    TEST_TYPECHECKER_TEST("void meth(){};  void xd(int j){}; class test { int a = 8;  boolean b = 8; void meth(int abc){ int b = 7; }; }; \n");
+    TEST_TYPECHECKER_TEST("void meth(){};  void xd(int j){}; class test { int a = 8;  boolean b = 8; void meth(int abc){ boolean b = 7; }; }; \n");
 
     std::cout << text << std::endl;
 
@@ -280,7 +280,7 @@ TEST(TEST_TYPECHECKER, OverrideMethod)
 
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 0);
+    EXPECT_EQ(visitor.errors.size(), 1);
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
@@ -320,7 +320,7 @@ TEST(TEST_TYPECHECKER, ExtendedClass) {
     EXPECT_TRUE(visitor.classMap.find("test2")->second.functions.count("t2"));
 }
 TEST(TEST_TYPECHECKER, ExtendingNonExistingClass) {
-    TEST_TYPECHECKER_TEST("class test extends unknow{}; \n");
+    TEST_TYPECHECKER_TEST("class test extends t2{}; \n");
 
     std::cout << text << std::endl;
 
@@ -331,6 +331,8 @@ TEST(TEST_TYPECHECKER, ExtendingNonExistingClass) {
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+
+    //todo check exception here
 }
 TEST(TEST_TYPECHECKER, OverridingWithoutExtends) {
     TEST_TYPECHECKER_TEST("class test{ override void test(){}; }; \n");
@@ -375,5 +377,102 @@ TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) {
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test::a"));
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.find("test::a")->second.variableType == "int");
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test2::b"));
+}
+TEST(TEST_TYPECHECKER, AccessToNonExistingMethod) {
+    TEST_TYPECHECKER_TEST("class test{ void x(){ op(10); }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, AccessToExistingMethod) {
+    TEST_TYPECHECKER_TEST("class test{ void k(){}; void op(int x){}; void x(){ op(10); }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, CallingGlobalFunctionNotDefined) {
+    TEST_TYPECHECKER_TEST("void x(){ op(10); };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, CallingFunctionOnInstanceReturn) {
+    TEST_TYPECHECKER_TEST("x op(){}; class x{ void t(){}; void meth(){ op().t(); }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, CallingFunctionOnInstanceReturnNotExisting) {
+    TEST_TYPECHECKER_TEST("x op(){}; class x{ void meth(){ op().t(); }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, MultipleAccessProperty) {
+    TEST_TYPECHECKER_TEST("x op(){}; class x{ x t(){}; void meth(){ op().t().t(); }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, MultipleAccessP) {
+    TEST_TYPECHECKER_TEST("x op(){}; class x{ x t(){}; void meth(){ op().t().t().t(); };};\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
 }
 
