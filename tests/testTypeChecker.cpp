@@ -476,3 +476,60 @@ TEST(TEST_TYPECHECKER, MultipleAccessP) {
     }
 }
 
+TEST(TEST_TYPECHECKER, LocalsDefinition) {
+    TEST_TYPECHECKER_TEST("class x{ void meth(){ int a; int b; }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, NotDefinedVariableInFunction) {
+    TEST_TYPECHECKER_TEST("class x{ void meth(){ x = 8; }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, DefinedVariableInLocals) {
+    TEST_TYPECHECKER_TEST("class x{ void meth(){ int x; x = 8; }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, DefinedVariableInAttribute) {
+    TEST_TYPECHECKER_TEST("class x{ int x; void meth(){ x = 8; }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+

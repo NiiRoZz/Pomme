@@ -11,6 +11,14 @@
 namespace Pomme
 {
 
+    /*
+     *
+     * todo
+     *
+     *
+     * instrs : definition + expression
+     * local variable : check ident existence + add index to ident if class attribute */
+
     TypeCheckerVisitor::TypeCheckerVisitor()
 	{
 	}
@@ -78,6 +86,34 @@ namespace Pomme
         }else if(instrs_context)
         {
             std::cout << "instrs_context " << std::endl;
+            std::string &localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+            std::string &localName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+            for(int scope_number = 0; scope_number <= current_scopes; scope_number++)
+            {
+                auto ot = locals.find(scope_number);
+                if(ot != locals.end())
+                {
+                    for(const auto& local : ot->second)
+                    {
+                        if(local.variableName == localName)
+                        {
+                            errors.push_back("ERRORS DETECTED : variable "+ localName +" already defined in another scope");
+                        }
+                    }
+                }
+            }
+
+            auto it = locals.find(current_scopes);
+            if(it == locals.end())
+            {
+                std::vector<VariableClass> locals_current_scopes;
+                locals_current_scopes.push_back(*new VariableClass(localType, localName, isConst));
+                locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
+            }else
+            {
+                it->second.push_back(*new VariableClass(localType, localName, isConst));
+            }
         }
     }
 
@@ -233,7 +269,40 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTident *node, void * data)
     {
-        node->jjtChildrenAccept(this, data);
+
+        auto* context = static_cast<std::string*>(data);
+        std::cout << node->m_Identifier << std::endl;
+
+        // locals
+        for(int scopes = current_scopes; scopes >= 0; scopes-- )
+        {
+            auto it = locals.find(scopes);
+            if(it != locals.end())
+            {
+                for(auto ot : it->second)
+                {
+                    if(ot.variableName == node->m_Identifier)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+
+        //attributes
+        if(class_context)
+        {
+            auto it = classMap.find(class_name);
+            if(it != classMap.end())
+            {
+                auto ot = it->second.attributes.find(class_name + "::" + node->m_Identifier);
+                if(ot != it->second.attributes.end()){
+                    return;
+                }
+            }
+        }
+
+        errors.push_back("Variable "+ node->m_Identifier + " not found in either attribute of class nor locals variables ");
     }
     void TypeCheckerVisitor::visit(ASTidentOp *node, void * data)
     {
@@ -273,7 +342,7 @@ namespace Pomme
         addClass(context);
         class_context = true;
         class_name = context;
-        node->jjtChildrenAccept(this, data);
+        node->jjtGetChild(1)->jjtAccept(this, data);
         class_context = false;
     }
 
@@ -309,7 +378,7 @@ namespace Pomme
 
         class_context = true;
         child_context = true;
-        node->jjtChildrenAccept(this, data);
+        node->jjtGetChild(2)->jjtAccept(this, data);
         child_context = false;
         class_context = false;
     }
@@ -476,7 +545,7 @@ namespace Pomme
                             parameters
                         );
 
-        node->jjtChildrenAccept(this, data);
+        node->jjtChildAccept(3,this, data);
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
     {
@@ -509,7 +578,9 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeWhile *node, void * data)
     {
+        current_scopes++;
 
+        current_scopes--;
     }
     void TypeCheckerVisitor::visit(ASTpommeBreak *node, void * data)
     {
@@ -517,7 +588,9 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeIf *node, void * data)
     {
+        current_scopes++;
 
+        current_scopes--;
     }
     void TypeCheckerVisitor::visit(ASTpommePrint *node, void * data)
     {
@@ -529,7 +602,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTassignement *node, void * data)
     {
-
+        node->jjtChildrenAccept(this, data);
     }
     void TypeCheckerVisitor::visit(ASTaddeq *node, void * data)
     {
@@ -573,7 +646,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeCases *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeDefault *node, void * data)
     {
@@ -585,7 +657,9 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeCase *node, void * data)
     {
+        current_scopes++;
 
+        current_scopes--;
     }
     void TypeCheckerVisitor::visit(ASTlistexp *node, void * data)
     {

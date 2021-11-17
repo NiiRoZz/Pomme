@@ -39,7 +39,7 @@ namespace Pomme
             std::string functionIdent;
             std::unordered_set<std::string> parameters;
             std::unordered_set<std::string> keywords;
-            std::map<std::string, std::string> variables;
+            std::unordered_map<std::string, std::string> variables;
             int index;
 
             friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass)
@@ -86,8 +86,8 @@ namespace Pomme
         class ClassClass
         {
             public:
-            std::map<std::string, VariableClass> attributes;
-            std::map<std::string, FunctionClass> functions;
+            std::unordered_map<std::string, VariableClass> attributes;
+            std::unordered_map<std::string, FunctionClass> functions;
             std::unordered_set<std::string> keywords;
             std::unordered_set<std::string> children;
             std::string parent;
@@ -130,9 +130,11 @@ namespace Pomme
 
 	public:
         TypeCheckerVisitor();
-        std::map<std::string, FunctionClass> globalFunctionsMap;
-        std::map<std::string, ClassClass> classMap;
+        std::unordered_map<std::string, FunctionClass> globalFunctionsMap;
+        std::unordered_map<std::string, ClassClass> classMap;
         std::vector<std::string> errors;
+
+        std::unordered_map<int, std::vector<VariableClass>> locals;
 
         bool class_context = false;
         std::string class_name;
@@ -141,6 +143,7 @@ namespace Pomme
 
         bool instrs_context = false;
         int path_number = 1;
+        int current_scopes = 0;
 
         void visiteVariable(Node * node, void* data, bool isConst);
         void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
