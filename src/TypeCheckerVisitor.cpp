@@ -270,14 +270,8 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTident *node, void * data)
     {
-        if (data != nullptr) 
-        {
-            auto* variableType = static_cast<std::string*>(data);
-            *variableType = node->m_Identifier;
-            //return;
-        }
+        auto* variableType = static_cast<std::string*>(data);
 
-        auto* context = static_cast<std::string*>(data);
         std::cout << node->m_Identifier << std::endl;
 
         // locals
@@ -290,6 +284,10 @@ namespace Pomme
                 {
                     if(ot.variableName == node->m_Identifier)
                     {
+                        if (variableType != nullptr) 
+                        {
+                            *variableType = ot.variableType;
+                        }
                         return;
                     }
                 }
@@ -303,7 +301,12 @@ namespace Pomme
             if(it != classMap.end())
             {
                 auto ot = it->second.attributes.find(class_name + "::" + node->m_Identifier);
-                if(ot != it->second.attributes.end()){
+                if(ot != it->second.attributes.end())
+                {
+                    if (variableType != nullptr) 
+                    {
+                        *variableType = ot->second.variableType;
+                    }
                     return;
                 }
             }
@@ -891,6 +894,8 @@ namespace Pomme
         }
 
         std::cout << "functionIdent == " << functionIdent << std::endl;
+
+        //std::cout << "class_name_caller : " << class_name_caller << " " << ((class_name_caller != nullptr) ? *class_name_caller : "") << std::endl;
 
         node->name = functionIdent;
 
