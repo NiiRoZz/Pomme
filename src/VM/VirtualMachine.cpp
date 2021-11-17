@@ -41,9 +41,9 @@ namespace Pomme
             return InterpretResult::INTERPRET_RUNTIME_ERROR;
         }
 
-        ObjFunction* function = AS_FUNCTION(globals[it->second]);
-
         assert(IS_FUNCTION(globals[it->second]));
+
+        ObjFunction* function = AS_FUNCTION(globals[it->second]);
 
         if (function->arity != params.size())
         {
@@ -289,6 +289,9 @@ namespace Pomme
                     assert(IS_INSTANCE(peek(0)));
                     ObjInstance* instance = AS_INSTANCE(peek(0));
 					uint16_t slot = READ_UINT16();
+
+                    assert(slot >= 0u && slot < METHODS_MAX);
+                    assert(IS_FUNCTION(instance->klass->methods[slot]));
 
                     ObjBoundMethod* bound = newBoundMethod(peek(0), AS_FUNCTION(instance->klass->methods[slot]));
                     pop(); // Instance.

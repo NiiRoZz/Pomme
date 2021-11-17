@@ -16,7 +16,7 @@ public:
 
   /** Accept the visitor. **/
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
-  int index;
+  int index = 0;
   bool global = false;
   std::string name;
 };
