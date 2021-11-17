@@ -242,4 +242,33 @@ TEST(TEST_VM, ClassMethodTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ClassConstructorTest)
+{
+	TEST_VM_TEST("class TestClass { public void f() {print(600);}; public void TestClass(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(10); print(oui); };\n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

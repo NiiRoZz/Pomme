@@ -426,7 +426,7 @@ namespace Pomme
     {
         visiteVariable(node, data, false);
 
-        //node->jjtChildAccept(2, this, data);
+        node->jjtChildAccept(2, this, nullptr);
     }
     void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
     {
@@ -444,8 +444,10 @@ namespace Pomme
 
         auto it = classMap.find(context);
         if(it == classMap.end()){
-            errors.push_back("method" + functionName + "not defined in class");
+            errors.push_back("class" + context + "not defined");
         }
+
+        node->constructor = context == functionName;
 
         // todo child_context
 
@@ -468,6 +470,11 @@ namespace Pomme
             functionType = "void";
         }else
         {
+            if (node->constructor && !keywords.count("static"))
+            {
+                errors.push_back("Constructor doesn't have any return type");
+            }
+
             functionType = dynamic_cast<ASTident *>(node->jjtGetChild(1))->m_Identifier;
         }
 
@@ -646,7 +653,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommePrint *node, void * data)
     {
-        node->jjtChildrenAccept(this, data);
+        node->jjtChildrenAccept(this, nullptr);
     }
     void TypeCheckerVisitor::visit(ASTpommeSwitch *node, void * data)
     {
@@ -860,7 +867,16 @@ namespace Pomme
             functionIdent += NAME_FUNC_SEPARATOR + typeExp;
         }
 
-        std::cout << "ASTpommeNew functionIdent : " << functionIdent << std::endl;
+        auto ot = it->second.functions.find(functionIdent);
+
+        if (ot == it->second.functions.end())
+        {
+            node->foundConstructor = false;
+            return;
+        }
+
+        node->foundConstructor = true;
+        node->index = ot->second.index;
     }
 
     void TypeCheckerVisitor::visit(ASTpommeTrue *node, void * data)

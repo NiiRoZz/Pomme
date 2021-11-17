@@ -433,16 +433,6 @@ namespace Pomme
     {
         uint8_t argCount = 0;
 
-        ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
-
-        while (exp != nullptr)
-        {
-            argCount++;
-            exp->jjtGetChild(0)->jjtAccept(this, nullptr);
-
-            exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
-        }
-
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
         std::optional<std::size_t> global = m_Vm.getGlobal(name);
@@ -453,7 +443,20 @@ namespace Pomme
         }
 
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *global);
+
+        ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+
+        while (exp != nullptr)
+        {
+            argCount++;
+            exp->jjtGetChild(0)->jjtAccept(this, nullptr);
+
+            exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
+        }
+
         emitBytes(AS_OPCODE(OpCode::OP_NEW), argCount);
+        emitByte(node->foundConstructor);
+        emit16Bits(node->index);
     }
 
     void CompilerVisitor::visit(ASTpommeTrue *node, void * data) 
@@ -529,7 +532,15 @@ namespace Pomme
         //4: instrs
         node->jjtChildAccept(4, this, data);
 
-        emitReturn();
+        if (node->constructor)
+        {
+            emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), 0);
+            emitByte(AS_OPCODE(OpCode::OP_RETURN));
+        }
+        else
+        {
+            emitReturn();
+        }
 
         endScope();
 

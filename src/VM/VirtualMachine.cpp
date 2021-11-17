@@ -417,13 +417,26 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_NEW):
                 {
                     int argCount = READ_BYTE();
-                    ObjClass* klass = AS_CLASS(peek(0));
+                    bool foundConstructor = READ_BYTE();
+                    uint16_t slot = READ_UINT16();
+
+                    assert(IS_CLASS(peek(argCount)));
+
+                    ObjClass* klass = AS_CLASS(peek(argCount));
                     stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
-                    /*if (klass->constructorIdx > -1)
+
+                    if (foundConstructor)
                     {
-                        return call(AS_FUNCTION(klass->methods[klass->constructorIdx]), argCount);
+                        assert(slot >= 0u && slot < METHODS_MAX);
+                        assert(IS_FUNCTION(klass->methods[slot]));
+
+                        if (!call(AS_FUNCTION(klass->methods[slot]), argCount))
+                        {
+                            return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                        }
+
+                        frame = &frames[frameCount - 1];
                     }
-                    */
                     break;
                 }
             }

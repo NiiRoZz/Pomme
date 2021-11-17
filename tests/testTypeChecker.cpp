@@ -272,7 +272,7 @@ TEST(TEST_TYPECHECKER, VisibilityMethod)
 }
 TEST(TEST_TYPECHECKER, OverrideMethod)
 {
-    TEST_TYPECHECKER_TEST("class test { override int test(){}; }; \n");
+    TEST_TYPECHECKER_TEST("class test { override int f(){}; }; \n");
 
     std::cout << text << std::endl;
 
@@ -284,7 +284,7 @@ TEST(TEST_TYPECHECKER, OverrideMethod)
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("override"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("f")->second.keywords.count("override"));
 }
 TEST(TEST_TYPECHECKER, StaticVisibilityMethod)
 {
