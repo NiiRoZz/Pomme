@@ -191,7 +191,7 @@ void decls() #void :
 void decl() #void :
 {}
 {
-	LOOKAHEAD(methode()) methode()
+	LOOKAHEAD(identfuncs() typemeth() identmeth() <PARENTL> | <NATIVE>) methode()
 	| var()
 }
 
