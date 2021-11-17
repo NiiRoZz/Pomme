@@ -491,7 +491,7 @@ TEST(TEST_TYPECHECKER, LocalsDefinition) {
 }
 
 TEST(TEST_TYPECHECKER, NotDefinedVariableInFunction) {
-    TEST_TYPECHECKER_TEST("class x{ void meth(){ x = 8; }; };\n");
+    TEST_TYPECHECKER_TEST("class x{ void meth(){ k = 8; }; };\n");
 
     std::cout << text << std::endl;
 
@@ -527,6 +527,34 @@ TEST(TEST_TYPECHECKER, DefinedVariableInAttribute) {
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, DefinedVariableInHeader) {
+    TEST_TYPECHECKER_TEST("class x{ void meth(int x){ x = 8; }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, RedefinedVariableInHeader) {
+    TEST_TYPECHECKER_TEST("class x{ void meth(int y, int y){}; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }

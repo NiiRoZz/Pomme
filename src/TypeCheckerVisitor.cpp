@@ -170,7 +170,7 @@ namespace Pomme
             std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
         }else
         {
-            typeCheckerVisitor->errors.push_back(attributeName+" already defined");
+            typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
             std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
         }
     }
@@ -189,7 +189,7 @@ namespace Pomme
                 std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
         }else
         {
-            typeCheckerVisitor->errors.push_back(functionName + " already defined");
+            typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
             std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
         }
 
@@ -209,9 +209,10 @@ namespace Pomme
             parameterName = dynamic_cast<ASTident*>(header->jjtGetChild(1))->m_Identifier;
 
             auto it = parameters.insert(parameterName);
+            std::cout << " parameter NAME =+++ ++ ++ ++ ++ ++  + " << parameterName <<std::endl;
             if(!it.second)
             {
-                errors.push_back(parameterName + " already defined");
+                errors.push_back("Parameter " + parameterName + " already defined");
                 std::cout << "ERROR DETECTED while adding parameter " << parameterName << " : parameter already defined"
                           << std::endl;
             }
@@ -273,7 +274,7 @@ namespace Pomme
         {
             auto* variableType = static_cast<std::string*>(data);
             *variableType = node->m_Identifier;
-            return;
+            //return;
         }
 
         auto* context = static_cast<std::string*>(data);
@@ -461,6 +462,7 @@ namespace Pomme
         node->index = it->second.functions.size() - 1;
         name->m_MethodIdentifier = functionIdent;
 
+        node->jjtGetChild(3)->jjtAccept(this, data); // instrs
         node->jjtGetChild(4)->jjtAccept(this, data); // instrs
 
     }
@@ -560,7 +562,8 @@ namespace Pomme
                             parameters
                         );
 
-        node->jjtChildAccept(3,this, data);
+        node->jjtChildAccept(2, this, data);
+        node->jjtChildAccept(3, this, data);
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
     {
@@ -707,7 +710,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTheaders *node, void * data)
     {
-
+        node->jjtChildrenAccept(this, data);
     }
     void TypeCheckerVisitor::visit(ASTenil *node, void * data)
     {
@@ -715,7 +718,23 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTheader *node, void * data)
     {
+        std::string &localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        if(&localType == nullptr)
+        {
+            localType = "void";
+        }
+        std::string &localName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
+        auto it = locals.find(current_scopes);
+        if(it == locals.end())
+        {
+            std::vector<VariableClass> locals_current_scopes;
+            locals_current_scopes.push_back(*new VariableClass(localType, localName, false)); // todo const in header
+            locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
+        }else
+        {
+            it->second.push_back(*new VariableClass(localType, localName, false));
+        }
     }
     void TypeCheckerVisitor::visit(ASTvoidType *node, void * data)
     {
