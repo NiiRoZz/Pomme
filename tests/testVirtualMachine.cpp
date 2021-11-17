@@ -212,7 +212,7 @@ TEST(TEST_VM, ClassTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
-/*
+
 TEST(TEST_VM, ClassMethodTest)
 {
 	TEST_VM_TEST("class StructClass { int h = 10; public int g(int a) {print(a);}; };  class TestClass { StructClass h = new StructClass(); public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.h.g(25); print(oui.h); print(oui.h.h);  };\n");
@@ -240,6 +240,6 @@ TEST(TEST_VM, ClassMethodTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
-}*/
+}
 
 #undef TEST_VM_TEST
