@@ -189,5 +189,10 @@ TEST(TEST_LEXER_PARSER, TestTypeDef)
 	TEST_PARSER_FILE("class Test {}; enum TestEnum {}; typedef TestEnum MyEnum;\n", "tests/TestTypeDef.txt");
 }
 
+TEST(TEST_LEXER_PARSER, TestHeaders)
+{
+	TEST_PARSER_FILE("class Array{ int b; int test(int a, int c, int d){};  void test2(int a){}; };\n", "tests/TestHeaders.txt");
+}
+
 
 #undef TEST_PARSER_FILE

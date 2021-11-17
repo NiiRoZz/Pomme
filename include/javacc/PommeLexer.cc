@@ -478,7 +478,7 @@ if (jjtc002) {
 
 
 void PommeLexer::decl() {
-    if (jj_2_2(8)) {
+    if (jj_2_2(2147483647)) {
       methode();
     } else {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {

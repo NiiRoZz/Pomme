@@ -586,7 +586,7 @@ void decls()       :
 void decl()       :
 {}
 {
-	LOOKAHEAD(8) methode()
+	LOOKAHEAD(methode()) methode()
 	| var()
 }
 
