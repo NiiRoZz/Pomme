@@ -150,6 +150,7 @@ namespace Pomme
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
         std::unordered_set<std::string> buildSignature(ASTheaders *headers);
+        std::string getExpTypes(Pomme::Node* node);
         std::unordered_set<std::string> buildKeyword(ASTidentFuncs *node);
 
         friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass)

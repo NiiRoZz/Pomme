@@ -227,6 +227,22 @@ namespace Pomme
         return parameters;
     }
 
+    std::string TypeCheckerVisitor::getExpTypes(Pomme::Node* node)
+    {
+        auto *functionParameters = dynamic_cast<ASTlistexp*>(node);
+        std::string typeExp = "";
+
+        while(functionParameters != nullptr)
+        {
+            std::string type;
+            functionParameters->jjtGetChild(0)->jjtAccept(this, &type);
+            typeExp += type + HEADER_FUNC_SEPARATOR;
+            functionParameters = dynamic_cast<ASTlistexp*>(functionParameters->jjtGetChild(1));
+        }
+
+        return typeExp;
+    }
+
     std::unordered_set<std::string> TypeCheckerVisitor::buildKeyword(ASTidentFuncs *node)
     {
 
@@ -409,6 +425,8 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
         visiteVariable(node, data, false);
+
+        //node->jjtChildAccept(2, this, data);
     }
     void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
     {
@@ -819,10 +837,32 @@ namespace Pomme
     {
 
     }
+
     void TypeCheckerVisitor::visit(ASTpommeNew *node, void * data)
     {
+        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
+        auto it = classMap.find(name);
+
+        if (it == classMap.end())
+        {
+            errors.push_back("Can't find class name : " + name);
+            return;
+        }
+
+        std::string functionIdent = name;
+
+        auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+        std::string typeExp = getExpTypes(functionParameters);
+
+        if(!typeExp.empty())
+        {
+            functionIdent += NAME_FUNC_SEPARATOR + typeExp;
+        }
+
+        std::cout << "ASTpommeNew functionIdent : " << functionIdent << std::endl;
     }
+
     void TypeCheckerVisitor::visit(ASTpommeTrue *node, void * data)
     {
 
@@ -874,23 +914,11 @@ namespace Pomme
         std::string functionIdent = functionName;
 
         auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
-        std::vector<std::string> typeParameters;
-        std::string typeExp;
+        std::string typeExp = getExpTypes(functionParameters);
 
-        while(functionParameters != nullptr)
+        if(!typeExp.empty())
         {
-            functionParameters->jjtGetChild(0)->jjtAccept(this, &typeExp);
-            typeParameters.push_back(typeExp);
-            functionParameters = dynamic_cast<ASTlistexp*>(functionParameters->jjtGetChild(1));
-        }
-
-        if(!typeParameters.empty())
-        {
-            functionIdent += NAME_FUNC_SEPARATOR;
-            for(const auto& type : typeParameters)
-            {
-                functionIdent += type + HEADER_FUNC_SEPARATOR;
-            }
+            functionIdent += NAME_FUNC_SEPARATOR + typeExp;
         }
 
         std::cout << "functionIdent == " << functionIdent << std::endl;
