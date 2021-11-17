@@ -182,7 +182,7 @@ TEST(TEST_VM, GlobalNativeTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
-/*TEST(TEST_VM, ClassTest)
+TEST(TEST_VM, ClassTest)
 {
 	TEST_VM_TEST("class TestClass { int g = 5; public void t() {int f = 50; print(f);}; }; void f() { int a = 10; TestClass oui = new TestClass(); TestClass non = new TestClass(); oui.t(); a = 25; oui.g = 35; non.g = 700; print(a); print(oui.g); print(non.g); };\n");
 
@@ -211,6 +211,7 @@ TEST(TEST_VM, GlobalNativeTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+/*
 TEST(TEST_VM, ClassMethodTest)
 {
 	TEST_VM_TEST("class StructClass { int h = 10; public int g(int a) {print(a);}; };  class TestClass { StructClass h = new StructClass(); public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.h.g(25); print(oui.h); print(oui.h.h);  };\n");

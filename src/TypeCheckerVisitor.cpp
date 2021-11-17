@@ -269,6 +269,12 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTident *node, void * data)
     {
+        if (data != nullptr) 
+        {
+            auto* variableType = static_cast<std::string*>(data);
+            *variableType = node->m_Identifier;
+            return;
+        }
 
         auto* context = static_cast<std::string*>(data);
         std::cout << node->m_Identifier << std::endl;
