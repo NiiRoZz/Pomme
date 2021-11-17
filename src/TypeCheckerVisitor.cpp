@@ -310,16 +310,22 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeInt *node, void * data)
     {
+        if (data == nullptr) return;
+        
         auto* variableType = static_cast<std::string*>(data);
         *variableType = "int";
     }
     void TypeCheckerVisitor::visit(ASTpommeFloat *node, void * data)
     {
+        if (data == nullptr) return;
+
         auto* variableType = static_cast<std::string*>(data);
         *variableType = "float";
     }
     void TypeCheckerVisitor::visit(ASTpommeString *node, void * data)
     {
+        if (data == nullptr) return;
+
         auto* variableType = static_cast<std::string*>(data);
         *variableType = "string";
     }
@@ -522,7 +528,8 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
     {
-        std::string functionName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        ASTident* functionIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+        std::string functionName = functionIdentNode->m_Identifier;
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
         std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
         std::unordered_set<std::string> parameters = buildSignature(headers);
@@ -533,6 +540,8 @@ namespace Pomme
         {
             std::cout << it << std::endl;
         }
+
+        functionIdentNode->m_MethodIdentifier = functionIdent;
 
         auto* identNode = dynamic_cast<ASTvoidType*>(node->jjtGetChild(0));
         addGlobalFunction ( (
@@ -549,7 +558,20 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
     {
+        ASTident* functionIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+        std::string functionName = functionIdentNode->m_Identifier;
+        auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
+        std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+        std::unordered_set<std::string> parameters = buildSignature(headers);
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
+        std::cout << "parameters ___________________________" << std::endl;
+        for(const auto& it : parameters)
+        {
+            std::cout << it << std::endl;
+        }
+
+        functionIdentNode->m_MethodIdentifier = functionIdent;
     }
     void TypeCheckerVisitor::visit(ASTinstrs *node, void * data)
     {
