@@ -35,6 +35,14 @@ TEST(TEST_VM, BasicTest)
     VirtualMachine vm;
     Compiler compiler(vm);
 
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
 	ObjFunction *function = compiler.compile(tree);
 
 	InterpretResult result = vm.interpret(function);
@@ -55,6 +63,14 @@ TEST(TEST_VM, GlobalFunctionTest)
 
     VirtualMachine vm;
     Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
 
 	ObjFunction *function = compiler.compile(tree);
 
@@ -77,6 +93,14 @@ TEST(TEST_VM, ScopeTest)
     VirtualMachine vm;
     Compiler compiler(vm);
 
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
 	ObjFunction *function = compiler.compile(tree);
 
 	InterpretResult result = vm.interpret(function);
@@ -97,6 +121,14 @@ TEST(TEST_VM, IfTest)
 
     VirtualMachine vm;
     Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
 
 	ObjFunction *function = compiler.compile(tree);
 

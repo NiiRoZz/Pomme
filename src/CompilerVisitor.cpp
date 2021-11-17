@@ -592,13 +592,10 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
     {
+        ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(1));
         //1: name
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
-
-        //2: parameters
-        std::string parametersType = CommonVisitorFunction::getParametersType(node->jjtGetChild(2));
-
-        std::string nameFunc = name + NAME_FUNC_SEPARATOR + parametersType;
+        std::string name = identFunc->m_Identifier;
+        std::string nameFunc = identFunc->m_MethodIdentifier;
 
         uint8_t global = m_Vm.addGlobal(nameFunc);
 
@@ -630,13 +627,10 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
     {
+        ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(1));
         //1: name
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
-
-        //2: parameters
-        std::string parametersType = CommonVisitorFunction::getParametersType(node->jjtGetChild(2));
-
-        std::string nameFunc = name + NAME_FUNC_SEPARATOR + parametersType;
+        std::string name = identFunc->m_Identifier;
+        std::string nameFunc = identFunc->m_MethodIdentifier;
 
         uint8_t global = m_Vm.addGlobal(nameFunc);
 
