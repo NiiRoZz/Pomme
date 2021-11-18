@@ -147,6 +147,8 @@ namespace Pomme
 		void beginScope();
 		void endScope();
 
+		void method(SimpleNode *node, ASTident* name, uint16_t index, bool constructor);
+
 		int addLocal(const std::string& name);
 		void namedVariable(const std::string& name, bool assign);
 	private:

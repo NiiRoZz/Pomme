@@ -244,7 +244,7 @@ TEST(TEST_VM, ClassMethodTest)
 
 TEST(TEST_VM, ClassConstructorTest)
 {
-	TEST_VM_TEST("class TestClass { public void f() {print(600);}; public void TestClass(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(10); print(oui); };\n");
+	TEST_VM_TEST("class TestClass { public void f() {print(600);}; TestClass(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(10); print(oui); };\n");
 
     std::cout << text << std::endl;
 

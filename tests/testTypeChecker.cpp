@@ -335,7 +335,7 @@ TEST(TEST_TYPECHECKER, ExtendingNonExistingClass) {
     //todo check exception here
 }
 TEST(TEST_TYPECHECKER, OverridingWithoutExtends) {
-    TEST_TYPECHECKER_TEST("class test{ override void test(){}; }; \n");
+    TEST_TYPECHECKER_TEST("class test{ override void x(){}; }; \n");
 
     std::cout << text << std::endl;
 
@@ -548,6 +548,48 @@ TEST(TEST_TYPECHECKER, DefinedVariableInHeader) {
 
 TEST(TEST_TYPECHECKER, RedefinedVariableInHeader) {
     TEST_TYPECHECKER_TEST("class x{ void meth(int y, int y){}; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, MethodNameSameAsClass) {
+    TEST_TYPECHECKER_TEST("class x { void x(int x, int y) {}; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, Constructor) {
+    TEST_TYPECHECKER_TEST("class x { x(int x, int y) {}; x() {}; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, ConstructorNotCorrectName) {
+    TEST_TYPECHECKER_TEST("class x { z(int x, int y) {}; x() {}; };\n");
 
     std::cout << text << std::endl;
 

@@ -451,7 +451,10 @@ namespace Pomme
             errors.push_back("class" + context + "not defined");
         }
 
-        node->constructor = context == functionName;
+        if (functionName == context && !keywords.count("static"))
+        {
+            errors.push_back("can't define a method with the same name of the class");
+        }
 
         // todo child_context
 
@@ -474,11 +477,6 @@ namespace Pomme
             functionType = "void";
         }else
         {
-            if (node->constructor && !keywords.count("static"))
-            {
-                errors.push_back("Constructor doesn't have any return type");
-            }
-
             functionType = dynamic_cast<ASTident *>(node->jjtGetChild(1))->m_Identifier;
         }
 
@@ -494,7 +492,7 @@ namespace Pomme
         node->index = it->second.functions.size() - 1;
         name->m_MethodIdentifier = functionIdent;
 
-        node->jjtGetChild(3)->jjtAccept(this, data); // instrs
+        node->jjtGetChild(3)->jjtAccept(this, data); // headers
         node->jjtGetChild(4)->jjtAccept(this, data); // instrs
 
     }
@@ -774,7 +772,37 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeConstructor *node, void * data)
     {
-        
+        std::string functionType = "void";
+        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+        std::string &functionName = name->m_Identifier;
+        std::string functionIdent = functionName;
+        std::string &context = *static_cast<std::string*>(data);
+
+        auto it = classMap.find(context);
+        if(it == classMap.end()){
+            errors.push_back("class" + context + "not defined");
+        }
+
+        if (functionName != context)
+        {
+            errors.push_back("Can't define a constructor with not the same identifier as class. (" + functionName + " expected " + context + ")");
+            return;
+        }
+
+        auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(1)); // headers
+        std::unordered_set<std::string> parameters = buildSignature(headers);
+        std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+
+        if(!parameters.empty())
+        {
+            functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
+        }
+        it->second.addFunction(functionType, functionIdent, parameters, {}, this);
+        node->index = it->second.functions.size() - 1;
+        name->m_MethodIdentifier = functionIdent;
+
+        node->jjtGetChild(1)->jjtAccept(this, data); // headers
+        node->jjtGetChild(2)->jjtAccept(this, data); // instrs
     }
     void TypeCheckerVisitor::visit(ASTpommeDestructor *node, void * data)
     {

@@ -523,48 +523,8 @@ namespace Pomme
     void CompilerVisitor::visit(ASTpommeMethode *node, void * data)
     {
         auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
-        std::string& ident = name->m_MethodIdentifier;
-        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(ident.c_str(), ident.length())));
-
-        m_InMethod = true;
-
-        ObjFunction* currentFunction = function;
-        function = m_Vm.newFunction();
-
-        function->name = m_Vm.copyString(name->m_Identifier.c_str(), name->m_Identifier.length());
-
-        beginScope(); 
-
-        addLocal("this");
-
-        //3: parameters
-        node->jjtChildAccept(3, this, data);
-
-        //4: instrs
-        node->jjtChildAccept(4, this, data);
-
-        if (node->constructor)
-        {
-            emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), 0);
-            emitByte(AS_OPCODE(OpCode::OP_RETURN));
-        }
-        else
-        {
-            emitReturn();
-        }
-
-        endScope();
-
-        ObjFunction* compiledFunction = function;
-        function = currentFunction;
-
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
-
-        emitByte(AS_OPCODE(OpCode::OP_METHOD));
-        emit16Bits(node->index);
-        emitByte(identConstant);
-
-        m_InMethod = false;
+        
+        method(node, name, node->index, false);
     }
 
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -720,7 +680,9 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeConstructor *node, void * data)
     {
+        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
         
+        method(node, name, node->index, true);
     }
 
     void CompilerVisitor::visit(ASTpommeDestructor *node, void * data)
@@ -965,6 +927,52 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_POP));
             localCount--;
         }
+    }
+
+    void CompilerVisitor::method(SimpleNode *node, ASTident *name, uint16_t index, bool constructor)
+    {
+        std::string& ident = name->m_MethodIdentifier;
+        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(ident.c_str(), ident.length())));
+
+        m_InMethod = true;
+
+        ObjFunction* currentFunction = function;
+        function = m_Vm.newFunction();
+
+        function->name = m_Vm.copyString(name->m_Identifier.c_str(), name->m_Identifier.length());
+
+        beginScope(); 
+
+        addLocal("this");
+
+        //1 or 3: headers
+        node->jjtChildAccept(constructor ? 1u : 3u, this, nullptr);
+
+        //2 or 4: instrs
+        node->jjtChildAccept(constructor ? 2u : 4u, this, nullptr);
+
+        if (constructor)
+        {
+            emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), 0);
+            emitByte(AS_OPCODE(OpCode::OP_RETURN));
+        }
+        else
+        {
+            emitReturn();
+        }
+
+        endScope();
+
+        ObjFunction* compiledFunction = function;
+        function = currentFunction;
+
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
+
+        emitByte(AS_OPCODE(OpCode::OP_METHOD));
+        emit16Bits(index);
+        emitByte(identConstant);
+
+        m_InMethod = false;
     }
 
     int CompilerVisitor::addLocal(const std::string& name)
