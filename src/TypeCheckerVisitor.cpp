@@ -393,7 +393,6 @@ namespace Pomme
 
         auto it = classMap.find(extendedClass);
         if(it != classMap.end()){
-
             ClassClass classClass;
             classClass = classMap.find(extendedClass)->second;
             classClass.parent = extendedClass;
@@ -492,7 +491,6 @@ namespace Pomme
 
         node->jjtGetChild(3)->jjtAccept(this, data); // headers
         node->jjtGetChild(4)->jjtAccept(this, data); // instrs
-
     }
     void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
@@ -875,8 +873,6 @@ namespace Pomme
 
         //acccesP
         node->jjtChildAccept(2, this,  &class_name);
-
-
     }
     void TypeCheckerVisitor::visit(ASTlistaccesP *node, void * data)
     {
