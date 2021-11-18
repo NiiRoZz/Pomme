@@ -141,8 +141,8 @@ namespace Pomme
 		void emitDefaultValue(const std::string& typeName);
 
 		void endCompiler();
-		void emitConstant(Value value);
-		uint8_t makeConstant(Value value);
+		void emitConstant(const Value& value);
+		uint8_t makeConstant(const Value& value);
 
 		void beginScope();
 		void endScope();

@@ -796,12 +796,12 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_NULL));
     }
 
-    void CompilerVisitor::emitConstant(Value value)
+    void CompilerVisitor::emitConstant(const Value& value)
     {
         emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
     }
 
-    uint8_t CompilerVisitor::makeConstant(Value value)
+    uint8_t CompilerVisitor::makeConstant(const Value& value)
     {
         int constant = currentChunk()->addConstant(value);
         if (constant > UINT16_MAX)

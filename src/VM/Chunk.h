@@ -74,7 +74,7 @@ namespace Pomme
     {
     public:
         void writeChunk(uint8_t byte, int line);
-        int addConstant(Value value);
+        int addConstant(const Value& value);
 
     public:
         int count;

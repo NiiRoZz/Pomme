@@ -83,7 +83,7 @@ namespace Pomme
         AS_GLOBAL_NATIVE(globals[it->second]) = function;
     }
 
-    void VirtualMachine::push(Value value)
+    void VirtualMachine::push(const Value& value)
     {
     	*stackTop = value;
         stackTop++;

@@ -44,7 +44,7 @@ namespace Pomme
 			return name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
 		}
 
-		void push(Value value);
+		void push(const Value& value);
 		Value pop();
 		Value peek(int depth);
 

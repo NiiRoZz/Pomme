@@ -19,7 +19,7 @@ namespace Pomme
         count++;
     }
 
-    int Chunk::addConstant(Value value)
+    int Chunk::addConstant(const Value& value)
     {
         constants.write(value);
         return constants.count - 1;
