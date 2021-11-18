@@ -753,7 +753,27 @@ namespace Pomme
             emit16Bits(ident->m_IndexAttribute);
         }
 
-        node->jjtChildAccept(2, this, data);
+        ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+        methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(2));
+        if (ident != nullptr)
+        {
+            std::cout << "ident 3 attribute : " << ident->m_IndexAttribute << std::endl;
+            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+            emitByte(AS_OPCODE(code));
+            emit16Bits(ident->m_IndexAttribute);
+        }
+        else if (methode != nullptr)
+        {
+            assert(!assign);
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(methode->index);
+
+            methode->jjtAccept(this, &assign);
+        }
+        else
+        {
+            node->jjtChildAccept(2, this, data);
+        }
     }
 
     void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
