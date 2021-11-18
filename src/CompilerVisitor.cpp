@@ -53,7 +53,16 @@ namespace Pomme
         }
         else
         {
-            namedVariable(node->m_Identifier, assign);
+            //First check if it's a name of a class (for static method/property)
+            if (!emitGetClass(node->m_Identifier))
+            {
+                //Second, check if it's not a local var or global method
+                namedVariable(node->m_Identifier, assign);
+            }
+            else
+            {
+                assert(!assign);
+            }
         }
     }
 
@@ -471,7 +480,7 @@ namespace Pomme
     
     void CompilerVisitor::visit(ASTpommeClass *node, void * data)
     {
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
         uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
         uint8_t global = m_Vm.addGlobal(name);
@@ -624,6 +633,7 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_FIELD));
             emit16Bits(node->index);
             emitByte(makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length()))));
+            emitByte(node->isStatic);
         }
     }
 
@@ -760,6 +770,20 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_NULL));
     }
 
+    bool CompilerVisitor::emitGetClass(const std::string& name)
+    {
+        std::optional<std::size_t> idx = m_Vm.getGlobal(name);
+
+        if (!idx.has_value())
+        {
+            return false;
+        }
+
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *idx);
+
+        return true;
+    }
+
     void CompilerVisitor::emitConstant(const Value& value)
     {
         emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
@@ -813,8 +837,6 @@ namespace Pomme
 
         auto emitIdent = [&] (ASTident* ident, bool check, bool forceCheck) {
             if (ident == nullptr) return false; 
-
-            assert(ident != nullptr);
 
             OpCode code = OpCode::OP_GET_PROPERTY;
             if (forceCheck || (check && !hasNext)) code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
@@ -932,7 +954,7 @@ namespace Pomme
 
         std::optional<std::size_t> idx = m_Vm.getGlobal(name);
 
-        if (!idx)
+        if (!idx.has_value())
         {
             assert(false);
         }

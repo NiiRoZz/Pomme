@@ -265,38 +265,78 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_GET_PROPERTY):
                 {
-                    ObjInstance* instance = AS_INSTANCE(peek(0));
-					uint16_t slot = READ_UINT16();
+                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
 
-                    pop(); // Instance.
-                    push(instance->fields[slot]);
+                    uint16_t slot = READ_UINT16();
+
+                    Value* value = nullptr;
+
+                    if (IS_INSTANCE(peek(0)))
+                    {
+                        ObjInstance* instance = AS_INSTANCE(peek(0));
+                        value = &instance->fields[slot];
+                    }
+                    else
+                    {
+                        ObjClass* klass = AS_CLASS(peek(0));
+                        value = &klass->staticFields[slot];
+                    }
+
+                    pop(); // Instance or Class.
+                    push(*value);
 
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_SET_PROPERTY):
                 {
-					ObjInstance* instance = AS_INSTANCE(peek(0));
-                    uint16_t slot = READ_UINT16();
-                    instance->fields[slot] = peek(1);
+                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
 
-                    pop(); // Instance.
+                    uint16_t slot = READ_UINT16();
+
+                    if (IS_INSTANCE(peek(0)))
+                    {
+                        ObjInstance* instance = AS_INSTANCE(peek(0));
+                        instance->fields[slot] = peek(1);
+                    }
+                    else
+                    {
+                        ObjClass* klass = AS_CLASS(peek(0));
+                        klass->staticFields[slot] = peek(1);
+                    }
+
+                    pop(); // Instance or Class.
                     pop(); // Value
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_GET_METHOD):
                 {
-                    assert(IS_INSTANCE(peek(0)));
-                    ObjInstance* instance = AS_INSTANCE(peek(0));
-					uint16_t slot = READ_UINT16();
+                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
 
+                    uint16_t slot = READ_UINT16();
                     assert(slot >= 0u && slot < METHODS_MAX);
-                    assert(IS_FUNCTION(instance->klass->methods[slot]));
 
-                    ObjBoundMethod* bound = newBoundMethod(peek(0), AS_FUNCTION(instance->klass->methods[slot]));
-                    pop(); // Instance.
-                    push(OBJ_VAL(bound));
+                    Obj* obj = nullptr;
+
+                    if (IS_INSTANCE(peek(0)))
+                    {
+                        ObjInstance* instance = AS_INSTANCE(peek(0));
+                        assert(IS_FUNCTION(instance->klass->methods[slot]));
+                        ObjBoundMethod* bound = newBoundMethod(peek(0), AS_FUNCTION(instance->klass->methods[slot]));
+                        obj = (Obj*) bound;
+                    }
+                    else
+                    {
+                        ObjClass* klass = AS_CLASS(peek(0));
+                        assert(IS_FUNCTION(klass->methods[slot]));
+
+                        ObjFunction* func = AS_FUNCTION(klass->methods[slot]);
+                        obj = (Obj*) func;
+                    }
+
+                    pop(); // Instance or Class.
+                    push(OBJ_VAL(obj));
                     break;
                 }
 
@@ -391,8 +431,9 @@ namespace Pomme
                 {
                     uint16_t slot = READ_UINT16();
                     ObjString* name = READ_STRING();
+                    bool isStatic = READ_BYTE();
 
-                    defineField(slot, name);
+                    defineField(slot, name, isStatic);
                     break;
                 }
 
@@ -637,17 +678,24 @@ namespace Pomme
         pop();
     }
 
-    void VirtualMachine::defineField(uint16_t slot, ObjString* name)
+    void VirtualMachine::defineField(uint16_t slot, ObjString* name, bool isStatic)
     {
-        std::cout << "VirtualMachine::defineField(" << slot << ", " << name->chars << ")" << std::endl;
+        std::cout << "VirtualMachine::defineField(" << slot << ", " << name->chars << ", " << isStatic << ")" << std::endl;
 
         Value value = peek(0);
-
         assert(IS_CLASS(peek(1)));
 
         ObjClass* klass = AS_CLASS(peek(1));
 
-        klass->fields_default[slot] = value;
+        if (isStatic)
+        {
+            klass->staticFields[slot] = value;
+        }
+        else
+        {
+            klass->defaultFields[slot] = value;
+        }
+        
         //klass->fieldsIndices[name->chars] = slot;
         pop();
     }
@@ -663,7 +711,7 @@ namespace Pomme
     {
         ObjInstance* instance = ALLOCATE_OBJ(this, ObjInstance, ObjType::OBJ_INSTANCE);
         instance->klass = klass;
-        std::memcpy(instance->fields, klass->fields_default, sizeof(Value) * FIELDS_MAX);
+        std::memcpy(instance->fields, klass->defaultFields, sizeof(Value) * FIELDS_MAX);
         return instance;
     }
 

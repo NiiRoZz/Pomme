@@ -90,7 +90,7 @@ namespace Pomme
 		void printFunction(ObjFunction* function);
 
 		void defineMethod(uint16_t slot, ObjString* name);
-		void defineField(uint16_t slot, ObjString* name);
+		void defineField(uint16_t slot, ObjString* name, bool isStatic);
 
 		ObjClass* newClass(ObjString* name);
 		ObjInstance* newInstance(ObjClass* klass);

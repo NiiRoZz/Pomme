@@ -329,4 +329,62 @@ TEST(TEST_VM, ThisVariableTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ClassStaticMethodTest)
+{
+	TEST_VM_TEST("class TestClass { static int y(int a) {print(a);}; }; void f() { TestClass.y(10); };\n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ClassStaticVarTest)
+{
+	TEST_VM_TEST("class TestClass { static int y = 587; }; void f() { print(TestClass.y); };\n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

@@ -76,7 +76,8 @@ namespace Pomme
         Obj obj;
         ObjString* name;
         Value methods[METHODS_MAX]; 
-        Value fields_default[FIELDS_MAX]; 
+        Value staticFields[FIELDS_MAX]; 
+        Value defaultFields[FIELDS_MAX]; 
         int deconstructorIdx = -1;
 
         //Used for C++->Pomme call

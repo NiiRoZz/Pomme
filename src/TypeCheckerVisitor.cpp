@@ -22,7 +22,7 @@ namespace Pomme
 	{
 	}
 
-    void TypeCheckerVisitor::visiteVariable(Node * node, void* data, bool isConst)
+    void TypeCheckerVisitor::visiteVariable(Node * node, void* data, bool isConst, const std::unordered_set<std::string>& keywords)
     {
         std::string &context = *static_cast<std::string*>(data);
 
@@ -75,6 +75,7 @@ namespace Pomme
                 {
                     auto* variable = dynamic_cast<ASTpommeVariable*>(node);
                     variable->index = it->second.attributes.size() -1;
+                    variable->isStatic = keywords.count("static");
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << variable->index << std::endl;
                 }
             }else // todo check coverage to remove this branche
@@ -309,7 +310,7 @@ namespace Pomme
             }
         }
 
-        //attributes
+        //attributes and class
         auto it = classMap.find(class_name);
         if(it != classMap.end())
         {
@@ -325,8 +326,13 @@ namespace Pomme
                 }
                 return;
             }
-        }
 
+            if (node->m_Identifier == class_name) 
+            {
+                *variableType = class_name;
+                return;
+            }
+        }
 
         errors.push_back("Variable "+ node->m_Identifier + " not found in either attribute of class nor locals variables ");
     }
@@ -421,11 +427,12 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTvarDecls *node, void * data)
     {
-        node->jjtChildrenAccept(this, data);
+        std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
+        visiteVariable(node->jjtGetChild(1), data, dynamic_cast<ASTpommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
     }
     void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
-        visiteVariable(node, data, false);
+        visiteVariable(node, data, false, {});
 
         node->jjtChildAccept(2, this, nullptr);
     }
@@ -696,7 +703,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
     {
-        visiteVariable(node, data, true);
+        visiteVariable(node, data, true, {});
     }
     void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {
