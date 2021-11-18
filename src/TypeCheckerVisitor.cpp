@@ -321,6 +321,7 @@ namespace Pomme
                     *variableType = ot->second.variableType;
                     std::cout << "index of ident " << node->m_Identifier << " in class " << class_name << " = " << ot->second.index << std::endl;
                     node->m_IndexAttribute = ot->second.index;
+                    node->m_Attribute = true;
                 }
                 return;
             }

@@ -19,7 +19,8 @@ public:
 
   std::string m_Identifier;
   std::string m_MethodIdentifier;
-  int m_IndexAttribute;
+  uint16_t m_IndexAttribute;
+  bool m_Attribute = false;
 };
 
 }

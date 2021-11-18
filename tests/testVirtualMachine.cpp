@@ -185,7 +185,7 @@ TEST(TEST_VM, GlobalNativeTest)
 
 TEST(TEST_VM, ClassTest)
 {
-	TEST_VM_TEST("class TestClass { int g = 5; public void t() {int f = 50; print(f);}; }; void f() { int a = 10; TestClass oui = new TestClass(); TestClass non = new TestClass(); oui.t(); a = 25; oui.g = 35; non.g = 700; print(a); print(oui.g); print(non.g); };\n");
+	TEST_VM_TEST("class TestClass { int k = 0; int g = 5; public void t() {int f = 50; print(f);}; }; void f() { int a = 10; TestClass oui = new TestClass(); TestClass non = new TestClass(); oui.t(); a = 25; oui.g = 35; non.g = 700; print(a); print(oui.g); print(non.g); };\n");
 
     std::cout << text << std::endl;
 
@@ -245,6 +245,64 @@ TEST(TEST_VM, ClassMethodTest)
 TEST(TEST_VM, ClassConstructorTest)
 {
 	TEST_VM_TEST("class TestClass { public void f() {print(600);}; public void TestClass(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(10); print(oui); };\n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, AttributeMethodTest)
+{
+	TEST_VM_TEST("class TestClass { int x; int y; void meth(){ x = 8; y = 10; }; }; void f() { TestClass oui = new TestClass(); oui.meth(); print(oui.x); print(oui.y); }; \n");
+
+    std::cout << text << std::endl;
+
+	VirtualMachine vm;
+    Compiler compiler(vm);
+
+	TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+	for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+
+	ObjFunction *function = compiler.compile(tree);
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ThisVariableTest)
+{
+	TEST_VM_TEST("class TestClass { int x; int y; void meth(){ this.x = 500; this.y = 100; }; }; void f() { TestClass oui = new TestClass(); oui.meth(); print(oui.x); print(oui.y); }; \n");
 
     std::cout << text << std::endl;
 

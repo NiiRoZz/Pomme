@@ -281,6 +281,7 @@ namespace Pomme
                     instance->fields[slot] = peek(1);
 
                     pop(); // Instance.
+                    pop(); // Value
                     break;
                 }
 

@@ -44,7 +44,18 @@ namespace Pomme
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
-        namedVariable(node->m_Identifier, assign);
+        if (node->m_Attribute)
+        {
+            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+
+            namedVariable("this", false);
+            emitByte(AS_OPCODE(code));
+            emit16Bits(node->m_IndexAttribute);
+        }
+        else
+        {
+            namedVariable(node->m_Identifier, assign);
+        }
     }
 
     void CompilerVisitor::visit(ASTidentOp *node, void * data) 
@@ -524,7 +535,7 @@ namespace Pomme
 
         beginScope(); 
 
-        addLocal("");
+        addLocal("this");
 
         //3: parameters
         node->jjtChildAccept(3, this, data);
@@ -724,10 +735,12 @@ namespace Pomme
         }
         else
         {
+            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+            assert(ident != nullptr);
+
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
             emitByte(AS_OPCODE(code));
-            //TODO: get the index directly from here
-            emit16Bits(0);
+            emit16Bits(ident->m_IndexAttribute);
         }
 
         node->jjtChildAccept(2, this, data);
@@ -748,10 +761,12 @@ namespace Pomme
         }
         else
         {
+            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+            assert(ident != nullptr);
+
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
             emitByte(AS_OPCODE(code));
-            //TODO: get the index directly from here
-            emit16Bits(0);
+            emit16Bits(ident->m_IndexAttribute);
         }
 
         methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1));
@@ -765,10 +780,12 @@ namespace Pomme
         }
         else
         {
+            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+            assert(ident != nullptr);
+
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
             emitByte(AS_OPCODE(code));
-            //TODO: get the index directly from here
-            emit16Bits(0);
+            emit16Bits(ident->m_IndexAttribute);
         }
 
         node->jjtChildAccept(2, this, data);
@@ -789,10 +806,12 @@ namespace Pomme
         }
         else
         {
+            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+            assert(ident != nullptr);
+
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
             emitByte(AS_OPCODE(code));
-            //TODO: get the index directly from here
-            emit16Bits(0);
+            emit16Bits(ident->m_IndexAttribute);
         }
     }
 
