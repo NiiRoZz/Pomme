@@ -332,7 +332,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTidentOp *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeInt *node, void * data)
     {
@@ -365,7 +364,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeTypeDef *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeClass *node, void * data)
     {
@@ -498,7 +496,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTidentFuncs *node, void * data)
     {
@@ -510,7 +507,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTsnil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommePublic *node, void * data)
     {
@@ -526,43 +522,33 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTvinil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeOverride *node, void * data)
     {
-        // delete
     }
     void TypeCheckerVisitor::visit(ASTonil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeEnum *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeExtendsEnum *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeModdedEnum *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTdeclenums *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTennil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTenumassign *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTenumdefault *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
     {
@@ -623,19 +609,15 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTinil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTincrementPre *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTdecrementPre *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeReturn *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeWhile *node, void * data)
     {
@@ -645,7 +627,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeBreak *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeIf *node, void * data)
     {
@@ -659,7 +640,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeSwitch *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTassignement *node, void * data)
     {
@@ -667,54 +647,42 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTaddeq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTminuseq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTdiveq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTmulteq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASToreq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTandeq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTshiftleq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTshiftreq *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTincrementPost *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTdecrementPost *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeCases *node, void * data)
     {
     }
     void TypeCheckerVisitor::visit(ASTpommeDefault *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTswinil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeCase *node, void * data)
     {
@@ -724,11 +692,9 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTlistexp *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTexnil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
     {
@@ -736,7 +702,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTheaders *node, void * data)
     {
@@ -744,7 +709,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTenil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTheader *node, void * data)
     {
@@ -764,7 +728,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTvoidType *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeConstructor *node, void * data)
     {
@@ -802,79 +765,60 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeDestructor *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeAnd *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeOr *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeEQ *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeNEQ *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeGT *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeGET *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeLT *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeLET *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeAdd *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeMinus *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeShiftR *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeShiftL *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeMult *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeDiv *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeModulo *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeUnary *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeNot *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeTilde *node, void * data)
     {
-
     }
 
     void TypeCheckerVisitor::visit(ASTpommeNew *node, void * data)
@@ -913,15 +857,12 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeTrue *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeFalse *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTpommeNull *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTlistacces *node, void * data)
     {
@@ -943,7 +884,6 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTacnil *node, void * data)
     {
-
     }
     void TypeCheckerVisitor::visit(ASTaccessMethode *node, void * data)
     {
