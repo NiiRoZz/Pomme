@@ -696,12 +696,12 @@ namespace Pomme
         //We need to check for local variable or method
         node->jjtChildAccept(0, this, nullptr);
         
-        access(nullptr, node->jjtGetChild(1), node->jjtGetChild(2), data);
+        accessProperty(nullptr, node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
     void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
     {
-        access(node->jjtGetChild(0), node->jjtGetChild(1), node->jjtGetChild(2), data);
+        accessProperty(node->jjtGetChild(0), node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
     void CompilerVisitor::visit(ASTacnil *node, void * data)
@@ -830,7 +830,7 @@ namespace Pomme
         }
     }
 
-    void CompilerVisitor::access(Node* left, Node* middle, Node* right, void * data)
+    void CompilerVisitor::accessProperty(Node* left, Node* middle, Node* right, void * data)
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
         bool hasNext = dynamic_cast<ASTacnil*>(right) == nullptr;
