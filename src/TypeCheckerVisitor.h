@@ -61,16 +61,18 @@ namespace Pomme
         class VariableClass
         {
         public:
-            VariableClass(std::string  variableType, std::string  variableName, bool isConst)
+            VariableClass(std::string  variableType, std::string variableName, int index, bool isConst)
             : isConst(isConst),
             variableName(std::move(variableName)),
-            variableType(std::move(variableType))
+            variableType(std::move(variableType)),
+            index(index)
             {
             }
 
             bool isConst;
             std::string variableName;
             std::string variableType;
+            int index;
 
             friend std::ostream & operator<<(std::ostream & str, const VariableClass & klass)
             {

@@ -19,6 +19,7 @@ public:
 
   std::string m_Identifier;
   std::string m_MethodIdentifier;
+  int m_IndexAttribute;
 };
 
 }

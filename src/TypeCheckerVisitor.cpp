@@ -16,8 +16,7 @@ namespace Pomme
      * todo
      *
      *
-     * instrs : definition + expression
-     * local variable : check ident existence + add index to ident if class attribute */
+     * instrs : definition + expression*/
 
     TypeCheckerVisitor::TypeCheckerVisitor()
 	{
@@ -108,11 +107,11 @@ namespace Pomme
             if(it == locals.end())
             {
                 std::vector<VariableClass> locals_current_scopes;
-                locals_current_scopes.push_back(*new VariableClass(localType, localName, isConst));
+                locals_current_scopes.push_back(*new VariableClass(localType, localName, 0, isConst));
                 locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
             }else
             {
-                it->second.push_back(*new VariableClass(localType, localName, isConst));
+                it->second.push_back(*new VariableClass(localType, localName, it->second.size(),isConst));
             }
         }
     }
@@ -165,7 +164,7 @@ namespace Pomme
         auto access = this->attributes.find(attributeName);
         if(access == this->attributes.end())
         {
-            VariableClass variable(attributeType,attributeName,isConst);
+            VariableClass variable(attributeType,attributeName, this->attributes.size(), isConst);
             this->attributes.insert(std::pair<std::string, VariableClass>(attributeName, variable));
             std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
         }else
@@ -311,22 +310,22 @@ namespace Pomme
         }
 
         //attributes
-        if(class_context)
+        auto it = classMap.find(class_name);
+        if(it != classMap.end())
         {
-            auto it = classMap.find(class_name);
-            if(it != classMap.end())
+            auto ot = it->second.attributes.find(class_name + "::" + node->m_Identifier);
+            if(ot != it->second.attributes.end())
             {
-                auto ot = it->second.attributes.find(class_name + "::" + node->m_Identifier);
-                if(ot != it->second.attributes.end())
+                if (variableType != nullptr)
                 {
-                    if (variableType != nullptr) 
-                    {
-                        *variableType = ot->second.variableType;
-                    }
-                    return;
+                    *variableType = ot->second.variableType;
+                    std::cout << "index of ident " << node->m_Identifier << " in class " << class_name << " = " << ot->second.index << std::endl;
+                    node->m_IndexAttribute = ot->second.index;
                 }
+                return;
             }
         }
+
 
         errors.push_back("Variable "+ node->m_Identifier + " not found in either attribute of class nor locals variables ");
     }
@@ -757,11 +756,11 @@ namespace Pomme
         if(it == locals.end())
         {
             std::vector<VariableClass> locals_current_scopes;
-            locals_current_scopes.push_back(*new VariableClass(localType, localName, false)); // todo const in header
+            locals_current_scopes.push_back(*new VariableClass(localType, localName, -1 ,false)); // todo const in header
             locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
         }else
         {
-            it->second.push_back(*new VariableClass(localType, localName, false));
+            it->second.push_back(*new VariableClass(localType, localName, -1 ,false));
         }
     }
     void TypeCheckerVisitor::visit(ASTvoidType *node, void * data)

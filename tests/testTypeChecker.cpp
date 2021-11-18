@@ -519,7 +519,7 @@ TEST(TEST_TYPECHECKER, DefinedVariableInLocals) {
 }
 
 TEST(TEST_TYPECHECKER, DefinedVariableInAttribute) {
-    TEST_TYPECHECKER_TEST("class x{ int x; void meth(){ x = 8; }; };\n");
+    TEST_TYPECHECKER_TEST("class x{ int x; int y; void meth(){ x = 8; y = 10; }; };\n");
 
     std::cout << text << std::endl;
 
