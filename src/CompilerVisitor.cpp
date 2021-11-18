@@ -17,7 +17,6 @@ namespace Pomme
     , m_InClass(false)
     , m_InMethod(false)
 	{
-
 	}
 
     Chunk* CompilerVisitor::currentChunk()
@@ -27,7 +26,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(SimpleNode *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTinput *node, void * data) 
@@ -61,7 +59,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTidentOp *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTpommeInt *node, void * data) 
@@ -99,42 +96,34 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTidentFuncs *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTsnil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTvinil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTonil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTdeclenums *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTennil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTenumassign *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTenumdefault *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTinstrs *node, void * data) 
@@ -256,7 +245,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeBreak *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTpommeIf *node, void * data) 
@@ -293,47 +281,38 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeSwitch *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTpommeCases *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTpommeDefault *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTswinil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTlistexp *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTexnil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTomega *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTenil *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTvoidType *node, void * data) 
     {
-
     }
 
     void CompilerVisitor::visit(ASTpommeAnd *node, void * data) 
@@ -488,7 +467,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeTypeDef *node, void * data)
     {
-        
     }
     
     void CompilerVisitor::visit(ASTpommeClass *node, void * data)
@@ -513,12 +491,10 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeMethode *node, void * data)
@@ -530,47 +506,38 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeStatic *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommePublic *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommePrivate *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeProtected *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeOverride *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeEnum *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeExtendsEnum *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeModdedEnum *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
@@ -623,7 +590,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeCase *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTvarDecls *node, void * data)
@@ -663,7 +629,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeConstant *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTheaders *node, void * data)
@@ -688,7 +653,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeDestructor *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTlistacces *node, void * data)
@@ -706,7 +670,6 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTacnil *node, void * data)
     {
-        
     }
 
     void CompilerVisitor::visit(ASTaccessMethode *node, void * data)
