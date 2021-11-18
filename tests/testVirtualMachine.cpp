@@ -215,7 +215,7 @@ TEST(TEST_VM, ClassTest)
 
 TEST(TEST_VM, ClassMethodTest)
 {
-	TEST_VM_TEST("class StructClass { int x = 0; int h = 10; public int y(int a) {print(a);}; };  class TestClass { StructClass z = new StructClass(); public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.z.y(25); print(oui.z); print(oui.z.h);  };\n");
+	TEST_VM_TEST("class StructClass { int x = 0; int h = 10; public int y(int a) {print(a);}; };  class TestClass { StructClass z = new StructClass(); public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.z.y(25); oui.z.x = 5; print(oui.z); print(oui.z.h);  };\n");
 
     std::cout << text << std::endl;
 

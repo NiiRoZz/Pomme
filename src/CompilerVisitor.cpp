@@ -692,115 +692,15 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTlistacces *node, void * data)
     {
-        bool assign = (data == nullptr) ? false : *(bool*)data;
-
+        //We need to check for local variable or method
         node->jjtChildAccept(0, this, nullptr);
         
-        ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1));
-        if (methode != nullptr)
-        {
-            assert(!assign);
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(methode->index);
-
-            methode->jjtAccept(this, &assign);
-        }
-        else
-        {
-            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(1));
-            assert(ident != nullptr);
-
-            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
-            emitByte(AS_OPCODE(code));
-            emit16Bits(ident->m_IndexAttribute);
-        }
-
-        ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(2));
-        methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(2));
-        if (ident != nullptr)
-        {
-            std::cout << "ident 3 attribute : " << ident->m_IndexAttribute << std::endl;
-            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
-            emitByte(AS_OPCODE(code));
-            emit16Bits(ident->m_IndexAttribute);
-        }
-        else if (methode != nullptr)
-        {
-            assert(!assign);
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(methode->index);
-
-            methode->jjtAccept(this, &assign);
-        }
-        else
-        {
-            node->jjtChildAccept(2, this, data);
-        }
+        access(nullptr, node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
     void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
     {
-        bool assign = (data == nullptr) ? false : *(bool*)data;
-
-        ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
-        if (methode != nullptr)
-        {
-            assert(!assign);
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(methode->index);
-
-            methode->jjtAccept(this, &assign);
-        }
-        else
-        {
-            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(1));
-            assert(ident != nullptr);
-
-            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
-            emitByte(AS_OPCODE(code));
-            emit16Bits(ident->m_IndexAttribute);
-        }
-
-        methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1));
-        if (methode != nullptr)
-        {
-            assert(!assign);
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(methode->index);
-
-            methode->jjtAccept(this, &assign);
-        }
-        else
-        {
-            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(1));
-            assert(ident != nullptr);
-
-            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
-            emitByte(AS_OPCODE(code));
-            emit16Bits(ident->m_IndexAttribute);
-        }
-
-        ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(2));
-        methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(2));
-        if (ident != nullptr)
-        {
-            std::cout << "ident 3 attribute : " << ident->m_IndexAttribute << std::endl;
-            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
-            emitByte(AS_OPCODE(code));
-            emit16Bits(ident->m_IndexAttribute);
-        }
-        else if (methode != nullptr)
-        {
-            assert(!assign);
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(methode->index);
-
-            methode->jjtAccept(this, &assign);
-        }
-        else
-        {
-            node->jjtChildAccept(2, this, data);
-        }
+        access(node->jjtGetChild(0), node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
     void CompilerVisitor::visit(ASTacnil *node, void * data)
@@ -927,6 +827,57 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_POP));
             localCount--;
         }
+    }
+
+    void CompilerVisitor::access(Node* left, Node* middle, Node* right, void * data)
+    {
+        bool assign = (data == nullptr) ? false : *(bool*)data;
+        bool hasNext = dynamic_cast<ASTacnil*>(right) == nullptr;
+
+        auto emitMethod = [&] (ASTaccessMethode* method) { 
+            if (method == nullptr) return false; 
+
+            assert(!assign);
+
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(method->index);
+
+            method->jjtAccept(this, &assign);
+
+            return true;
+        };
+
+        auto emitIdent = [&] (ASTident* ident, bool check, bool forceCheck) {
+            if (ident == nullptr) return false; 
+
+            assert(ident != nullptr);
+
+            OpCode code = OpCode::OP_GET_PROPERTY;
+            if (forceCheck || (check && !hasNext)) code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
+
+            emitByte(AS_OPCODE(code));
+            emit16Bits(ident->m_IndexAttribute);
+
+            return true;
+        };
+
+        if (left != nullptr)
+        {
+            emitMethod(dynamic_cast<ASTaccessMethode*>(left)) || emitIdent(dynamic_cast<ASTident*>(left), false, false);
+        }
+
+        emitMethod(dynamic_cast<ASTaccessMethode*>(middle)) || emitIdent(dynamic_cast<ASTident*>(middle), true, false);
+
+        if (!hasNext) return;
+
+        //We continue through the list
+        if (dynamic_cast<ASTlistaccesP*>(right) != nullptr)
+        {
+            right->jjtAccept(this, &assign);
+            return;
+        }
+
+        emitMethod(dynamic_cast<ASTaccessMethode*>(right)) || emitIdent(dynamic_cast<ASTident*>(right), false, true);
     }
 
     void CompilerVisitor::method(SimpleNode *node, ASTident *name, uint16_t index, bool constructor)
