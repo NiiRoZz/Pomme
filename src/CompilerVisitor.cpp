@@ -665,6 +665,11 @@ namespace Pomme
         
     }
 
+    void CompilerVisitor::visit(ASTvarDecls *node, void * data)
+    {
+        node->jjtChildrenAccept(this, data);
+    }
+
     void CompilerVisitor::visit(ASTpommeVariable *node, void * data)
     {
         //0: type
@@ -711,6 +716,11 @@ namespace Pomme
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
         addLocal(name);
         function->arity++;
+    }
+
+    void CompilerVisitor::visit(ASTpommeConstructor *node, void * data)
+    {
+        
     }
 
     void CompilerVisitor::visit(ASTpommeDestructor *node, void * data)
@@ -789,30 +799,6 @@ namespace Pomme
         }
 
         node->jjtChildAccept(2, this, data);
-    }
-
-    void CompilerVisitor::visit(ASTpommeProperty *node, void * data)
-    {
-        bool assign = (data == nullptr) ? false : *(bool*)data;
-
-        ASTaccessMethode* methode = dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(0));
-        if (methode != nullptr)
-        {
-            assert(!assign);
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(methode->index);
-
-            methode->jjtAccept(this, &assign);
-        }
-        else
-        {
-            ASTident* ident = dynamic_cast<ASTident*>(node->jjtGetChild(0));
-            assert(ident != nullptr);
-
-            OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
-            emitByte(AS_OPCODE(code));
-            emit16Bits(ident->m_IndexAttribute);
-        }
     }
 
     void CompilerVisitor::visit(ASTacnil *node, void * data)

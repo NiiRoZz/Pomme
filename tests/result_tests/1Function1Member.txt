@@ -12,11 +12,16 @@ input
    pommeClass
     ident
     decls
-     pommeVariable
-      ident
-      ident
-      accessMethode
+     varDecls
+      identFuncs
+       snil
+       vinil
+       onil
+      pommeVariable
        ident
-       exnil
+       ident
+       accessMethode
+        ident
+        exnil
      dnil
    scinil

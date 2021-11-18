@@ -88,6 +88,7 @@ namespace Pomme
 		void visit(ASTpommeCase *node, void * data);
 		void visit(ASTlistexp *node, void * data);
 		void visit(ASTexnil *node, void * data);
+		void visit(ASTvarDecls *node, void * data);
 		void visit(ASTpommeVariable *node, void * data);
 		void visit(ASTpommeConstant *node, void * data);
 		void visit(ASTomega *node, void * data);
@@ -95,6 +96,7 @@ namespace Pomme
 		void visit(ASTenil *node, void * data);
 		void visit(ASTheader *node, void * data);
 		void visit(ASTvoidType *node, void * data);
+		void visit(ASTpommeConstructor *node, void * data);
 		void visit(ASTpommeDestructor *node, void * data);
 		void visit(ASTpommeAnd *node, void * data);
 		void visit(ASTpommeOr *node, void * data);
@@ -120,7 +122,6 @@ namespace Pomme
 		void visit(ASTpommeNull *node, void * data);
 		void visit(ASTlistacces *node, void * data);
 		void visit(ASTlistaccesP *node, void * data);
-		void visit(ASTpommeProperty *node, void * data);
 		void visit(ASTacnil *node, void * data);
 		void visit(ASTaccessMethode *node, void * data);
 

@@ -23,8 +23,11 @@ class PommeLexerVisitor
   virtual void  visit(ASTpommeModdedClass *node, void * data) = 0;
   virtual void  visit(ASTdecls *node, void * data) = 0;
   virtual void  visit(ASTdnil *node, void * data) = 0;
-  virtual void  visit(ASTpommeMethode *node, void * data) = 0;
+  virtual void  visit(ASTpommeDestructor *node, void * data) = 0;
   virtual void  visit(ASTpommeMethodeNative *node, void * data) = 0;
+  virtual void  visit(ASTpommeConstructor *node, void * data) = 0;
+  virtual void  visit(ASTvarDecls *node, void * data) = 0;
+  virtual void  visit(ASTpommeMethode *node, void * data) = 0;
   virtual void  visit(ASTidentFuncs *node, void * data) = 0;
   virtual void  visit(ASTpommeStatic *node, void * data) = 0;
   virtual void  visit(ASTsnil *node, void * data) = 0;
@@ -77,7 +80,6 @@ class PommeLexerVisitor
   virtual void  visit(ASTenil *node, void * data) = 0;
   virtual void  visit(ASTheader *node, void * data) = 0;
   virtual void  visit(ASTvoidType *node, void * data) = 0;
-  virtual void  visit(ASTpommeDestructor *node, void * data) = 0;
   virtual void  visit(ASTpommeAnd *node, void * data) = 0;
   virtual void  visit(ASTpommeOr *node, void * data) = 0;
   virtual void  visit(ASTpommeEQ *node, void * data) = 0;
@@ -102,7 +104,6 @@ class PommeLexerVisitor
   virtual void  visit(ASTpommeNull *node, void * data) = 0;
   virtual void  visit(ASTlistacces *node, void * data) = 0;
   virtual void  visit(ASTlistaccesP *node, void * data) = 0;
-  virtual void  visit(ASTpommeProperty *node, void * data) = 0;
   virtual void  visit(ASTacnil *node, void * data) = 0;
   virtual void  visit(ASTaccessMethode *node, void * data) = 0;
   virtual ~PommeLexerVisitor() { }
@@ -155,10 +156,19 @@ public:
   virtual void  visit(ASTdnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeMethode *node, void * data) {
+  virtual void  visit(ASTpommeDestructor *node, void * data) {
     defaultVisit(node, data);
   }
   virtual void  visit(ASTpommeMethodeNative *node, void * data) {
+    defaultVisit(node, data);
+  }
+  virtual void  visit(ASTpommeConstructor *node, void * data) {
+    defaultVisit(node, data);
+  }
+  virtual void  visit(ASTvarDecls *node, void * data) {
+    defaultVisit(node, data);
+  }
+  virtual void  visit(ASTpommeMethode *node, void * data) {
     defaultVisit(node, data);
   }
   virtual void  visit(ASTidentFuncs *node, void * data) {
@@ -317,9 +327,6 @@ public:
   virtual void  visit(ASTvoidType *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeDestructor *node, void * data) {
-    defaultVisit(node, data);
-  }
   virtual void  visit(ASTpommeAnd *node, void * data) {
     defaultVisit(node, data);
   }
@@ -392,9 +399,6 @@ public:
   virtual void  visit(ASTlistaccesP *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeProperty *node, void * data) {
-    defaultVisit(node, data);
-  }
   virtual void  visit(ASTacnil *node, void * data) {
     defaultVisit(node, data);
   }
@@ -405,4 +409,4 @@ public:
 };
 }
 #endif
-/* JavaCC - OriginalChecksum=a8fc92d011e53cec7ac439ee2f719c1d (do not edit this line) */
+/* JavaCC - OriginalChecksum=6914b670d28c2fab95e39245049d04fc (do not edit this line) */

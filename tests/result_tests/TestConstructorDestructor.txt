@@ -3,25 +3,17 @@ input
   pommeClass
    ident
    decls
-    pommeMethode
-     identFuncs
-      snil
-      vinil
-      onil
-     voidType
+    pommeConstructor
      ident
-     enil
-     inil
-    decls
-     pommeMethode
-      identFuncs
-       snil
-       vinil
-       onil
-      voidType
-      pommeDestructor
+     headers
+      header
+       ident
        ident
       enil
+     inil
+    decls
+     pommeDestructor
+      ident
       inil
      dnil
   scinil

@@ -13,10 +13,15 @@ input
      enil
      inil
     decls
-     pommeVariable
-      ident
-      ident
-      omega
+     varDecls
+      identFuncs
+       snil
+       vinil
+       onil
+      pommeVariable
+       ident
+       ident
+       omega
      dnil
   scopes
    pommeGlobalFunction

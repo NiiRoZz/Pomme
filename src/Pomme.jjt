@@ -190,16 +190,20 @@ void decls() #void :
 
 void decl() #void :
 {}
-{
-	LOOKAHEAD(identfuncs() typemeth() identmeth() <PARENTL> | <NATIVE>) methode()
-	| var()
+{ 
+	<TILDE> ident() <PARENTL> <PARENTR> <BRACEL> instrs() <BRACER> #pommeDestructor(2)
+	| <NATIVE> pommeStatic() visibility() typemeth() identmeth() <PARENTL> headers() <PARENTR> #pommeMethodeNative(5)
+	| LOOKAHEAD(ident() <PARENTL>) ident() <PARENTL> headers() <PARENTR> <BRACEL> instrs() <BRACER> #pommeConstructor(3)
+	| identfuncs() (
+		LOOKAHEAD(<VOID> | methode()) methode()
+		| var() #varDecls(2)
+	)
 }
 
 void methode() #void :
 {}
 {
-	identfuncs() typemeth() identmeth() <PARENTL> headers() <PARENTR> <BRACEL> instrs() <BRACER> #pommeMethode(5)
-	| <NATIVE> pommeStatic() visibility() typemeth() identmeth() <PARENTL> headers() <PARENTR> #pommeMethodeNative(5)
+	typemeth() identmeth() <PARENTL> headers() <PARENTR> <BRACEL> instrs() <BRACER> #pommeMethode(5)
 }
 
 void identfuncs() #void :
@@ -380,7 +384,6 @@ void identmeth() #void :
 {
 	ident()
 	| identOp()
-	| <TILDE> ident() #pommeDestructor(1)
 }
 
 void type() #void:
@@ -489,7 +492,7 @@ void listaccesP() #void :
 		<POINT> ( 
 				access() (	
 							<POINT> access() listaccesP() #listaccesP(3)
-							| {} #pommeProperty(1)
+							| {}
 						)
 			)
 		| {} #acnil

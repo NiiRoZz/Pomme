@@ -422,6 +422,10 @@ namespace Pomme
     {
         node->jjtChildrenAccept(this, data);
     }
+    void TypeCheckerVisitor::visit(ASTvarDecls *node, void * data)
+    {
+        node->jjtChildrenAccept(this, data);
+    }
     void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
         visiteVariable(node, data, false);
@@ -768,6 +772,10 @@ namespace Pomme
     {
 
     }
+    void TypeCheckerVisitor::visit(ASTpommeConstructor *node, void * data)
+    {
+        
+    }
     void TypeCheckerVisitor::visit(ASTpommeDestructor *node, void * data)
     {
 
@@ -906,10 +914,6 @@ namespace Pomme
 
     }
     void TypeCheckerVisitor::visit(ASTlistaccesP *node, void * data)
-    {
-        node->jjtChildrenAccept(this, data);
-    }
-    void TypeCheckerVisitor::visit(ASTpommeProperty *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }

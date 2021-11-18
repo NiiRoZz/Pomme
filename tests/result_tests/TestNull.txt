@@ -3,12 +3,17 @@ input
   pommeClass
    ident
    decls
-    pommeVariable
-     ident
-     ident
-     pommeNew
+    varDecls
+     identFuncs
+      snil
+      vinil
+      onil
+     pommeVariable
       ident
-      exnil
+      ident
+      pommeNew
+       ident
+       exnil
     dnil
   scopes
    pommeGlobalFunction

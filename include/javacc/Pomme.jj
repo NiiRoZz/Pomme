@@ -585,39 +585,32 @@ void decls()       :
 
 void decl()       :
 {}
-{
-	LOOKAHEAD(identfuncs() typemeth() identmeth() <PARENTL> | <NATIVE>) methode()
-	| var()
-}
-
-void methode()       :
-{}
-{
-	identfuncs() typemeth() identmeth() <PARENTL> headers() <PARENTR> <BRACEL> instrs()/*@bgen(jjtree) #pommeMethode( 5) */
-                                                                                            {
-                                                                                              ASTpommeMethode *jjtn001 = new ASTpommeMethode(JJTPOMMEMETHODE);
-                                                                                              bool jjtc001 = true;
-                                                                                              jjtree.openNodeScope(jjtn001);
-                                                                                              jjtreeOpenNodeScope(jjtn001);
-                                                                                            }
-                                                                                            try {
+{ 
+	<TILDE> ident() <PARENTL> <PARENTR> <BRACEL> instrs()/*@bgen(jjtree) #pommeDestructor( 2) */
+                                                              {
+                                                                ASTpommeDestructor *jjtn001 = new ASTpommeDestructor(JJTPOMMEDESTRUCTOR);
+                                                                bool jjtc001 = true;
+                                                                jjtree.openNodeScope(jjtn001);
+                                                                jjtreeOpenNodeScope(jjtn001);
+                                                              }
+                                                              try {
 /*@egen*/ <BRACER>/*@bgen(jjtree)*/
-                                                                                            } catch (...) {
-                                                                                              if (jjtc001) {
-                                                                                                jjtree.clearNodeScope(jjtn001);
-                                                                                                jjtc001 = false;
-                                                                                              } else {
-                                                                                                jjtree.popNode();
-                                                                                              }
-                                                                                            } {
-                                                                                              if (jjtc001) {
-                                                                                                jjtree.closeNodeScope(jjtn001,  5);
-                                                                                                if (jjtree.nodeCreated()) {
-                                                                                                 jjtreeCloseNodeScope(jjtn001);
-                                                                                                }
-                                                                                              }
-                                                                                            }
-/*@egen*/                 
+                                                              } catch (...) {
+                                                                if (jjtc001) {
+                                                                  jjtree.clearNodeScope(jjtn001);
+                                                                  jjtc001 = false;
+                                                                } else {
+                                                                  jjtree.popNode();
+                                                                }
+                                                              } {
+                                                                if (jjtc001) {
+                                                                  jjtree.closeNodeScope(jjtn001,  2);
+                                                                  if (jjtree.nodeCreated()) {
+                                                                   jjtreeCloseNodeScope(jjtn001);
+                                                                  }
+                                                                }
+                                                              }
+/*@egen*/                    
 	| <NATIVE> pommeStatic() visibility() typemeth() identmeth() <PARENTL> headers()/*@bgen(jjtree) #pommeMethodeNative( 5) */
                                                                                          {
                                                                                            ASTpommeMethodeNative *jjtn002 = new ASTpommeMethodeNative(JJTPOMMEMETHODENATIVE);
@@ -643,6 +636,89 @@ void methode()       :
                                                                                            }
                                                                                          }
 /*@egen*/                       
+	| LOOKAHEAD(ident() <PARENTL>) ident() <PARENTL> headers() <PARENTR> <BRACEL> instrs()/*@bgen(jjtree) #pommeConstructor( 3) */
+                                                                                               {
+                                                                                                 ASTpommeConstructor *jjtn003 = new ASTpommeConstructor(JJTPOMMECONSTRUCTOR);
+                                                                                                 bool jjtc003 = true;
+                                                                                                 jjtree.openNodeScope(jjtn003);
+                                                                                                 jjtreeOpenNodeScope(jjtn003);
+                                                                                               }
+                                                                                               try {
+/*@egen*/ <BRACER>/*@bgen(jjtree)*/
+                                                                                               } catch (...) {
+                                                                                                 if (jjtc003) {
+                                                                                                   jjtree.clearNodeScope(jjtn003);
+                                                                                                   jjtc003 = false;
+                                                                                                 } else {
+                                                                                                   jjtree.popNode();
+                                                                                                 }
+                                                                                               } {
+                                                                                                 if (jjtc003) {
+                                                                                                   jjtree.closeNodeScope(jjtn003,  3);
+                                                                                                   if (jjtree.nodeCreated()) {
+                                                                                                    jjtreeCloseNodeScope(jjtn003);
+                                                                                                   }
+                                                                                                 }
+                                                                                               }
+/*@egen*/                     
+	| identfuncs() (
+		LOOKAHEAD(<VOID> | methode()) methode()
+		|/*@bgen(jjtree) #varDecls( 2) */
+                  {
+                    ASTvarDecls *jjtn004 = new ASTvarDecls(JJTVARDECLS);
+                    bool jjtc004 = true;
+                    jjtree.openNodeScope(jjtn004);
+                    jjtreeOpenNodeScope(jjtn004);
+                  }
+                  try {
+/*@egen*/ var()/*@bgen(jjtree)*/
+                  } catch (...) {
+                    if (jjtc004) {
+                      jjtree.clearNodeScope(jjtn004);
+                      jjtc004 = false;
+                    } else {
+                      jjtree.popNode();
+                    }
+                  } {
+                    if (jjtc004) {
+                      jjtree.closeNodeScope(jjtn004,  2);
+                      if (jjtree.nodeCreated()) {
+                       jjtreeCloseNodeScope(jjtn004);
+                      }
+                    }
+                  }
+/*@egen*/             
+	)
+}
+
+void methode()       :
+{}
+{
+	typemeth() identmeth() <PARENTL> headers() <PARENTR> <BRACEL> instrs()/*@bgen(jjtree) #pommeMethode( 5) */
+                                                                               {
+                                                                                 ASTpommeMethode *jjtn001 = new ASTpommeMethode(JJTPOMMEMETHODE);
+                                                                                 bool jjtc001 = true;
+                                                                                 jjtree.openNodeScope(jjtn001);
+                                                                                 jjtreeOpenNodeScope(jjtn001);
+                                                                               }
+                                                                               try {
+/*@egen*/ <BRACER>/*@bgen(jjtree)*/
+                                                                               } catch (...) {
+                                                                                 if (jjtc001) {
+                                                                                   jjtree.clearNodeScope(jjtn001);
+                                                                                   jjtc001 = false;
+                                                                                 } else {
+                                                                                   jjtree.popNode();
+                                                                                 }
+                                                                               } {
+                                                                                 if (jjtc001) {
+                                                                                   jjtree.closeNodeScope(jjtn001,  5);
+                                                                                   if (jjtree.nodeCreated()) {
+                                                                                    jjtreeCloseNodeScope(jjtn001);
+                                                                                   }
+                                                                                 }
+                                                                               }
+/*@egen*/                 
 }
 
 void identfuncs()       :
@@ -2295,31 +2371,6 @@ void identmeth()       :
 {
 	ident()
 	| identOp()
-	| <TILDE>/*@bgen(jjtree) #pommeDestructor( 1) */
-                  {
-                    ASTpommeDestructor *jjtn001 = new ASTpommeDestructor(JJTPOMMEDESTRUCTOR);
-                    bool jjtc001 = true;
-                    jjtree.openNodeScope(jjtn001);
-                    jjtreeOpenNodeScope(jjtn001);
-                  }
-                  try {
-/*@egen*/ ident()/*@bgen(jjtree)*/
-                  } catch (...) {
-                    if (jjtc001) {
-                      jjtree.clearNodeScope(jjtn001);
-                      jjtc001 = false;
-                    } else {
-                      jjtree.popNode();
-                    }
-                  } {
-                    if (jjtc001) {
-                      jjtree.closeNodeScope(jjtn001,  1);
-                      if (jjtree.nodeCreated()) {
-                       jjtreeCloseNodeScope(jjtn001);
-                      }
-                    }
-                  }
-/*@egen*/                    
 }
 
 void type()      :
@@ -3004,70 +3055,38 @@ void listaccesP()       :
                                                                            }
                                                                          }
 /*@egen*/               
-							|/*@bgen(jjtree) #pommeProperty( 1) */
-                                                          {
-                                                            ASTpommeProperty *jjtn002 = new ASTpommeProperty(JJTPOMMEPROPERTY);
-                                                            bool jjtc002 = true;
-                                                            jjtree.openNodeScope(jjtn002);
-                                                            jjtreeOpenNodeScope(jjtn002);
-                                                          }
-                                                          try {
-/*@egen*//*@bgen(jjtree)*/
-                                                          {
-                                                            jjtree.closeNodeScope(jjtn002,  1);
-                                                            jjtc002 = false;
-                                                            if (jjtree.nodeCreated()) {
-                                                             jjtreeCloseNodeScope(jjtn002);
-                                                            }
-                                                          }
-/*@egen*/ {}/*@bgen(jjtree)*/
-                                                          } catch (...) {
-                                                            if (jjtc002) {
-                                                              jjtree.clearNodeScope(jjtn002);
-                                                              jjtc002 = false;
-                                                            } else {
-                                                              jjtree.popNode();
-                                                            }
-                                                          } {
-                                                            if (jjtc002) {
-                                                              jjtree.closeNodeScope(jjtn002,  1);
-                                                              if (jjtree.nodeCreated()) {
-                                                               jjtreeCloseNodeScope(jjtn002);
-                                                              }
-                                                            }
-                                                          }
-/*@egen*/                  
+							| {}
 						)
 			)
 		|/*@bgen(jjtree) acnil */
                   {
-                    ASTacnil *jjtn003 = new ASTacnil(JJTACNIL);
-                    bool jjtc003 = true;
-                    jjtree.openNodeScope(jjtn003);
-                    jjtreeOpenNodeScope(jjtn003);
+                    ASTacnil *jjtn002 = new ASTacnil(JJTACNIL);
+                    bool jjtc002 = true;
+                    jjtree.openNodeScope(jjtn002);
+                    jjtreeOpenNodeScope(jjtn002);
                   }
                   try {
 /*@egen*//*@bgen(jjtree)*/
                   {
-                    jjtree.closeNodeScope(jjtn003, true);
-                    jjtc003 = false;
+                    jjtree.closeNodeScope(jjtn002, true);
+                    jjtc002 = false;
                     if (jjtree.nodeCreated()) {
-                     jjtreeCloseNodeScope(jjtn003);
+                     jjtreeCloseNodeScope(jjtn002);
                     }
                   }
 /*@egen*/ {}/*@bgen(jjtree)*/
                   } catch (...) {
-                    if (jjtc003) {
-                      jjtree.clearNodeScope(jjtn003);
-                      jjtc003 = false;
+                    if (jjtc002) {
+                      jjtree.clearNodeScope(jjtn002);
+                      jjtc002 = false;
                     } else {
                       jjtree.popNode();
                     }
                   } {
-                    if (jjtc003) {
-                      jjtree.closeNodeScope(jjtn003, true);
+                    if (jjtc002) {
+                      jjtree.closeNodeScope(jjtn002, true);
                       if (jjtree.nodeCreated()) {
-                       jjtreeCloseNodeScope(jjtn003);
+                       jjtreeCloseNodeScope(jjtn002);
                       }
                     }
                   }

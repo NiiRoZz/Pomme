@@ -94,7 +94,7 @@ TEST(TEST_LEXER_PARSER, 1Function1Member)
 	TEST_PARSER_FILE("int64_t f(){ return 3;}; class main{ int64_t a = f(); };\n", "tests/1Function1Member.txt");
 }
 
-TEST(TEST_LEXER_PARSER, AccesMember)
+TEST(TEST_LEXER_PARSER, AccessMember)
 {
 	TEST_PARSER_FILE("Test glob() { return new Test() ; }; class Test{ int64_t b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int64_t a = t.b; int64_t c = t.t.b; t.operator+=(); t.operator*(); t.operatorbool(); t.operator++(); t.t.salut(); t.t.salut().a; glob().t; };\n", "tests/AccesMember.txt");
 }
@@ -181,7 +181,7 @@ TEST(TEST_LEXER_PARSER, TestNativeGlobalFunction)
 
 TEST(TEST_LEXER_PARSER, TestConstructorDestructor)
 {
-	TEST_PARSER_FILE("class Destr{ void Destr(){}; void ~Destr(){}; };\n", "tests/TestConstructorDestructor.txt");
+	TEST_PARSER_FILE("class Destr{ Destr(int a) {}; ~Destr() {}; };\n", "tests/TestConstructorDestructor.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestTypeDef)

@@ -14,17 +14,27 @@ input
    pommeClass
     ident
     decls
-     pommeVariable
-      ident
-      ident
-      pommeInt
-     decls
+     varDecls
+      identFuncs
+       snil
+       vinil
+       onil
       pommeVariable
        ident
        ident
-       pommeNew
+       pommeInt
+     decls
+      varDecls
+       identFuncs
+        snil
+        vinil
+        onil
+       pommeVariable
         ident
-        exnil
+        ident
+        pommeNew
+         ident
+         exnil
       dnil
    scopes
     pommeGlobalFunction
@@ -53,8 +63,7 @@ input
          listacces
           ident
           ident
-          pommeProperty
-           ident
+          ident
         instrs
          listacces
           ident
@@ -87,10 +96,9 @@ input
              listacces
               ident
               ident
-              pommeProperty
-               accessMethode
-                ident
-                exnil
+              accessMethode
+               ident
+               exnil
              instrs
               listacces
                ident
