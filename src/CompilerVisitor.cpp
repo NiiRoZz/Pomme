@@ -11,6 +11,7 @@ namespace Pomme
 {
 	CompilerVisitor::CompilerVisitor(VirtualMachine& vm)
 	: m_Vm(vm)
+    , function(nullptr)
     , localCount(0)
     , scopeDepth(0)
     , m_InClass(false)

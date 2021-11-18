@@ -17,8 +17,6 @@ namespace Pomme
 
 	class CompilerVisitor : public PommeLexerVisitor
 	{
-		VirtualMachine& m_Vm;
-
 	public:
 		CompilerVisitor(VirtualMachine &vm);
 
@@ -153,6 +151,8 @@ namespace Pomme
 		int addLocal(const std::string& name);
 		void namedVariable(const std::string& name, bool assign);
 	private:
+		VirtualMachine& m_Vm;
+	
 		ObjFunction* function;
 		int line;
 

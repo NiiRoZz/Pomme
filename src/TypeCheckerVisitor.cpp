@@ -749,10 +749,6 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTheader *node, void * data)
     {
         std::string &localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        if(&localType == nullptr)
-        {
-            localType = "void";
-        }
         std::string &localName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
         auto it = locals.find(current_scopes);
