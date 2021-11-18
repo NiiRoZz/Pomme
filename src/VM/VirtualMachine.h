@@ -82,11 +82,11 @@ namespace Pomme
 
 		bool valuesEqual(Value a, Value b);
 
-		bool callValue(Value callee, int argCount);
+		bool callValue(const Value& callee, int argCount);
 		bool call(ObjFunction* function, int argCount);
 
-		void printValue(Value value);
-		void printObject(Value value);
+		void printValue(const Value& value);
+		void printObject(const Value& value);
 		void printFunction(ObjFunction* function);
 
 		void defineMethod(uint16_t slot, ObjString* name);
@@ -94,7 +94,7 @@ namespace Pomme
 
 		ObjClass* newClass(ObjString* name);
 		ObjInstance* newInstance(ObjClass* klass);
-		ObjBoundMethod* newBoundMethod(Value receiver, ObjFunction* method);
+		ObjBoundMethod* newBoundMethod(const Value& receiver, ObjFunction* method);
 
 		int disassembleInstruction(Chunk* chunk, int offset);
 		int simpleInstruction(const char* name, int offset);

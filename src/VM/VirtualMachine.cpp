@@ -514,7 +514,7 @@ namespace Pomme
         }
     }
 
-    bool VirtualMachine::callValue(Value callee, int argCount)
+    bool VirtualMachine::callValue(const Value& callee, int argCount)
     {
         if (IS_OBJ(callee))
         {
@@ -572,7 +572,7 @@ namespace Pomme
         return true;
     }
 
-    void VirtualMachine::printValue(Value value)
+    void VirtualMachine::printValue(const Value& value)
     {
         switch (value.type)
         {
@@ -586,7 +586,7 @@ namespace Pomme
         }
     }
 
-    void VirtualMachine::printObject(Value value)
+    void VirtualMachine::printObject(const Value& value)
     {
         switch (OBJ_TYPE(value))
         {
@@ -667,7 +667,7 @@ namespace Pomme
         return instance;
     }
 
-    ObjBoundMethod* VirtualMachine::newBoundMethod(Value receiver, ObjFunction* method)
+    ObjBoundMethod* VirtualMachine::newBoundMethod(const Value& receiver, ObjFunction* method)
     {
         ObjBoundMethod* bound = ALLOCATE_OBJ(this, ObjBoundMethod, ObjType::OBJ_BOUND_METHOD);
         bound->receiver = receiver;
