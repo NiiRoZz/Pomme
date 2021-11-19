@@ -35,6 +35,7 @@ namespace Pomme
 
         if(child_context)
         {
+            //TODO: go through the hierarchy instead of just the parent of the class
             auto child = classMap.find(context);
             auto parent = classMap.find(child->second.parent);
 
