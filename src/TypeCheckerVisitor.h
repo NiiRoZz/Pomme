@@ -89,12 +89,13 @@ namespace Pomme
         {
             public:
             std::unordered_map<std::string, VariableClass> attributes;
+            std::unordered_map<std::string, VariableClass> staticAttributes;
             std::unordered_map<std::string, FunctionClass> functions;
             std::unordered_set<std::string> keywords;
             std::unordered_set<std::string> children;
             std::string parent;
 
-            void addAttribute(std::string &attributeType, std::string attributeName, bool isConst,
+            void addAttribute(std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
                               TypeCheckerVisitor *typeCheckerVisitor);
             void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, TypeCheckerVisitor* typeCheckerVisitor);
 

@@ -31,6 +31,8 @@ namespace Pomme
             std::cout << it.first << std::endl;
         }
 
+        bool isStatic = keywords.count("static");
+
         if(child_context)
         {
             auto child = classMap.find(context);
@@ -52,7 +54,7 @@ namespace Pomme
                     }
                 }else
                 {
-                    child->second.addAttribute(attributeType, context + "::" + attributeName, isConst, this);
+                    child->second.addAttribute(attributeType, context + "::" + attributeName, isConst, isStatic, this);
                 }
             }
         }else if(class_context && !instrs_context)
@@ -60,22 +62,21 @@ namespace Pomme
             auto it = classMap.find(context);
             if( it != classMap.end())
             {
-
                 std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
                 std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
-                it->second.addAttribute(attributeType, context + "::" + attributeName, isConst, this);
+                it->second.addAttribute(attributeType, context + "::" + attributeName, isConst, isStatic, this);
 
                 auto* constant = dynamic_cast<ASTpommeConstant*>(node);
                 if(constant != nullptr)
                 {
-                    constant->index = it->second.attributes.size() - 1;
+                    constant->index = isStatic ? it->second.staticAttributes.size() - 1 : it->second.attributes.size() - 1;
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << constant->index << std::endl;
                 }else
                 {
                     auto* variable = dynamic_cast<ASTpommeVariable*>(node);
-                    variable->index = it->second.attributes.size() -1;
-                    variable->isStatic = keywords.count("static");
+                    variable->index = isStatic ? it->second.staticAttributes.size() - 1 : it->second.attributes.size() - 1;
+                    variable->isStatic = isStatic;
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << variable->index << std::endl;
                 }
             }else // todo check coverage to remove this branche
@@ -159,19 +160,31 @@ namespace Pomme
     }
 
     void TypeCheckerVisitor::ClassClass::addAttribute(std::string &attributeType, std::string attributeName,
-                                                 bool isConst, TypeCheckerVisitor *typeCheckerVisitor)
+                                                 bool isConst, bool isStatic, TypeCheckerVisitor *typeCheckerVisitor)
     {
         std::cout << "Adding attribute " << attributeName <<  " with type " << attributeType << std::endl;
-        auto access = this->attributes.find(attributeName);
-        if(access == this->attributes.end())
+
+        auto addAttribute = [&] (std::unordered_map<std::string, VariableClass>& attributes) {
+            auto access = attributes.find(attributeName);
+            if(access == attributes.end())
+            {
+                VariableClass variable(attributeType, attributeName, attributes.size(), isConst);
+                attributes.insert(std::pair<std::string, VariableClass>(attributeName, variable));
+                std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
+            }else
+            {
+                typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
+                std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+            }
+        };
+
+        if (isStatic)
         {
-            VariableClass variable(attributeType,attributeName, this->attributes.size(), isConst);
-            this->attributes.insert(std::pair<std::string, VariableClass>(attributeName, variable));
-            std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
-        }else
+            addAttribute(staticAttributes);
+        }
+        else
         {
-            typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
-            std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+            addAttribute(attributes);
         }
     }
 
@@ -314,6 +327,7 @@ namespace Pomme
         auto it = classMap.find(class_name);
         if(it != classMap.end())
         {
+            //non static attributes
             auto ot = it->second.attributes.find(class_name + "::" + node->m_Identifier);
             if(ot != it->second.attributes.end())
             {
@@ -322,6 +336,20 @@ namespace Pomme
                     *variableType = ot->second.variableType;
                     std::cout << "index of ident " << node->m_Identifier << " in class " << class_name << " = " << ot->second.index << std::endl;
                     node->m_IndexAttribute = ot->second.index;
+                    node->m_Attribute = true;
+                }
+                return;
+            }
+
+            //static attributes
+            auto pt = it->second.staticAttributes.find(class_name + "::" + node->m_Identifier);
+            if(pt != it->second.staticAttributes.end())
+            {
+                if (variableType != nullptr)
+                {
+                    *variableType = pt->second.variableType;
+                    std::cout << "index of static ident " << node->m_Identifier << " in class " << class_name << " = " << pt->second.index << std::endl;
+                    node->m_IndexAttribute = pt->second.index;
                     node->m_Attribute = true;
                 }
                 return;
