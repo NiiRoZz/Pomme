@@ -6,6 +6,7 @@ add_executable(pomme_tests
   testParser.cpp
   testTypeChecker.cpp
   testVirtualMachine.cpp
+  testAutomate.cpp
 )
 
 

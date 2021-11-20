@@ -45,6 +45,7 @@ add_library(${APP}
   "src/VM/Chunk.cpp"
   "src/VM/Object.cpp"
   "src/VM/Value.cpp"
+  "src/Automate/Automaton.cpp"
   "src/Compiler.cpp"
   "src/TypeChecker.cpp"
   "src/CompilerVisitor.cpp"
