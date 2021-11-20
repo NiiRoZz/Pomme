@@ -65,12 +65,104 @@ namespace Pomme
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
         callFunction->chunk.writeChunk(params.size(), 1);
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_POP), 0);
-
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_NULL), 0);
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_RETURN), 0);
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
         
         return interpret(callFunction);
+    }
+
+    std::optional<Value> VirtualMachine::callGlobalFunction(const std::string& name, const std::vector<Value>& params)
+    {
+        auto it = globalsIndices.find(name);
+        if (it == globalsIndices.end())
+        {
+            return {};
+        }
+
+        assert(IS_FUNCTION(globals[it->second]));
+
+        ObjFunction* function = AS_FUNCTION(globals[it->second]);
+
+        if (function->arity != params.size())
+        {
+            return {};
+        }
+
+        push(globals[it->second]);
+
+        for (int i = 0; i < params.size(); ++i)
+        {
+            push(params[i]);
+        }
+
+        ObjFunction* callFunction = newFunction();
+
+        callFunction->name = function->name;
+        callFunction->arity = function->arity;
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
+        callFunction->chunk.writeChunk(params.size(), 1);
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
+
+        if (!call(callFunction, params.size()))
+        {
+            return {};
+        }
+
+        if (run() != InterpretResult::INTERPRET_OK)
+        {
+            return {};
+        }
+
+        return pop();
+    }
+
+    std::optional<Value> VirtualMachine::callMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params)
+    {
+        auto it = instance->klass->methodsIndices.find(methodName);
+        if (it == instance->klass->methodsIndices.end())
+        {
+            return {};
+        }
+
+        assert(IS_FUNCTION(instance->klass->methods[it->second]));
+
+        ObjFunction* function = AS_FUNCTION(instance->klass->methods[it->second]);
+
+        if (function->arity != params.size())
+        {
+            return {};
+        }
+
+        ObjBoundMethod* bound = newBoundMethod(OBJ_VAL(instance), &instance->klass->methods[it->second]);
+        push(OBJ_VAL((Obj*) bound));
+
+        for (int i = 0; i < params.size(); ++i)
+        {
+            push(params[i]);
+        }
+
+        ObjFunction* callFunction = newFunction();
+
+        callFunction->name = function->name;
+        callFunction->arity = function->arity;
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
+        callFunction->chunk.writeChunk(params.size(), 1);
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
+
+        if (!call(callFunction, params.size()))
+        {
+            return {};
+        }
+
+        if (run() != InterpretResult::INTERPRET_OK)
+        {
+            return {};
+        }
+
+        return pop();
     }
 
     bool VirtualMachine::linkGlobalNative(const std::string& name, GlobalNativeFn function)
@@ -94,8 +186,6 @@ namespace Pomme
 
         auto ot = klass->methodsIndices.find(methodName);
         if (ot == klass->methodsIndices.end()) return false;
-
-        std::cout << "index : " << ot->second << std::endl;
 
         AS_METHOD_NATIVE(klass->methods[ot->second]) = function;
 
@@ -455,6 +545,21 @@ namespace Pomme
 
                     frame = &frames[frameCount - 1];
                     break;
+                }
+
+                case AS_OPCODE(OpCode::OP_FINISH):
+                {
+                    Value result = pop();
+                    frameCount--;
+
+                    pop();
+
+                    if (frameCount > 0)
+                    {
+                        push(result);
+                    }
+
+                    return InterpretResult::INTERPRET_OK; 
                 }
 
                 case AS_OPCODE(OpCode::OP_INHERIT):

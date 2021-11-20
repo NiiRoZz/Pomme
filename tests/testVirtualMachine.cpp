@@ -234,4 +234,58 @@ TEST(TEST_VM, ClassNativeMethodTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ClassNativeMethodCallGlobalTest)
+{
+	TEST_VM_TEST("int g(int a) {return a + 10;}; class TestClass { native int meth(int a); }; void f() { TestClass oui = new TestClass(); print(oui.meth(573)); };\n");
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+		if (argCount  == 1)
+		{
+			std::optional<Value> val = vm.callGlobalFunction(vm.getFunctionName("g", "int"), {args[0]});
+
+			EXPECT_TRUE(val.has_value());
+
+			return *val;
+		}
+		
+		return NULL_VAL;
+	});
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ClassNativeMethodCallMethodTest)
+{
+	TEST_VM_TEST("class TestClass { native int meth(int a); void update(float t) {print(\"update :\"); print(t);}; }; void f() { TestClass oui = new TestClass(); oui.meth(650); };\n");
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+		if (argCount  == 1)
+		{
+			std::optional<Value> val = vm.callMethodFunction(instance, vm.getFunctionName("update", "float"), {args[0]});
+
+			EXPECT_TRUE(val.has_value());
+
+			return *val;
+		}
+		
+		return NULL_VAL;
+	});
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

@@ -35,6 +35,8 @@ namespace Pomme
 
 		InterpretResult interpret(ObjFunction* function);
 		InterpretResult interpretGlobalFunction(const std::string& name, const std::vector<Value>& params);
+		std::optional<Value> callGlobalFunction(const std::string& name, const std::vector<Value>& params);
+		std::optional<Value> callMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params);
 
 		bool linkGlobalNative(const std::string& name, GlobalNativeFn function);
 		bool linkMethodNative(const std::string& className, const std::string& methodName, MethodNativeFn function);

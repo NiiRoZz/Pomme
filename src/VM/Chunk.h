@@ -36,6 +36,7 @@ namespace Pomme
         OP_LOOP,
         OP_CALL,
         OP_RETURN,
+        OP_FINISH,
         OP_INHERIT,
         OP_METHOD,
         OP_FIELD,
