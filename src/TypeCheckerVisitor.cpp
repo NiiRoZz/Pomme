@@ -22,9 +22,9 @@ namespace Pomme
 	{
 	}
 
-    void TypeCheckerVisitor::visiteVariable(Node * node, void* data, bool isConst, const std::unordered_set<std::string>& keywords)
+    void TypeCheckerVisitor::visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords)
     {
-        std::string &context = *static_cast<std::string*>(data);
+        const std::string &context = class_name;
 
         for (const auto& it : classMap)
         {
@@ -53,7 +53,8 @@ namespace Pomme
                         + " is already defined in parent class with a different type. Expected type "
                         + variable->second.variableType + " but got "+ attributeType );
                     }
-                }else
+                }
+                else
                 {
                     child->second.addAttribute(attributeType, context + "::" + attributeName, isConst, isStatic, this);
                 }
@@ -122,8 +123,8 @@ namespace Pomme
     void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent,
                                                std::unordered_set<std::string> parameters)
     {
-        std::cout << "Adding global function " << functionName << " with type " << functionType << std::endl;
-        auto access = globalFunctionsMap.find(functionName);
+        std::cout << "Adding global function " << functionName << " with type " << functionType << " with ident " << functionIdent << std::endl;
+        auto access = globalFunctionsMap.find(functionIdent);
         if(access != globalFunctionsMap.end())
         {
             if(access->second.functionIdent == functionIdent)
@@ -138,7 +139,7 @@ namespace Pomme
         {
             FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
                                    std::unordered_set<std::string>(),0); // todo global index
-            globalFunctionsMap.insert(std::pair<std::string,FunctionClass>(functionName, function));
+            globalFunctionsMap.insert(std::pair<std::string,FunctionClass>(functionIdent, function));
         }
     }
 
@@ -301,67 +302,91 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTident *node, void * data)
     {
         auto* variableType = static_cast<std::string*>(data);
+        const std::string& currentClassName = (variableType != nullptr && *variableType != "") ? *variableType : class_name;
 
-        std::cout << node->m_Identifier << std::endl;
+        std::cout << "ASTident identifier : " << node->m_Identifier << " currentClassName : " << currentClassName << std::endl;
 
-        // locals
-        for(int scopes = current_scopes; scopes >= 0; scopes-- )
+        //locals should be checked only when on left side of listaccess
+        if (variableType == nullptr || *variableType == "")
         {
-            auto it = locals.find(scopes);
-            if(it != locals.end())
+            // locals
+            for(int scopes = current_scopes; scopes >= 0; scopes-- )
             {
-                for(auto ot : it->second)
+                auto it = locals.find(scopes);
+                if(it != locals.end())
                 {
-                    if(ot.variableName == node->m_Identifier)
+                    for(auto ot : it->second)
                     {
-                        if (variableType != nullptr) 
+                        if(ot.variableName == node->m_Identifier)
                         {
-                            *variableType = ot.variableType;
+                            if (variableType != nullptr)
+                            {
+                                *variableType = ot.variableType;
+                            }
+
+                            return;
                         }
-                        return;
                     }
                 }
+            }
+
+            //check this variable
+            if (class_context && node->m_Identifier == "this")
+            {
+                if (variableType != nullptr)
+                {
+                    *variableType = class_name;
+                }
+
+                std::cout << "FOUND THIS" << std::endl;
+
+                return;
             }
         }
 
         //attributes and class
-        auto it = classMap.find(class_name);
+        auto it = classMap.find(currentClassName);
         if(it != classMap.end())
         {
             //non static attributes
-            auto ot = it->second.attributes.find(class_name + "::" + node->m_Identifier);
+            auto ot = it->second.attributes.find(currentClassName + "::" + node->m_Identifier);
             if(ot != it->second.attributes.end())
             {
+                std::cout << "index of ident " << node->m_Identifier << " in class " << currentClassName << " = " << ot->second.index << std::endl;
+                node->m_IndexAttribute = ot->second.index;
+                node->m_Attribute = true;
+
                 if (variableType != nullptr)
                 {
                     *variableType = ot->second.variableType;
-                    std::cout << "index of ident " << node->m_Identifier << " in class " << class_name << " = " << ot->second.index << std::endl;
-                    node->m_IndexAttribute = ot->second.index;
-                    node->m_Attribute = true;
                 }
                 return;
             }
 
             //static attributes
-            auto pt = it->second.staticAttributes.find(class_name + "::" + node->m_Identifier);
+            auto pt = it->second.staticAttributes.find(currentClassName + "::" + node->m_Identifier);
             if(pt != it->second.staticAttributes.end())
             {
+                std::cout << "index of static ident " << node->m_Identifier << " in class " << currentClassName << " = " << pt->second.index << std::endl;
+                node->m_IndexAttribute = pt->second.index;
+                node->m_Attribute = true;
+                
                 if (variableType != nullptr)
                 {
                     *variableType = pt->second.variableType;
-                    std::cout << "index of static ident " << node->m_Identifier << " in class " << class_name << " = " << pt->second.index << std::endl;
-                    node->m_IndexAttribute = pt->second.index;
-                    node->m_Attribute = true;
                 }
                 return;
             }
 
-            if (node->m_Identifier == class_name) 
+            //static class call
+            if (node->m_Identifier == currentClassName) 
             {
-                *variableType = class_name;
+                *variableType = currentClassName;
                 return;
             }
         }
+
+        std::cout << "ASTident not found : " << node->m_Identifier << std::endl;
 
         errors.push_back("Variable "+ node->m_Identifier + " not found in either attribute of class nor locals variables ");
     }
@@ -403,7 +428,6 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTpommeClass *node, void * data)
     {
         std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        data = &context;
         addClass(context);
         class_context = true;
         class_name = context;
@@ -418,7 +442,6 @@ namespace Pomme
         }*/
         std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
         std::string extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
-        data = &context;
 
         if(classMap.count(context)){
             errors.push_back("ERROR DETECTED while adding class "+ context +" : Class already defined");
@@ -428,8 +451,7 @@ namespace Pomme
 
         auto it = classMap.find(extendedClass);
         if(it != classMap.end()){
-            ClassClass classClass;
-            classClass = classMap.find(extendedClass)->second;
+            ClassClass& classClass = classMap.find(extendedClass)->second;
             classClass.parent = extendedClass;
             classMap.insert(std::pair<std::string,ClassClass>(context, classClass));
 
@@ -441,6 +463,7 @@ namespace Pomme
         }
 
         class_context = true;
+        class_name = context;
         child_context = true;
         node->jjtGetChild(2)->jjtAccept(this, data);
         child_context = false;
@@ -457,11 +480,11 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTvarDecls *node, void * data)
     {
         std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
-        visiteVariable(node->jjtGetChild(1), data, dynamic_cast<ASTpommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
+        visiteVariable(node->jjtGetChild(1), dynamic_cast<ASTpommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
     }
     void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
     {
-        visiteVariable(node, data, false, {});
+        visiteVariable(node, false, {});
 
         node->jjtChildAccept(2, this, nullptr);
     }
@@ -476,8 +499,8 @@ namespace Pomme
         std::string functionType;
         auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
         std::string &functionName = name->m_Identifier;
-        std::string functionIdent = functionName;
-        std::string &context = *static_cast<std::string*>(data);
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
+        const std::string &context = class_name;
 
         auto it = classMap.find(context);
         if(it == classMap.end()){
@@ -519,7 +542,7 @@ namespace Pomme
 
         if(!parameters.empty())
         {
-            functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
+            functionIdent += signatureParameter;
         }
         it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
         node->index = it->second.functions.size() - 1;
@@ -591,7 +614,12 @@ namespace Pomme
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
         std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
         std::unordered_set<std::string> parameters = buildSignature(headers);
-        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
+
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
+        if (!parameters.empty())
+        {
+            functionIdent += signatureParameter;
+        }
 
         std::cout << "parameters ___________________________" << std::endl;
         for(const auto& it : parameters)
@@ -601,10 +629,10 @@ namespace Pomme
 
         functionIdentNode->m_MethodIdentifier = functionIdent;
 
-        auto* identNode = dynamic_cast<ASTvoidType*>(node->jjtGetChild(0));
+        auto* typeIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
         addGlobalFunction ( (
-                                (identNode == nullptr) ? 
-                                (dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier) //get return type
+                                (typeIdentNode != nullptr) ? 
+                                typeIdentNode->m_Identifier //get return type
                                 : "void"
                             ),
                             functionName,
@@ -612,7 +640,9 @@ namespace Pomme
                             parameters
                         );
 
+        //Define local headers
         node->jjtChildAccept(2, this, data);
+
         node->jjtChildAccept(3, this, data);
     }
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
@@ -622,13 +652,29 @@ namespace Pomme
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
         std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
         std::unordered_set<std::string> parameters = buildSignature(headers);
-        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
+        
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
+        if (!parameters.empty())
+        {
+            functionIdent += signatureParameter;
+        }
 
         std::cout << "parameters ___________________________" << std::endl;
         for(const auto& it : parameters)
         {
             std::cout << it << std::endl;
         }
+
+        auto* typeIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+        addGlobalFunction ( (
+                                (typeIdentNode != nullptr) ? 
+                                typeIdentNode->m_Identifier //get return type
+                                : "void"
+                            ),
+                            functionName,
+                            functionIdent,
+                            parameters
+                        );
 
         functionIdentNode->m_MethodIdentifier = functionIdent;
     }
@@ -732,7 +778,7 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
     {
-        visiteVariable(node, data, true, {});
+        visiteVariable(node, true, {});
     }
     void TypeCheckerVisitor::visit(ASTomega *node, void * data)
     {
@@ -768,8 +814,8 @@ namespace Pomme
         std::string functionType = "void";
         auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
         std::string &functionName = name->m_Identifier;
-        std::string functionIdent = functionName;
-        std::string &context = *static_cast<std::string*>(data);
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
+        const std::string &context = class_name;
 
         auto it = classMap.find(context);
         if(it == classMap.end()){
@@ -788,7 +834,7 @@ namespace Pomme
 
         if(!parameters.empty())
         {
-            functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
+            functionIdent += signatureParameter;
         }
         it->second.addFunction(functionType, functionIdent, parameters, {}, this);
         node->index = it->second.functions.size() - 1;
@@ -867,14 +913,14 @@ namespace Pomme
             return;
         }
 
-        std::string functionIdent = name;
+        std::string functionIdent = name + NAME_FUNC_SEPARATOR;
 
         auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
         std::string typeExp = getExpTypes(functionParameters);
 
         if(!typeExp.empty())
         {
-            functionIdent += NAME_FUNC_SEPARATOR + typeExp;
+            functionIdent += typeExp;
         }
 
         auto ot = it->second.functions.find(functionIdent);
@@ -901,14 +947,14 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTlistacces *node, void * data)
     {
         // acccess
-        std::string class_name;
-        node->jjtChildAccept(0, this, &class_name);
+        std::string className = "";
+        node->jjtChildAccept(0, this, &className);
 
         // access
-        node->jjtChildAccept(1, this, &class_name);
+        node->jjtChildAccept(1, this, &className);
 
         //acccesP
-        node->jjtChildAccept(2, this,  &class_name);
+        node->jjtChildAccept(2, this,  &className);
     }
     void TypeCheckerVisitor::visit(ASTlistaccesP *node, void * data)
     {
@@ -919,80 +965,91 @@ namespace Pomme
     }
     void TypeCheckerVisitor::visit(ASTaccessMethode *node, void * data)
     {
-        std::string* class_name_caller = nullptr;
-        if(data != nullptr)
-        {
-            class_name_caller = static_cast<std::string*>(data);
-        }
+        auto* variableType = static_cast<std::string*>(data);
 
         auto *identNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
         std::string functionName = identNode->m_Identifier;
-        std::string functionIdent = functionName;
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
 
         auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
         std::string typeExp = getExpTypes(functionParameters);
 
         if(!typeExp.empty())
         {
-            functionIdent += NAME_FUNC_SEPARATOR + typeExp;
+            functionIdent += typeExp;
         }
 
-        std::cout << "functionIdent == " << functionIdent << std::endl;
+        std::cout << "functionIdent : " << functionIdent << " variableType : " << variableType << " class_context : " << class_context << std::endl;
 
         //std::cout << "class_name_caller : " << class_name_caller << " " << ((class_name_caller != nullptr) ? *class_name_caller : "") << std::endl;
 
         node->name = functionIdent;
 
-        if(class_name_caller != nullptr && *class_name_caller != "")
+        if(variableType != nullptr && *variableType != "")
         {
-            auto it = classMap.find(*class_name_caller);
+            auto it = classMap.find(*variableType);
             if (it != classMap.end())
             {
                 auto ot = it->second.functions.find(functionIdent);
                 if (ot != it->second.functions.end())
                 {
                     node->index = ot->second.index;
-                    *class_name_caller = class_name;
+                    *variableType = class_name;
                     std::cout << " INDEX  == " << node->index << std::endl;
-                }else{
-                    errors.push_back("No function " + functionName + " implemented in class " + *class_name_caller);
+                }
+                else
+                {
+                    errors.push_back("No function " + functionName + " implemented in class " + *variableType);
                     return;
                 }
             }
-        }else if(class_context)
+        }
+        else if(class_context)
         {
             auto it = classMap.find(class_name);
-            if (it != classMap.end()) {
+            if (it != classMap.end())
+            {
                 auto ot = it->second.functions.find(functionIdent);
-                if (ot == it->second.functions.end()) {
-                    auto ut = globalFunctionsMap.find(functionIdent);
-                    if (ut == globalFunctionsMap.end()) {
-                        errors.push_back("No function " + functionName + " implemented in file ");
-                        return;
-                    }
-                    if( class_name_caller != nullptr)
-                    {
-                        *class_name_caller = ut->second.returnType;
-                        node->global = true;
-                    }
-                } else {
+                if (ot != it->second.functions.end())
+                {
+                    node->global = false;
                     node->index = ot->second.index;
-                    if( class_name_caller != nullptr)
+                    if( variableType != nullptr)
                     {
-                        *class_name_caller = class_name;
+                        *variableType = class_name;
                     }
                     std::cout << " INDEX  == " << node->index << std::endl;
                 }
+                else
+                {
+                    std::cout << "global scope 1 ?" << std::endl;
+                    auto ut = globalFunctionsMap.find(functionIdent);
+                    if (ut == globalFunctionsMap.end())
+                    {
+                        errors.push_back("No function " + functionName + " implemented in file ");
+                        return;
+                    }
+
+                    node->global = true;
+                    if( variableType != nullptr)
+                    {
+                        *variableType = ut->second.returnType;
+                    }
+                }
             }
-        }else // global scope
+        }
+        else // global scope
         {
-            node->global = true;
+            std::cout << "global scope 2 ?" << std::endl;
+
             auto ut = globalFunctionsMap.find(functionIdent);
             if( ut == globalFunctionsMap.end())
             {
-                errors.push_back("No global function "+functionName+" implemented in file ");
+                errors.push_back("No global function " + functionName + " implemented in file ");
                 return;
             }
+
+            node->global = true;
         }
     }
 }

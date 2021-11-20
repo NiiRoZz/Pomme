@@ -43,6 +43,8 @@ namespace Pomme
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
+        std::cout << "ASTident visit : " << node->m_Identifier << " " << node->m_Attribute << " " << node->m_IndexAttribute << std::endl;
+
         if (node->m_Attribute)
         {
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
@@ -53,16 +55,8 @@ namespace Pomme
         }
         else
         {
-            //First check if it's a name of a class (for static method/property)
-            if (!emitGetClass(node->m_Identifier))
-            {
-                //Second, check if it's not a local var or global method
-                namedVariable(node->m_Identifier, assign);
-            }
-            else
-            {
-                assert(!assign);
-            }
+            //Second, check if it's not a local var
+            namedVariable(node->m_Identifier, assign);
         }
     }
 
@@ -770,20 +764,6 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_NULL));
     }
 
-    bool CompilerVisitor::emitGetClass(const std::string& name)
-    {
-        std::optional<std::size_t> idx = m_Vm.getGlobal(name);
-
-        if (!idx.has_value())
-        {
-            return false;
-        }
-
-        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *idx);
-
-        return true;
-    }
-
     void CompilerVisitor::emitConstant(const Value& value)
     {
         emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(value));
@@ -949,9 +929,9 @@ namespace Pomme
             }
         }
 
-        //GLOBALS
-        op = (assign) ? OpCode::OP_SET_GLOBAL : OpCode::OP_GET_GLOBAL;
+        assert(!assign);
 
+        //GLOBALS
         std::optional<std::size_t> idx = m_Vm.getGlobal(name);
 
         if (!idx.has_value())
@@ -959,6 +939,6 @@ namespace Pomme
             assert(false);
         }
 
-        emitBytes(AS_OPCODE(op), *idx);
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *idx);
     }
 }

@@ -148,7 +148,7 @@ namespace Pomme
         int path_number = 1;
         int current_scopes = 0;
 
-        void visiteVariable(Node * node, void* data, bool isConst, const std::unordered_set<std::string>& keywords);
+        void visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords);
         void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);

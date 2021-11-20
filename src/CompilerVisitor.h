@@ -137,7 +137,6 @@ namespace Pomme
 		void emitLoop(int loopStart);
 
 		void emitDefaultValue(const std::string& typeName);
-		bool emitGetClass(const std::string& name);
 
 		void endCompiler();
 		void emitConstant(const Value& value);

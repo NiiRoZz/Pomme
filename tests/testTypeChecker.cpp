@@ -194,7 +194,7 @@ TEST(TEST_TYPECHECKER, ParametersRedefinitionWithDifferentType)
 }
 TEST(TEST_TYPECHECKER, FunctionRedefinitionWithDifferentType)
 {
-    TEST_TYPECHECKER_TEST(" int meth(int n){}; void meth(){};\n");
+    TEST_TYPECHECKER_TEST(" int meth(int n){}; void meth(int n){};\n");
     std::cout << text << std::endl;
     TypeChecker typeChecker;
 
@@ -247,7 +247,7 @@ TEST(TEST_TYPECHECKER, StaticMethod)
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("static"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test!")->second.keywords.count("static"));
 }
 
 TEST(TEST_TYPECHECKER, VisibilityMethod)
@@ -264,10 +264,10 @@ TEST(TEST_TYPECHECKER, VisibilityMethod)
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPublic")->second.keywords.count("public"));
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPrivate")->second.keywords.count("private"));
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPrivate2")->second.keywords.count("private"));
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testProtected")->second.keywords.count("protected"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPublic!")->second.keywords.count("public"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPrivate!")->second.keywords.count("private"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testPrivate2!")->second.keywords.count("private"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("testProtected!")->second.keywords.count("protected"));
 
 }
 TEST(TEST_TYPECHECKER, OverrideMethod)
@@ -284,7 +284,7 @@ TEST(TEST_TYPECHECKER, OverrideMethod)
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("f")->second.keywords.count("override"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("f!")->second.keywords.count("override"));
 }
 TEST(TEST_TYPECHECKER, StaticVisibilityMethod)
 {
@@ -301,8 +301,8 @@ TEST(TEST_TYPECHECKER, StaticVisibilityMethod)
         std::cout << error << std::endl;
     }
 
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("static"));
-    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test")->second.keywords.count("public"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test!")->second.keywords.count("static"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.functions.find("test!")->second.keywords.count("public"));
 }
 TEST(TEST_TYPECHECKER, ExtendedClass) {
     TEST_TYPECHECKER_TEST("class test { int t; void t2(){}; }; class test2 extends test {}; \n");
@@ -317,7 +317,7 @@ TEST(TEST_TYPECHECKER, ExtendedClass) {
         std::cout << error << std::endl;
     }
     EXPECT_TRUE(visitor.classMap.find("test2")->second.keywords.count("extends"));
-    EXPECT_TRUE(visitor.classMap.find("test2")->second.functions.count("t2"));
+    EXPECT_TRUE(visitor.classMap.find("test2")->second.functions.count("t2!"));
 }
 TEST(TEST_TYPECHECKER, ExtendingNonExistingClass) {
     TEST_TYPECHECKER_TEST("class test extends t2{}; \n");
@@ -348,7 +348,7 @@ TEST(TEST_TYPECHECKER, OverridingWithoutExtends) {
     }
 }
 TEST(TEST_TYPECHECKER, OverridingWithoutDefinitionInParent) {
-    TEST_TYPECHECKER_TEST("class test {  void a(){}; }; class test2 extends test{ override void test(){}; }; \n");
+    TEST_TYPECHECKER_TEST("class test {  void a(){}; }; class test2 extends test{ override void b() {}; }; \n");
 
     std::cout << text << std::endl;
 
@@ -361,7 +361,7 @@ TEST(TEST_TYPECHECKER, OverridingWithoutDefinitionInParent) {
     }
 }
 TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) {
-    TEST_TYPECHECKER_TEST("class test{ int a; }; class test2 extends test{ bool a;  bool b; };\n");
+    TEST_TYPECHECKER_TEST("class test{ int a; }; class test2 extends test { bool a;  bool b; };\n");
 
     std::cout << text << std::endl;
 
