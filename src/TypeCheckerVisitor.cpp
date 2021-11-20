@@ -206,22 +206,46 @@ namespace Pomme
 
     void TypeCheckerVisitor::ClassClass::addFunction(std::string &functionType, std::string &functionName,
                                                      std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords,
-                                                     TypeCheckerVisitor *typeCheckerVisitor)
+                                                     bool isNative, TypeCheckerVisitor *typeCheckerVisitor)
     {
-        std::cout << "Adding function " << functionName << " with type " << functionType << std::endl;
-        auto access = this->functions.find(functionName);
-        if(access == this->functions.end())
-        {
-            FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
-                                   std::move(keywords), this->functions.size());
-            this->functions.insert(std::pair<std::string, FunctionClass>(functionName, function));
-                std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
-        }else
-        {
-            typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
-            std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
-        }
 
+        auto addMethod = [&] (std::unordered_map<std::string, FunctionClass>& methods) {
+            auto access = methods.find(functionName);
+            if(access == methods.end())
+            {
+                FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
+                                   std::move(keywords), methods.size());
+                methods.insert(std::pair<std::string, FunctionClass>(functionName, function));
+                std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
+            }else
+            {
+                typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
+                std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+            }
+        };
+
+        if (isNative)
+        {
+            auto access = methods.find(functionName);
+            if (access != methods.end())
+            {
+                typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
+                std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+            }
+
+            addMethod(nativeMethods);
+        }
+        else
+        {
+            auto access = nativeMethods.find(functionName);
+            if (access != nativeMethods.end())
+            {
+                typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
+                std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+            }
+
+            addMethod(methods);
+        }
     }
 
     std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTheaders *headers) {
@@ -545,8 +569,9 @@ namespace Pomme
             }
             auto parent = classMap.find(it->second.parent);
             if(parent != classMap.end()){
-                auto function = parent->second.functions.find(functionName);
-                if(function == parent->second.functions.end()){
+                auto function = parent->second.methods.find(functionName);
+                if(function == parent->second.methods.end())
+                {
                     errors.push_back("Overriding method " + functionName + " while your parent class don't have this method defined");
                 }
             }
@@ -568,8 +593,8 @@ namespace Pomme
         {
             functionIdent += signatureParameter;
         }
-        it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
-        node->index = it->second.functions.size() - 1;
+        it->second.addFunction(functionType, functionIdent, parameters, keywords, false, this);
+        node->index = it->second.methods.size() - 1;
         name->m_MethodIdentifier = functionIdent;
 
         node->jjtGetChild(3)->jjtAccept(this, data); // headers
@@ -631,15 +656,15 @@ namespace Pomme
         auto parent = classMap.find(it->second.parent);
         if(parent != classMap.end())
         {
-            if (parent->second.functions.count(functionIdent))
+            if (parent->second.nativeMethods.count(functionIdent))
             {
                 errors.push_back("you can't override a native method");
                 return;
             }
         }
 
-        it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
-        node->index = it->second.functions.size() - 1;
+        it->second.addFunction(functionType, functionIdent, parameters, keywords, true, this);
+        node->index = it->second.nativeMethods.size() - 1;
         name->m_MethodIdentifier = functionIdent;
     }
 
@@ -925,8 +950,8 @@ namespace Pomme
         {
             functionIdent += signatureParameter;
         }
-        it->second.addFunction(functionType, functionIdent, parameters, {}, this);
-        node->index = it->second.functions.size() - 1;
+        it->second.addFunction(functionType, functionIdent, parameters, {}, false, this);
+        node->index = it->second.methods.size() - 1;
         name->m_MethodIdentifier = functionIdent;
 
         node->jjtGetChild(1)->jjtAccept(this, data); // headers
@@ -1012,9 +1037,9 @@ namespace Pomme
             functionIdent += typeExp;
         }
 
-        auto ot = it->second.functions.find(functionIdent);
+        auto ot = it->second.methods.find(functionIdent);
 
-        if (ot == it->second.functions.end())
+        if (ot == it->second.methods.end())
         {
             node->foundConstructor = false;
             return;
@@ -1079,17 +1104,29 @@ namespace Pomme
             auto it = classMap.find(*variableType);
             if (it != classMap.end())
             {
-                auto ot = it->second.functions.find(functionIdent);
-                if (ot != it->second.functions.end())
+                auto ot = it->second.methods.find(functionIdent);
+                if (ot != it->second.methods.end())
                 {
+                    node->global = false;
                     node->index = ot->second.index;
                     *variableType = class_name;
                     std::cout << " INDEX  == " << node->index << std::endl;
                 }
                 else
                 {
-                    errors.push_back("No function " + functionName + " implemented in class " + *variableType);
-                    return;
+                    auto pt = it->second.nativeMethods.find(functionIdent);
+                    if (pt != it->second.nativeMethods.end())
+                    {
+                        node->index = pt->second.index;
+                        node->native = true;
+                        *variableType = class_name;
+                        std::cout << " NATIVE INDEX  == " << node->index << std::endl;
+                    }
+                    else
+                    {
+                        errors.push_back("No function " + functionName + " implemented in class " + *variableType);
+                        return;
+                    }
                 }
             }
         }
@@ -1098,11 +1135,12 @@ namespace Pomme
             auto it = classMap.find(class_name);
             if (it != classMap.end())
             {
-                auto ot = it->second.functions.find(functionIdent);
-                if (ot != it->second.functions.end())
+                auto ot = it->second.methods.find(functionIdent);
+                if (ot != it->second.methods.end())
                 {
                     node->global = false;
                     node->index = ot->second.index;
+                    node->methodCall = true;
                     if( variableType != nullptr)
                     {
                         *variableType = class_name;
@@ -1111,18 +1149,33 @@ namespace Pomme
                 }
                 else
                 {
-                    std::cout << "global scope 1 ?" << std::endl;
-                    auto ut = globalFunctionsMap.find(functionIdent);
-                    if (ut == globalFunctionsMap.end())
+                    auto pt = it->second.nativeMethods.find(functionIdent);
+                    if (pt != it->second.nativeMethods.end())
                     {
-                        errors.push_back("No function " + functionName + " implemented in file ");
-                        return;
+                        node->index = pt->second.index;
+                        node->native = true;
+                        node->methodCall = true;
+                        if( variableType != nullptr)
+                        {
+                            *variableType = class_name;
+                        }
+                        std::cout << " NATIVE INDEX  == " << node->index << std::endl;
                     }
-
-                    node->global = true;
-                    if( variableType != nullptr)
+                    else
                     {
-                        *variableType = ut->second.returnType;
+                        std::cout << "global scope 1 ?" << std::endl;
+                        auto ut = globalFunctionsMap.find(functionIdent);
+                        if (ut == globalFunctionsMap.end())
+                        {
+                            errors.push_back("No function " + functionName + " implemented in file ");
+                            return;
+                        }
+
+                        node->global = true;
+                        if( variableType != nullptr)
+                        {
+                            *variableType = ut->second.returnType;
+                        }
                     }
                 }
             }

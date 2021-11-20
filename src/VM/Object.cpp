@@ -22,4 +22,14 @@ namespace Pomme
     {
         return klass->getStaticField(name);
     }
+
+    bool ObjInstance::linkMethodNative(const std::string& name, MethodNativeFn function)
+    {
+        auto it = klass->nativeMethodsIndices.find(name);
+        if (it == klass->nativeMethodsIndices.end()) return false;
+
+        AS_METHOD_NATIVE(nativeMethods[it->second]) = function;
+
+        return true;
+    }
 }

@@ -90,14 +90,15 @@ namespace Pomme
             public:
             std::unordered_map<std::string, VariableClass> attributes;
             std::unordered_map<std::string, VariableClass> staticAttributes;
-            std::unordered_map<std::string, FunctionClass> functions;
+            std::unordered_map<std::string, FunctionClass> methods;
+            std::unordered_map<std::string, FunctionClass> nativeMethods;
             std::unordered_set<std::string> keywords;
             std::unordered_set<std::string> children;
             std::string parent;
 
             void addAttribute(std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
                               TypeCheckerVisitor *typeCheckerVisitor);
-            void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, TypeCheckerVisitor* typeCheckerVisitor);
+            void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, TypeCheckerVisitor* typeCheckerVisitor);
 
             ClassClass& operator=(const ClassClass& other)
             {
@@ -105,7 +106,9 @@ namespace Pomme
                 if (this != &other)
                 {
                     this->attributes = other.attributes;
-                    this->functions = other.functions;
+                    this->staticAttributes = other.staticAttributes;
+                    this->methods = other.methods;
+                    this->nativeMethods = other.nativeMethods;
                     this->keywords = other.keywords;
                     this->children = other.children;
                 }
@@ -123,9 +126,20 @@ namespace Pomme
                 {
                     str << "\t" << it.second << std::endl;
                 }
-                for(const auto& it : klass.functions)
+
+                for(const auto& it : klass.methods)
                 {
                     str << "\t";
+                    for(const auto& keyword : it.second.keywords)
+                    {
+                        str << keyword << " ";
+                    }
+                    str << it.second << std::endl;
+                }
+
+                for(const auto& it : klass.nativeMethods)
+                {
+                    str << "\tnative ";
                     for(const auto& keyword : it.second.keywords)
                     {
                         str << keyword << " ";

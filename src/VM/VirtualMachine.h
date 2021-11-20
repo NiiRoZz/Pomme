@@ -35,6 +35,8 @@ namespace Pomme
 
 		InterpretResult interpret(ObjFunction* function);
 		InterpretResult interpretGlobalFunction(const std::string& name, const std::vector<Value>& params);
+		InterpretResult interpretMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params);
+
 		std::optional<Value> callGlobalFunction(const std::string& name, const std::vector<Value>& params);
 		std::optional<Value> callMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params);
 
@@ -57,6 +59,9 @@ namespace Pomme
 
 		ObjString* allocateString(char* chars, int length);
 		ObjString* copyString(const char* chars, int length);
+
+		ObjInstance* newInstance(const std::string& className);
+		ObjInstance* newInstance(uint16_t slot);
 
 		ObjFunction* newFunction();
 		ObjGlobalNative* newGlobalNative();
@@ -95,7 +100,7 @@ namespace Pomme
 		void printObject(const Value& value);
 		void printFunction(ObjFunction* function);
 
-		void defineMethod(uint16_t slot, ObjString* name);
+		void defineMethod(uint16_t slot, ObjString* name, bool isNative);
 		void defineField(uint16_t slot, ObjString* name, bool isStatic);
 
 		ObjClass* newClass(ObjString* name);

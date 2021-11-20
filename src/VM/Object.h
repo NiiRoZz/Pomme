@@ -89,7 +89,7 @@ namespace Pomme
         Obj obj;
         ObjString* name;
         Value methods[METHODS_MAX]; 
-        ObjMethodNative nativeMethods[METHODS_MAX];
+        Value nativeMethods[METHODS_MAX];
         Value staticFields[FIELDS_MAX]; 
         Value defaultFields[FIELDS_MAX];
         
@@ -99,6 +99,7 @@ namespace Pomme
 
         //Used for C++->Pomme call
         std::unordered_map<std::string, uint16_t> methodsIndices;
+        std::unordered_map<std::string, uint16_t> nativeMethodsIndices;
         std::unordered_map<std::string, uint16_t> fieldsIndices;
         std::unordered_map<std::string, uint16_t> staticFieldsIndices;
     };
@@ -108,9 +109,12 @@ namespace Pomme
         Obj obj;
         ObjClass* klass;
         Value fields[FIELDS_MAX];
+        Value nativeMethods[METHODS_MAX];
 
         Value* getField(const std::string& name);
         Value* getStaticField(const std::string& name);
+
+        bool linkMethodNative(const std::string& methodName, MethodNativeFn function);
     };
 
     struct ObjBoundMethod

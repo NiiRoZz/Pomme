@@ -70,6 +70,47 @@ namespace Pomme
         return interpret(callFunction);
     }
 
+    InterpretResult VirtualMachine::interpretMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params)
+    {
+        if (instance == nullptr) return InterpretResult::INTERPRET_RUNTIME_ERROR;
+
+        auto it = instance->klass->methodsIndices.find(methodName);
+        if (it == instance->klass->methodsIndices.end())
+        {
+            return InterpretResult::INTERPRET_RUNTIME_ERROR;
+        }
+
+        assert(IS_FUNCTION(instance->klass->methods[it->second]));
+
+        ObjFunction* function = AS_FUNCTION(instance->klass->methods[it->second]);
+
+        if (function->arity != params.size())
+        {
+            return InterpretResult::INTERPRET_RUNTIME_ERROR; 
+        }
+
+        ObjFunction* callFunction = newFunction();
+
+        ObjBoundMethod* bound = newBoundMethod(OBJ_VAL(instance), &instance->klass->methods[it->second]);
+        int id = callFunction->chunk.addConstant(OBJ_VAL(bound));
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
+        callFunction->chunk.writeChunk(id, 1);
+
+        for (int i = 0; i < params.size(); ++i)
+        {
+            id = callFunction->chunk.addConstant(params[i]);
+            callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
+            callFunction->chunk.writeChunk(id, 1);
+        }
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
+        callFunction->chunk.writeChunk(params.size(), 1);
+
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
+        
+        return interpret(callFunction);
+    }
+
     std::optional<Value> VirtualMachine::callGlobalFunction(const std::string& name, const std::vector<Value>& params)
     {
         auto it = globalsIndices.find(name);
@@ -135,7 +176,7 @@ namespace Pomme
         }
 
         ObjBoundMethod* bound = newBoundMethod(OBJ_VAL(instance), &instance->klass->methods[it->second]);
-        push(OBJ_VAL((Obj*) bound));
+        push(OBJ_VAL(bound));
 
         for (int i = 0; i < params.size(); ++i)
         {
@@ -173,6 +214,8 @@ namespace Pomme
         assert(IS_GLOBAL_NATIVE(globals[it->second]));
  
         AS_GLOBAL_NATIVE(globals[it->second]) = function;
+
+        return true;
     }
 
     bool VirtualMachine::linkMethodNative(const std::string& className, const std::string& methodName, MethodNativeFn function)
@@ -184,10 +227,10 @@ namespace Pomme
 
         ObjClass* klass = AS_CLASS(globals[it->second]);
 
-        auto ot = klass->methodsIndices.find(methodName);
-        if (ot == klass->methodsIndices.end()) return false;
+        auto ot = klass->nativeMethodsIndices.find(methodName);
+        if (ot == klass->nativeMethodsIndices.end()) return false;
 
-        AS_METHOD_NATIVE(klass->methods[ot->second]) = function;
+        AS_METHOD_NATIVE(klass->nativeMethods[ot->second]) = function;
 
         return true;
     }
@@ -250,6 +293,14 @@ namespace Pomme
         heapChars[length] = '\0';
 
         return allocateString(heapChars, length);
+    }
+
+    ObjInstance* VirtualMachine::newInstance(const std::string& className)
+    {
+        auto it = globalsIndices.find(className);
+        if (it == globalsIndices.end()) return nullptr;
+
+        return newInstance(AS_CLASS(globals[it->second]));
     }
 
     ObjFunction* VirtualMachine::newFunction()
@@ -454,12 +505,23 @@ namespace Pomme
                     uint16_t slot = READ_UINT16();
                     assert(slot >= 0u && slot < METHODS_MAX);
 
+                    bool native = READ_BYTE();
+
                     Obj* obj = nullptr;
 
                     if (IS_INSTANCE(peek(0)))
                     {
                         ObjInstance* instance = AS_INSTANCE(peek(0));
-                        Value *method = &instance->klass->methods[slot];
+                        Value *method;
+
+                        if (native)
+                        {
+                            method = &instance->nativeMethods[slot];
+                        }
+                        else
+                        {
+                            method = &instance->klass->methods[slot];
+                        }
 
                         assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
 
@@ -577,8 +639,9 @@ namespace Pomme
                 {
                     uint16_t slot = READ_UINT16();
                     ObjString* name = READ_STRING();
+                    bool native = READ_BYTE();
 
-                    defineMethod(slot, name);
+                    defineMethod(slot, name, native);
                     break;
                 }
 
@@ -660,7 +723,7 @@ namespace Pomme
 
             case ObjType::OBJ_CLASS:
             {
-                FREE(ObjClass, object);
+                delete object;
                 break;
             } 
 
@@ -837,9 +900,9 @@ namespace Pomme
         printf("<fn %s>", function->name->chars);
     }
 
-    void VirtualMachine::defineMethod(uint16_t slot, ObjString* name)
+    void VirtualMachine::defineMethod(uint16_t slot, ObjString* name, bool isNative)
     {
-        std::cout << "VirtualMachine::defineMethod(" << slot << ", " << name->chars << ")" << std::endl;
+        std::cout << "VirtualMachine::defineMethod(" << slot << ", " << name->chars << ", " << isNative << ")" << std::endl;
 
         Value method = peek(0);
 
@@ -847,8 +910,18 @@ namespace Pomme
 
         ObjClass* klass = AS_CLASS(peek(1));
 
-        klass->methods[slot] = method;
-        klass->methodsIndices.emplace(name->chars, slot);
+        if (isNative)
+        {
+            klass->nativeMethods[slot] = method;
+            klass->nativeMethodsIndices.emplace(name->chars, slot);
+        }
+        else
+        {
+            klass->methods[slot] = method;
+            klass->methodsIndices.emplace(name->chars, slot);
+        }
+
+        
         pop();
     }
 
@@ -891,6 +964,7 @@ namespace Pomme
         ObjInstance* instance = ALLOCATE_OBJ(this, ObjInstance, ObjType::OBJ_INSTANCE);
         instance->klass = klass;
         std::memcpy(instance->fields, klass->defaultFields, sizeof(Value) * FIELDS_MAX);
+        std::memcpy(instance->nativeMethods, klass->nativeMethods, sizeof(Value) * METHODS_MAX);
         return instance;
     }
 

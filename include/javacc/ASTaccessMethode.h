@@ -19,6 +19,7 @@ public:
   int index = 0;
   bool global = false;
   bool native = false;
+  bool methodCall = false;
   std::string name;
 };
 

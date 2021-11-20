@@ -520,6 +520,7 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
         emit16Bits(node->index);
         emitByte(identConstant);
+        emitByte(true);
     }
 
     void CompilerVisitor::visit(ASTpommeStatic *node, void * data)
@@ -693,6 +694,15 @@ namespace Pomme
         {
             namedVariable(node->name, false);
         }
+        //We are in class and calling a method of this class without the "this" prefix
+        else if (node->methodCall)
+        {
+            namedVariable("this", false);
+
+            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            emit16Bits(node->index);
+            emitByte(node->native);
+        }
 
         uint8_t argCount = 0;
 
@@ -819,6 +829,7 @@ namespace Pomme
 
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
             emit16Bits(method->index);
+            emitByte(method->native);
 
             method->jjtAccept(this, &assign);
 
@@ -898,6 +909,7 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
         emit16Bits(index);
         emitByte(identConstant);
+        emitByte(false);
 
         m_InMethod = false;
     }

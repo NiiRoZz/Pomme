@@ -207,7 +207,7 @@ TEST(TEST_VM, ClassNativeMethodTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 
-	vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
 		std::cout << "From native method argcount : " << argCount << std::endl; 
 
 		if (argCount  == 1)
@@ -226,7 +226,7 @@ TEST(TEST_VM, ClassNativeMethodTest)
 		}
 		
 		return NULL_VAL;
-	});
+	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -242,7 +242,7 @@ TEST(TEST_VM, ClassNativeMethodCallGlobalTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 
-	vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
 		if (argCount  == 1)
 		{
 			std::optional<Value> val = vm.callGlobalFunction(vm.getFunctionName("g", "int"), {args[0]});
@@ -253,7 +253,7 @@ TEST(TEST_VM, ClassNativeMethodCallGlobalTest)
 		}
 		
 		return NULL_VAL;
-	});
+	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -269,7 +269,7 @@ TEST(TEST_VM, ClassNativeMethodCallMethodTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 
-	vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
 		if (argCount  == 1)
 		{
 			std::optional<Value> val = vm.callMethodFunction(instance, vm.getFunctionName("update", "float"), {args[0]});
@@ -280,9 +280,53 @@ TEST(TEST_VM, ClassNativeMethodCallMethodTest)
 		}
 		
 		return NULL_VAL;
-	});
+	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ClassCallMethodFromCPPTest)
+{
+	TEST_VM_TEST("class TestClass { void update(float t) {print(\"update :\"); print(t);}; };\n");
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	ObjInstance* instance = vm.newInstance("TestClass");
+
+	EXPECT_TRUE(instance != nullptr);
+
+	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {NUMBER_VAL(520)});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ClassLinkMethodInstanceTest)
+{
+	TEST_VM_TEST("class TestClass { native void method(int a); void update(int t) {method(t);}; };\n");
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	ObjInstance* instance = vm.newInstance("TestClass");
+	EXPECT_TRUE(instance != nullptr);
+
+	EXPECT_TRUE(instance->linkMethodNative(vm.getFunctionName("method", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+		if (argCount  == 1)
+		{
+			std::cout << "Hello value : " << AS_NUMBER(args[0]) << std::endl;
+		}
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "int"), {NUMBER_VAL(520)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
