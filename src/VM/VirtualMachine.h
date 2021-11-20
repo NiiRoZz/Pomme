@@ -37,6 +37,9 @@ namespace Pomme
 		InterpretResult interpretGlobalFunction(const std::string& name, const std::vector<Value>& params);
 
 		bool linkGlobalNative(const std::string& name, GlobalNativeFn function);
+		bool linkMethodNative(const std::string& className, const std::string& methodName, MethodNativeFn function);
+
+		Value* getStaticField(const std::string& className, const std::string& fieldName);
 
 		template<typename ... Strings>
 		std::string getFunctionName(std::string name, const Strings&... rest)
@@ -54,7 +57,8 @@ namespace Pomme
 		ObjString* copyString(const char* chars, int length);
 
 		ObjFunction* newFunction();
-		ObjNative* newGlobalNative();
+		ObjGlobalNative* newGlobalNative();
+		ObjMethodNative* newMethodNative();
 
 		std::size_t addGlobal(const std::string& name);
 		std::optional<std::size_t> getGlobal(const std::string& name);
@@ -94,7 +98,7 @@ namespace Pomme
 
 		ObjClass* newClass(ObjString* name);
 		ObjInstance* newInstance(ObjClass* klass);
-		ObjBoundMethod* newBoundMethod(const Value& receiver, ObjFunction* method);
+		ObjBoundMethod* newBoundMethod(const Value& receiver, Value* method);
 
 		int disassembleInstruction(Chunk* chunk, int offset);
 		int simpleInstruction(const char* name, int offset);

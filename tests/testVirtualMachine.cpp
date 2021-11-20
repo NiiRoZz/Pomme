@@ -199,4 +199,39 @@ TEST(TEST_VM, ClassStaticVarTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ClassNativeMethodTest)
+{
+	TEST_VM_TEST("class Other { static int t = 5; }; class TestClass { int z = 10; int x = 0; static int y = 23; native void meth(int a); }; void f() { TestClass oui = new TestClass(); oui.meth(573); print(oui.x); print(Other.t); };\n");
+
+	InterpretResult result = vm.interpret(function);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+
+	vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&vm] (int argCount, ObjInstance* instance, Value* args) {
+		std::cout << "From native method argcount : " << argCount << std::endl; 
+
+		if (argCount  == 1)
+		{
+			Value* x = instance->getField("x");
+
+			if (x != nullptr)
+			{
+				*x = args[0];
+			}
+
+			Value* y = instance->getStaticField("y");
+			EXPECT_EQ(AS_NUMBER(*y), 23);
+
+			*vm.getStaticField("Other", "t") = NUMBER_VAL(123);
+		}
+		
+		return NULL_VAL;
+	});
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

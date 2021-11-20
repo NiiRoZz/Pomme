@@ -43,6 +43,7 @@ include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "i
 add_library(${APP}
   "src/VM/VirtualMachine.cpp"
   "src/VM/Chunk.cpp"
+  "src/VM/Object.cpp"
   "src/VM/Value.cpp"
   "src/Compiler.cpp"
   "src/TypeChecker.cpp"

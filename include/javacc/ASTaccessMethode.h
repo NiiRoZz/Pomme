@@ -18,6 +18,7 @@ public:
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
   int index = 0;
   bool global = false;
+  bool native = false;
   std::string name;
 };
 

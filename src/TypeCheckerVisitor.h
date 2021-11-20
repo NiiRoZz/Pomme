@@ -114,6 +114,11 @@ namespace Pomme
 
             friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass)
             {
+                for(const auto& it : klass.staticAttributes)
+                {
+                    str << "\tstatic " << it.second << std::endl;
+                }
+
                 for(const auto& it : klass.attributes)
                 {
                     str << "\t" << it.second << std::endl;

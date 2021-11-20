@@ -602,4 +602,37 @@ TEST(TEST_TYPECHECKER, ConstructorNotCorrectName) {
     }
 }
 
+TEST(TEST_TYPECHECKER, StaticAttribute)
+{
+    TEST_TYPECHECKER_TEST("class test { static int test; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+    EXPECT_TRUE(visitor.classMap.find("test")->second.staticAttributes.count("test::test"));
+}
+
+TEST(TEST_TYPECHECKER, StaticAttributeAlreadyDefined)
+{
+    TEST_TYPECHECKER_TEST("class test { static int test; int test; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
 

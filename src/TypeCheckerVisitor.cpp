@@ -164,7 +164,7 @@ namespace Pomme
     void TypeCheckerVisitor::ClassClass::addAttribute(std::string &attributeType, std::string attributeName,
                                                  bool isConst, bool isStatic, TypeCheckerVisitor *typeCheckerVisitor)
     {
-        std::cout << "Adding attribute " << attributeName <<  " with type " << attributeType << std::endl;
+        std::cout << "Adding attribute " << attributeName <<  " with type " << attributeType << " isStatic : " << isStatic << std::endl;
 
         auto addAttribute = [&] (std::unordered_map<std::string, VariableClass>& attributes) {
             auto access = attributes.find(attributeName);
@@ -182,10 +182,24 @@ namespace Pomme
 
         if (isStatic)
         {
+            auto access = attributes.find(attributeName);
+            if (access != attributes.end())
+            {
+                typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
+                std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+            }
+
             addAttribute(staticAttributes);
         }
         else
         {
+            auto access = staticAttributes.find(attributeName);
+            if (access != staticAttributes.end())
+            {
+                typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
+                std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+            }
+
             addAttribute(attributes);
         }
     }
@@ -302,8 +316,18 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTident *node, void * data)
     {
         auto* variableType = static_cast<std::string*>(data);
-        const std::string& currentClassName = (variableType != nullptr && *variableType != "") ? *variableType : class_name;
-
+        std::string currentClassName = "";
+        //Special case, where we had the type of return of left expression
+        if (variableType != nullptr && *variableType != "")
+        {
+            currentClassName = *variableType;
+        }
+        //Special case, where we don't have the type of return, and we are not in class_context
+        else if (class_context)
+        {
+            currentClassName = class_name;
+        }
+        
         std::cout << "ASTident identifier : " << node->m_Identifier << " currentClassName : " << currentClassName << std::endl;
 
         //locals should be checked only when on left side of listaccess
@@ -337,8 +361,6 @@ namespace Pomme
                 {
                     *variableType = class_name;
                 }
-
-                std::cout << "FOUND THIS" << std::endl;
 
                 return;
             }
@@ -377,16 +399,18 @@ namespace Pomme
                 }
                 return;
             }
-
-            //static class call
-            if (node->m_Identifier == currentClassName) 
-            {
-                *variableType = currentClassName;
-                return;
-            }
         }
 
-        std::cout << "ASTident not found : " << node->m_Identifier << std::endl;
+        //check static class name
+        auto ot = classMap.find(node->m_Identifier);
+        if (ot != classMap.end())
+        {
+            if (variableType != nullptr)
+            {
+                *variableType = node->m_Identifier;
+            }
+            return;
+        }
 
         errors.push_back("Variable "+ node->m_Identifier + " not found in either attribute of class nor locals variables ");
     }
@@ -533,7 +557,7 @@ namespace Pomme
             functionType = "void";
         }else
         {
-            functionType = dynamic_cast<ASTident *>(node->jjtGetChild(1))->m_Identifier;
+            functionType = type->m_Identifier;
         }
 
         auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
@@ -551,9 +575,74 @@ namespace Pomme
         node->jjtGetChild(3)->jjtAccept(this, data); // headers
         node->jjtGetChild(4)->jjtAccept(this, data); // instrs
     }
+
     void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
+        std::unordered_set<std::string> keywords;
+
+        if (dynamic_cast<ASTsnil*>(node->jjtGetChild(0)) == nullptr)
+        {
+            keywords.emplace("static");
+        }
+
+        auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+        std::string functionType;
+        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(3));
+        std::string &functionName = name->m_Identifier;
+        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
+        const std::string &context = class_name;
+
+        auto it = classMap.find(context);
+        if(it == classMap.end())
+        {
+            errors.push_back("class" + context + "not defined");
+            return;
+        }
+
+        if (functionName == context && !keywords.count("static"))
+        {
+            errors.push_back("can't define a method with the same name of the class");
+            return;
+        }
+
+        if(keywords.count("override"))
+        {
+            errors.push_back("you can't override a native method");
+            return;
+        }
+
+        if(type == nullptr)
+        {
+            functionType = "void";
+        }else
+        {
+            functionType = type->m_Identifier;
+        }
+
+        auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(4)); // headers
+        std::unordered_set<std::string> parameters = buildSignature(headers);
+        std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
+
+        if(!parameters.empty())
+        {
+            functionIdent += signatureParameter;
+        }
+
+        auto parent = classMap.find(it->second.parent);
+        if(parent != classMap.end())
+        {
+            if (parent->second.functions.count(functionIdent))
+            {
+                errors.push_back("you can't override a native method");
+                return;
+            }
+        }
+
+        it->second.addFunction(functionType, functionIdent, parameters, keywords, this);
+        node->index = it->second.functions.size() - 1;
+        name->m_MethodIdentifier = functionIdent;
     }
+
     void TypeCheckerVisitor::visit(ASTidentFuncs *node, void * data)
     {
         // delete

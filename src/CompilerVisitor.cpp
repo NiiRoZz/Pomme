@@ -509,6 +509,17 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
+        ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(3));
+        //1: name
+        std::string identMethod = identFunc->m_MethodIdentifier;
+
+        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(identMethod.c_str(), identMethod.length())));
+
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodNative())));
+        
+        emitByte(AS_OPCODE(OpCode::OP_METHOD));
+        emit16Bits(node->index);
+        emitByte(identConstant);
     }
 
     void CompilerVisitor::visit(ASTpommeStatic *node, void * data)
@@ -582,7 +593,6 @@ namespace Pomme
     {
         ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(1));
         //1: name
-        std::string name = identFunc->m_Identifier;
         std::string nameFunc = identFunc->m_MethodIdentifier;
 
         uint8_t global = m_Vm.addGlobal(nameFunc);

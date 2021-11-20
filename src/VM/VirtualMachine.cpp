@@ -83,6 +83,40 @@ namespace Pomme
         AS_GLOBAL_NATIVE(globals[it->second]) = function;
     }
 
+    bool VirtualMachine::linkMethodNative(const std::string& className, const std::string& methodName, MethodNativeFn function)
+    {
+        auto it = globalsIndices.find(className);
+        if (it == globalsIndices.end()) return false;
+
+        assert(IS_CLASS(globals[it->second]));
+
+        ObjClass* klass = AS_CLASS(globals[it->second]);
+
+        auto ot = klass->methodsIndices.find(methodName);
+        if (ot == klass->methodsIndices.end()) return false;
+
+        std::cout << "index : " << ot->second << std::endl;
+
+        AS_METHOD_NATIVE(klass->methods[ot->second]) = function;
+
+        return true;
+    }
+
+    Value* VirtualMachine::getStaticField(const std::string& className, const std::string& fieldName)
+    {
+        auto it = globalsIndices.find(className);
+        if (it == globalsIndices.end()) return nullptr;
+
+        assert(IS_CLASS(globals[it->second]));
+
+        ObjClass* klass = AS_CLASS(globals[it->second]);
+
+        auto ot = klass->staticFieldsIndices.find(fieldName);
+        if (ot == klass->staticFieldsIndices.end()) return nullptr;
+
+        return &klass->staticFields[ot->second];
+    }
+
     void VirtualMachine::push(const Value& value)
     {
     	*stackTop = value;
@@ -137,11 +171,24 @@ namespace Pomme
         return function;
     }
 
-    ObjNative* VirtualMachine::newGlobalNative()
+    ObjGlobalNative* VirtualMachine::newGlobalNative()
     {
-        ObjNative* native = ALLOCATE_OBJ(this, ObjNative, ObjType::OBJ_GLOBAL_NATIVE);
-        new (native) ObjNative();
+        ObjGlobalNative* native = new ObjGlobalNative();
         native->obj.type = ObjType::OBJ_GLOBAL_NATIVE;
+
+        native->obj.next = objects;
+        objects = (Obj*) native;
+
+        return native;
+    }
+
+    ObjMethodNative* VirtualMachine::newMethodNative()
+    {
+        ObjMethodNative* native = new ObjMethodNative();
+        native->obj.type = ObjType::OBJ_METHOD_NATIVE;
+
+        native->obj.next = objects;
+        objects = (Obj*) native;
 
         return native;
     }
@@ -322,8 +369,11 @@ namespace Pomme
                     if (IS_INSTANCE(peek(0)))
                     {
                         ObjInstance* instance = AS_INSTANCE(peek(0));
-                        assert(IS_FUNCTION(instance->klass->methods[slot]));
-                        ObjBoundMethod* bound = newBoundMethod(peek(0), AS_FUNCTION(instance->klass->methods[slot]));
+                        Value *method = &instance->klass->methods[slot];
+
+                        assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
+
+                        ObjBoundMethod* bound = newBoundMethod(peek(0), method);
                         obj = (Obj*) bound;
                     }
                     else
@@ -511,7 +561,13 @@ namespace Pomme
 
             case ObjType::OBJ_GLOBAL_NATIVE:
             {
-                FREE(ObjNative, object);
+                delete object;
+                break;
+            }
+
+            case ObjType::OBJ_METHOD_NATIVE:
+            {
+                delete object;
                 break;
             }
 
@@ -564,8 +620,20 @@ namespace Pomme
                 case ObjType::OBJ_BOUND_METHOD:
                 {
                     ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
-                    stackTop[-argCount - 1] = bound->receiver;
-                    return call(bound->method, argCount);
+
+                    if (IS_FUNCTION(*bound->method))
+                    {
+                        stackTop[-argCount - 1] = bound->receiver;
+                        return call(AS_FUNCTION(*bound->method), argCount);
+                    }
+
+                    MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
+                    Value result = native(argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
+
+                    stackTop -= argCount + 1;
+                    push(result);
+                    
+                    return true;
                 }
 
                 case ObjType::OBJ_FUNCTION: 
@@ -573,7 +641,7 @@ namespace Pomme
                 
                 case ObjType::OBJ_GLOBAL_NATIVE:
                 {
-                    std::function<Value(int, Value*)>& native = AS_GLOBAL_NATIVE(callee);
+                    GlobalNativeFn& native = AS_GLOBAL_NATIVE(callee);
                     Value result = native(argCount, stackTop - argCount);
                     
                     stackTop -= argCount + 1;
@@ -632,7 +700,7 @@ namespace Pomme
         switch (OBJ_TYPE(value))
         {
             case ObjType::OBJ_BOUND_METHOD:
-                printFunction(AS_BOUND_METHOD(value)->method);
+                printObject(*AS_BOUND_METHOD(value)->method);
                 break;
             case ObjType::OBJ_CLASS:
                 printf("class %s", AS_CLASS(value)->name->chars);
@@ -644,6 +712,7 @@ namespace Pomme
                 printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
                 break;
             case ObjType::OBJ_GLOBAL_NATIVE:
+            case ObjType::OBJ_METHOD_NATIVE:
                 printf("<native fn>");
                 break;
             case ObjType::OBJ_STRING:
@@ -674,7 +743,7 @@ namespace Pomme
         ObjClass* klass = AS_CLASS(peek(1));
 
         klass->methods[slot] = method;
-        //klass->methodsIndices[name->chars] = slot;
+        klass->methodsIndices.emplace(name->chars, slot);
         pop();
     }
 
@@ -690,20 +759,25 @@ namespace Pomme
         if (isStatic)
         {
             klass->staticFields[slot] = value;
+            klass->staticFieldsIndices.emplace(name->chars, slot);
         }
         else
         {
             klass->defaultFields[slot] = value;
+            klass->fieldsIndices.emplace(name->chars, slot);
         }
         
-        //klass->fieldsIndices[name->chars] = slot;
         pop();
     }
 
     ObjClass* VirtualMachine::newClass(ObjString* name)
     {
-        ObjClass* klass = ALLOCATE_OBJ(this, ObjClass, ObjType::OBJ_CLASS);
-        klass->name = name; 
+        ObjClass* klass = new ObjClass();
+        klass->obj.type = ObjType::OBJ_CLASS;
+
+        klass->obj.next = objects;
+        objects = (Obj*) klass;
+        klass->name = name;
         return klass;
     }
 
@@ -715,7 +789,7 @@ namespace Pomme
         return instance;
     }
 
-    ObjBoundMethod* VirtualMachine::newBoundMethod(const Value& receiver, ObjFunction* method)
+    ObjBoundMethod* VirtualMachine::newBoundMethod(const Value& receiver, Value* method)
     {
         ObjBoundMethod* bound = ALLOCATE_OBJ(this, ObjBoundMethod, ObjType::OBJ_BOUND_METHOD);
         bound->receiver = receiver;
@@ -787,9 +861,9 @@ namespace Pomme
                 return jumpInstruction("OP_LOOP", -1, chunk, offset);
             case AS_OPCODE(OpCode::OP_CALL):
                 return byteInstruction("OP_CALL", chunk, offset);
-            case AS_OPCODE(OpCode::OP_CLASS):
+            /*case AS_OPCODE(OpCode::OP_CLASS):
                 return constantInstruction("OP_CLASS", chunk, offset);
-            /*case AS_OPCODE(OpCode::OP_GET_PROPERTY):
+            case AS_OPCODE(OpCode::OP_GET_PROPERTY):
                 return constantInstruction("OP_GET_PROPERTY", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_PROPERTY):
                 return constantInstruction("OP_SET_PROPERTY", chunk, offset);
