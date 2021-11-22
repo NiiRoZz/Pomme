@@ -72,7 +72,7 @@ namespace Pomme
         OP_NEW,
     };
 
-    struct Chunk
+    class Chunk
     {
     public:
         ~Chunk() {std::cout << "~Chunk" << std::endl;}

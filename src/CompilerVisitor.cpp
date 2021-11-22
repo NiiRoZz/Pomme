@@ -871,7 +871,7 @@ namespace Pomme
     {
         std::string& ident = name->m_MethodIdentifier;
         uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(ident.c_str(), ident.length())));
-
+        
         m_InMethod = true;
 
         ObjFunction* currentFunction = function;

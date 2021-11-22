@@ -13,7 +13,7 @@ namespace Pomme
 
     int Chunk::addConstant(const Value& value)
     {
-        constants.push_back(value);
+        constants.emplace_back(value);
 
         return constants.size() - 1;
     }

@@ -111,11 +111,11 @@ namespace Pomme
             if(it == locals.end())
             {
                 std::vector<VariableClass> locals_current_scopes;
-                locals_current_scopes.push_back(*new VariableClass(localType, localName, 0, isConst));
+                locals_current_scopes.emplace_back(localType, localName, 0, isConst);
                 locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
             }else
             {
-                it->second.push_back(*new VariableClass(localType, localName, it->second.size(),isConst));
+                it->second.emplace_back(localType, localName, it->second.size(),isConst);
             }
         }
     }
@@ -913,11 +913,11 @@ namespace Pomme
         if(it == locals.end())
         {
             std::vector<VariableClass> locals_current_scopes;
-            locals_current_scopes.push_back(*new VariableClass(localType, localName, -1 ,false)); // todo const in header
+            locals_current_scopes.emplace_back(localType, localName, -1 ,false); // todo const in header
             locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
         }else
         {
-            it->second.push_back(*new VariableClass(localType, localName, -1 ,false));
+            it->second.emplace_back(localType, localName, -1 ,false);
         }
     }
     void TypeCheckerVisitor::visit(ASTvoidType *node, void * data)
