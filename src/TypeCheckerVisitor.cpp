@@ -112,7 +112,7 @@ namespace Pomme
             {
                 std::vector<VariableClass> locals_current_scopes;
                 locals_current_scopes.emplace_back(localType, localName, 0, isConst);
-                locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
+                locals.emplace(current_scopes, std::move(locals_current_scopes));
             }else
             {
                 it->second.emplace_back(localType, localName, it->second.size(),isConst);
@@ -139,7 +139,7 @@ namespace Pomme
         {
             FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
                                    std::unordered_set<std::string>(),0); // todo global index
-            globalFunctionsMap.insert(std::pair<std::string,FunctionClass>(functionIdent, function));
+            globalFunctionsMap.emplace(functionIdent, function);
         }
     }
 
@@ -156,7 +156,7 @@ namespace Pomme
         }else
         {
             ClassClass classClass;
-            classMap.insert(std::pair<std::string,ClassClass>(className,classClass));
+            classMap.emplace(className,classClass);
             std::cout << "inserted " << className << std::endl;
         }
     }
@@ -171,7 +171,7 @@ namespace Pomme
             if(access == attributes.end())
             {
                 VariableClass variable(attributeType, attributeName, attributes.size(), isConst);
-                attributes.insert(std::pair<std::string, VariableClass>(attributeName, variable));
+                attributes.emplace(attributeName, variable);
                 std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
             }else
             {
@@ -215,7 +215,7 @@ namespace Pomme
             {
                 FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
                                    std::move(keywords), methods.size());
-                methods.insert(std::pair<std::string, FunctionClass>(functionName, function));
+                methods.emplace(functionName, function);
                 std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
             }else
             {
@@ -261,7 +261,7 @@ namespace Pomme
             header = dynamic_cast<ASTheader*>(headers->jjtGetChild(0));
             parameterName = dynamic_cast<ASTident*>(header->jjtGetChild(1))->m_Identifier;
 
-            auto it = parameters.insert(parameterName);
+            auto it = parameters.emplace(parameterName);
             std::cout << " parameter NAME =+++ ++ ++ ++ ++ ++  + " << parameterName <<std::endl;
             if(!it.second)
             {
@@ -304,19 +304,19 @@ namespace Pomme
         auto* nodeStatic = dynamic_cast<ASTpommeStatic*>(node->jjtGetChild(0));
         if(nodeStatic != nullptr)
         {
-            keywords.insert("static");
+            keywords.emplace("static");
         }
 
         node->jjtChildAccept(1, this, &keywords); // public protected or private
         if(!keywords.count("protected") && !keywords.count("public") && !keywords.count("private"))
         {
-            keywords.insert("private");
+            keywords.emplace("private");
         }
 
         auto* nodeOverride = dynamic_cast<ASTpommeOverride*>(node->jjtGetChild(2));
         if(nodeOverride != nullptr)
         {
-            keywords.insert("override");
+            keywords.emplace("override");
         }
 
         std::cout << "keyword :::::: " << std::endl;
@@ -501,9 +501,9 @@ namespace Pomme
         if(it != classMap.end()){
             ClassClass& classClass = classMap.find(extendedClass)->second;
             classClass.parent = extendedClass;
-            classMap.insert(std::pair<std::string,ClassClass>(context, classClass));
+            classMap.emplace(context, classClass);
 
-            classMap.find(context)->second.keywords.insert("extends");
+            classMap.find(context)->second.keywords.emplace("extends");
         }
         if(it == classMap.end())
         {
@@ -914,7 +914,7 @@ namespace Pomme
         {
             std::vector<VariableClass> locals_current_scopes;
             locals_current_scopes.emplace_back(localType, localName, -1 ,false); // todo const in header
-            locals.insert(std::pair<int, std::vector<VariableClass>>(current_scopes,locals_current_scopes));
+            locals.emplace(current_scopes, std::move(locals_current_scopes));
         }else
         {
             it->second.emplace_back(localType, localName, -1 ,false);
