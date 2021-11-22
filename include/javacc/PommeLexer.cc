@@ -148,7 +148,7 @@ jjtree.closeNodeScope(jjtn000, true);
                 if (jjtree.nodeCreated()) {
                  jjtreeCloseNodeScope(jjtn000);
                 }
-jjtn000->m_Value = std::stof(t->image);
+jjtn000->m_Value = std::stod(t->image);
     } catch ( ...) {
 if (jjtc000) {
        jjtree.clearNodeScope(jjtn000);

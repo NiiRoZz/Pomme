@@ -129,6 +129,7 @@ namespace Pomme
 		void emitByte(uint8_t byte);
 		void emitBytes(uint8_t byte1, uint8_t byte2);
 		void emit16Bits(uint16_t val);
+		void emit64Bits(uint64_t val);
 
 		void emitReturn();
 
@@ -148,6 +149,7 @@ namespace Pomme
 
 		void accessProperty(Node* left, Node* middle, Node* right, void * data);
 		void method(SimpleNode *node, ASTident* name, uint16_t index, bool constructor);
+		void binaryOperator(SimpleNode *node, uint16_t index, bool native);
 
 		int addLocal(const std::string& name);
 		void namedVariable(const std::string& name, bool assign);

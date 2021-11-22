@@ -11,6 +11,8 @@ namespace Pomme
     , frameCount(0)
     , globalsIndicesCount(0)
     , objects(nullptr)
+    , intClass(nullptr)
+    , floatClass(nullptr)
     {
     }
 
@@ -281,6 +283,30 @@ namespace Pomme
         return string;
     }
 
+    ObjInstance* VirtualMachine::newInt(uint64_t value)
+    {
+        if (intClass == nullptr) return nullptr;
+
+        assert(IS_CLASS(OBJ_VAL(intClass)));
+
+        ObjInstance* instance = newInstance(intClass);
+        instance->cppData = new uint64_t(value);
+
+        return instance;
+    }
+
+    ObjInstance* VirtualMachine::newFloat(double value)
+    {
+        if (floatClass == nullptr) return nullptr;
+
+        assert(IS_CLASS(OBJ_VAL(floatClass)));
+
+        ObjInstance* instance = newInstance(floatClass);
+        instance->cppData = new double(value);
+
+        return instance;
+    }
+
     ObjInstance* VirtualMachine::newInstance(const std::string& className)
     {
         auto it = globalsIndices.find(className);
@@ -330,14 +356,14 @@ namespace Pomme
 
     void VirtualMachine::printStack()
     {
-        printf("          ");
+        std::cout << "          ";
         for (Value* slot = stack; slot < stackTop; ++slot)
         {
-            printf("[ ");
+            std::cout << "[ ";
             printValue(*slot);
-            printf(" ]");
+            std::cout << " ]";
         }
-        printf("\n");
+        std::cout << std::endl;
     }
 
     int VirtualMachine::stackSize()
@@ -354,20 +380,15 @@ namespace Pomme
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
         #define READ_UINT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
-
-		#define BINARY_OP(valueType, op) \
-			do { \
-                double b = AS_NUMBER(pop()); \
-                double a = AS_NUMBER(pop()); \
-                push(valueType(a op b)); \
-			} while (false)
+        #define READ_UINT64() \
+            (frame->ip += 8, (uint64_t)((static_cast<uint64_t>(frame->ip[-8]) << 56) | (static_cast<uint64_t>(frame->ip[-7]) << 48) |(static_cast<uint64_t>(frame->ip[-6]) << 40) | (static_cast<uint64_t>(frame->ip[-5]) << 32) | (static_cast<uint64_t>(frame->ip[-4]) << 24) | (static_cast<uint64_t>(frame->ip[-3]) << 16) | (static_cast<uint64_t>(frame->ip[-2]) << 8) | static_cast<uint64_t>(frame->ip[-1])))
         
         #define AS_OPCODE(code) static_cast<uint8_t>(code)
 
         for (;;)
         {
             //printStack();
-            //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code));
+            //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
 
             uint8_t instruction;
 
@@ -381,13 +402,21 @@ namespace Pomme
                 }
 
                 case AS_OPCODE(OpCode::OP_NULL):        push(NULL_VAL); break;
-				case AS_OPCODE(OpCode::OP_NEGATE): 		push(NUMBER_VAL(-AS_NUMBER(pop()))); break;
-				case AS_OPCODE(OpCode::OP_ADD):      	BINARY_OP(NUMBER_VAL, +); break;
-				case AS_OPCODE(OpCode::OP_SUBTRACT): 	BINARY_OP(NUMBER_VAL, -); break;
-				case AS_OPCODE(OpCode::OP_MULTIPLY): 	BINARY_OP(NUMBER_VAL, *); break;
-				case AS_OPCODE(OpCode::OP_DIVIDE):   	BINARY_OP(NUMBER_VAL, /); break;
+				//case AS_OPCODE(OpCode::OP_NEGATE): 		push(NUMBER_VAL(-AS_NUMBER(pop()))); break;
 
 				case AS_OPCODE(OpCode::OP_POP):			pop(); break;
+
+                case AS_OPCODE(OpCode::OP_INT):
+                {
+                    push(OBJ_VAL(newInt(READ_UINT64())));
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_FLOAT):
+                {
+                    push(OBJ_VAL(newFloat(READ_UINT64())));
+                    break;
+                }
 
                 case AS_OPCODE(OpCode::OP_PRINT):
                 {
@@ -550,16 +579,6 @@ namespace Pomme
                     break;
                 }
 
-                case AS_OPCODE(OpCode::OP_EQ):
-                {
-                    Value b = pop();
-                    Value a = pop();
-                    push(BOOL_VAL(valuesEqual(a, b)));
-                    break;
-                }
-
-                case AS_OPCODE(OpCode::OP_LT):   	BINARY_OP(BOOL_VAL, <); break;
-
                 case AS_OPCODE(OpCode::OP_INCR_POST):
                 {
                     
@@ -639,7 +658,7 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_NOT):
                 {
-                    push(BOOL_VAL(isFalsey(pop())));
+                    //push(BOOL_VAL(isFalsey(pop())));
                     break;
                 }
 
@@ -681,7 +700,6 @@ namespace Pomme
         #undef READ_CONSTANT
 		#undef READ_STRING
         #undef READ_SHORT
-		#undef BINARY_OP
     }
 
     void VirtualMachine::freeObject(Obj* object)
@@ -726,6 +744,7 @@ namespace Pomme
             case ObjType::OBJ_INSTANCE:
             {
                 ObjInstance* instance = static_cast<ObjInstance*>(object);
+                delete instance->cppData;
                 delete instance;
                 break;
             }
@@ -741,20 +760,7 @@ namespace Pomme
 
     bool VirtualMachine::isFalsey(Value value)
     {
-        return IS_NIL(value) || IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
-    }
-
-    bool VirtualMachine::valuesEqual(Value a, Value b)
-    {
-        if (a.type != b.type) return false;
-
-        switch (a.type)
-        {
-            case ValueType::VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
-            case ValueType::VAL_NIL:    return true;
-            case ValueType::VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
-            default:         return false; // Unreachable.
-        }
+        return IS_NULL(value);
     }
 
     bool VirtualMachine::callValue(const Value& callee, int argCount)
@@ -774,7 +780,8 @@ namespace Pomme
                     }
 
                     MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
-                    Value result = native(argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
+                    assert(native);
+                    Value result = native(*this, argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
 
                     stackTop -= argCount + 1;
                     push(result);
@@ -829,14 +836,10 @@ namespace Pomme
 
     void VirtualMachine::printValue(const Value& value)
     {
+        //TODO
         switch (value.type)
         {
-            case ValueType::VAL_BOOL:
-                printf(AS_BOOL(value) ? "true" : "false");
-                break;
-            case ValueType::VAL_NIL: printf("nil"); break;
             case ValueType::VAL_NULL: printf("null"); break;
-            case ValueType::VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
             case ValueType::VAL_OBJ: printObject(value); break;
         }
     }
@@ -849,20 +852,31 @@ namespace Pomme
                 printObject(*AS_BOUND_METHOD(value)->method);
                 break;
             case ObjType::OBJ_CLASS:
-                printf("class %s", AS_CLASS(value)->name->chars.c_str());
+                std::cout << "class " << AS_CLASS(value)->name->chars.c_str();
                 break;
             case ObjType::OBJ_FUNCTION:
                 printFunction(AS_FUNCTION(value));
                 break;
             case ObjType::OBJ_INSTANCE:
-                printf("%s instance", AS_INSTANCE(value)->klass->name->chars.c_str());
+                if (AS_INSTANCE(value)->klass->classType == ClassType::INT)
+                {
+                    std::cout << *static_cast<int64_t*>(AS_INSTANCE(value)->cppData);
+                }
+                else if (AS_INSTANCE(value)->klass->classType == ClassType::FLOAT)
+                {
+                    std::cout << *static_cast<double*>(AS_INSTANCE(value)->cppData);
+                }
+                else
+                {
+                    std::cout << AS_INSTANCE(value)->klass->name->chars.c_str() << " instance";
+                }
                 break;
             case ObjType::OBJ_GLOBAL_NATIVE:
             case ObjType::OBJ_METHOD_NATIVE:
-                printf("<native fn>");
+                std::cout << "<native fn>";
                 break;
             case ObjType::OBJ_STRING:
-                printf("%s", AS_CSTRING(value));
+                std::cout << AS_CSTRING(value);
                 break;
         }
     }
@@ -871,11 +885,11 @@ namespace Pomme
     {
         if (function->name == nullptr)
         {
-            printf("<script>");
+            std::cout << "<script>";
             return;
         }
 
-        printf("<fn %s>", function->name->chars.c_str());
+        std::cout << "<fn " << function->name->chars.c_str() << ">";
     }
 
     void VirtualMachine::defineMethod(uint16_t slot, ObjString* name, bool isNative)
@@ -931,6 +945,25 @@ namespace Pomme
         ObjClass* klass = ALLOCATE_OBJ(this, ObjClass, ObjType::OBJ_CLASS);
         klass->name = name;
 
+        if (name->chars == "int")
+        {
+            klass->classType = ClassType::INT;
+            intClass = klass;
+        }
+        else if (name->chars == "float")
+        {
+            klass->classType = ClassType::FLOAT;
+            floatClass = klass;
+        }
+        else if (name->chars == "bool")
+        {
+            klass->classType = ClassType::BOOL;
+        }
+        else
+        {
+            klass->classType = ClassType::CLASS;
+        }
+
         return klass;
     }
 
@@ -974,26 +1007,12 @@ namespace Pomme
                 return simpleInstruction("OP_NOT", offset);
             case AS_OPCODE(OpCode::OP_NEGATE):
                 return simpleInstruction("OP_NEGATE", offset);
-            case AS_OPCODE(OpCode::OP_ADD):
-                return simpleInstruction("OP_ADD", offset);
-            case AS_OPCODE(OpCode::OP_SUBTRACT):
-                return simpleInstruction("OP_SUBTRACT", offset);
-            case AS_OPCODE(OpCode::OP_MULTIPLY):
-                return simpleInstruction("OP_MULTIPLY", offset);
-            case AS_OPCODE(OpCode::OP_DIVIDE):
-                return simpleInstruction("OP_DIVIDE", offset);
             case AS_OPCODE(OpCode::OP_NULL):
                 return simpleInstruction("OP_NULL", offset);
             case AS_OPCODE(OpCode::OP_TRUE):
                 return simpleInstruction("OP_TRUE", offset);
             case AS_OPCODE(OpCode::OP_FALSE):
                 return simpleInstruction("OP_FALSE", offset);
-            case AS_OPCODE(OpCode::OP_EQ):
-                return simpleInstruction("OP_EQ", offset);
-            case AS_OPCODE(OpCode::OP_GT):
-                return simpleInstruction("OP_GT", offset);
-            case AS_OPCODE(OpCode::OP_LT):
-                return simpleInstruction("OP_LT", offset);
             case AS_OPCODE(OpCode::OP_PRINT):
                 return simpleInstruction("OP_PRINT", offset);
             case AS_OPCODE(OpCode::OP_POP):
@@ -1031,7 +1050,7 @@ namespace Pomme
 
     int VirtualMachine::simpleInstruction(const char* name, int offset)
     {
-        printf("%s\n", name);
+        std::cout << name << std::endl;
         return offset + 1;
     }
 

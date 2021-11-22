@@ -289,7 +289,7 @@ void pommeFloat()            :
                  jjtreeCloseNodeScope(jjtn000);
                 }
               }
-/*@egen*/ { jjtn000->m_Value = std::stof(t->image);  }/*@bgen(jjtree)*/
+/*@egen*/ { jjtn000->m_Value = std::stod(t->image);  }/*@bgen(jjtree)*/
    } catch (...) {
      if (jjtc000) {
        jjtree.clearNodeScope(jjtn000);

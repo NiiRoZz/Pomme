@@ -19,10 +19,6 @@ namespace Pomme
         OP_FALSE,
         OP_NULL,
         OP_NEGATE,
-        OP_ADD,
-        OP_SUBTRACT,
-        OP_MULTIPLY,
-        OP_DIVIDE,
         OP_POP,
         OP_PRINT,
         OP_GET_GLOBAL,
@@ -42,26 +38,9 @@ namespace Pomme
         OP_METHOD,
         OP_FIELD,
         OP_GET_SUPER,
-        OP_MODULO,
-        OP_SHIFTR,
-        OP_SHIFTL,
-        OP_EQ,
-        OP_NEQ,
-        OP_AND,
-        OP_OR,
-        OP_GT,
-        OP_LT,
-        OP_GET,
-        OP_LET,
         OP_NOT,
         OP_TILDE,
-        OP_ADD_EQ,
-        OP_MULTIPLY_EQ,
-        OP_SUBTRACT_EQ,
-        OP_DIVIDE_EQ,
         OP_ASSIGN,
-        OP_SHIFTL_EQ,
-        OP_SHIFTR_EQ,
         OP_DECR_PRE,
         OP_DECR_POST,
         OP_INCR_PRE,
@@ -70,13 +49,14 @@ namespace Pomme
         OP_OR_EQ,
         OP_CLASS,
         OP_NEW,
+        OP_INT,
+        OP_FLOAT,
+        OP_BOOL,
     };
 
     class Chunk
     {
     public:
-        ~Chunk() {std::cout << "~Chunk" << std::endl;}
-
         void writeChunk(uint8_t byte, int line);
         int addConstant(const Value& value);
 

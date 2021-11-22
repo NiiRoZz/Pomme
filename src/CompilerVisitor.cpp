@@ -66,12 +66,16 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeInt *node, void * data) 
     {
-        emitConstant(NUMBER_VAL((double) node->m_Value));
+        emitByte(AS_OPCODE(OpCode::OP_INT));
+        emit64Bits(node->m_Value);
     }
 
     void CompilerVisitor::visit(ASTpommeFloat *node, void * data) 
     {
-        emitConstant(NUMBER_VAL(node->m_Value));
+        emitByte(AS_OPCODE(OpCode::OP_FLOAT));
+        std::cout << "sizeof(double) " << sizeof(double) << std::endl;
+        assert(sizeof(double) == 8);
+        emit64Bits(node->m_Value);
     }
 
     void CompilerVisitor::visit(ASTpommeString *node, void * data) 
@@ -148,26 +152,18 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTaddeq *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_ADD_EQ));
     }
 
     void CompilerVisitor::visit(ASTminuseq *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_SUBTRACT_EQ));
     }
 
     void CompilerVisitor::visit(ASTdiveq *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_DIVIDE_EQ));
     }
 
     void CompilerVisitor::visit(ASTmulteq *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_MULTIPLY_EQ));
     }
 
     void CompilerVisitor::visit(ASToreq *node, void * data) 
@@ -184,14 +180,10 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTshiftleq *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_SHIFTL_EQ));
     }
 
     void CompilerVisitor::visit(ASTshiftreq *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_SHIFTR_EQ));
     }
 
     void CompilerVisitor::visit(ASTincrementPost *node, void * data) 
@@ -320,92 +312,68 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeAnd *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_AND));
     }
 
     void CompilerVisitor::visit(ASTpommeOr *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_OR));
     }
 
     void CompilerVisitor::visit(ASTpommeEQ *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_EQ));
     }
 
     void CompilerVisitor::visit(ASTpommeNEQ *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_NEQ));
     }
 
     void CompilerVisitor::visit(ASTpommeGT *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_GT));
     }
 
     void CompilerVisitor::visit(ASTpommeGET *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_GET));
     }
 
     void CompilerVisitor::visit(ASTpommeLT *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_LT));
     }
 
     void CompilerVisitor::visit(ASTpommeLET *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_LET));
     }
 
     void CompilerVisitor::visit(ASTpommeAdd *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_ADD));
+        //TODO native
+        binaryOperator(node, node->index, true);
     }
 
     void CompilerVisitor::visit(ASTpommeMinus *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_SUBTRACT));
+        //TODO native
+        binaryOperator(node, node->index, true);
     }
 
     void CompilerVisitor::visit(ASTpommeShiftR *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_SHIFTR));
     }
 
     void CompilerVisitor::visit(ASTpommeShiftL *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_SHIFTL));
     }
 
     void CompilerVisitor::visit(ASTpommeMult *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_MULTIPLY));
+        //TODO native
+        binaryOperator(node, node->index, true);
     }
 
     void CompilerVisitor::visit(ASTpommeDiv *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_DIVIDE));
     }
 
     void CompilerVisitor::visit(ASTpommeModulo *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
-        emitByte(AS_OPCODE(OpCode::OP_MODULO));
     }
 
     void CompilerVisitor::visit(ASTpommeUnary *node, void * data) 
@@ -431,7 +399,7 @@ namespace Pomme
 
         std::optional<std::size_t> global = m_Vm.getGlobal(name);
 
-        if (!global)
+        if (!global.has_value())
         {
             assert(false);
         }
@@ -737,6 +705,18 @@ namespace Pomme
         emitByte(val & 0xff);
     }
 
+    void CompilerVisitor::emit64Bits(uint64_t val)
+    {
+        emitByte((val >> 56) & 0xFF);
+        emitByte((val >> 48) & 0xFF);
+        emitByte((val >> 40) & 0xFF);
+        emitByte((val >> 32) & 0xFF);
+        emitByte((val >> 24) & 0xFF);
+        emitByte((val >> 16) & 0xFF);
+        emitByte((val >> 8) & 0xFF);
+        emitByte((val >> 0) & 0xFF);
+    }
+
 	void CompilerVisitor::endCompiler()
     {
 		emitReturn();
@@ -782,7 +762,14 @@ namespace Pomme
 
     void CompilerVisitor::emitDefaultValue(const std::string& typeName)
     {
-        emitByte(AS_OPCODE(OpCode::OP_NULL));
+        if (typeName == "int")
+        {
+
+        }
+        else
+        {
+            emitByte(AS_OPCODE(OpCode::OP_NULL));
+        }
     }
 
     void CompilerVisitor::emitConstant(const Value& value)
@@ -919,6 +906,19 @@ namespace Pomme
         emitByte(false);
 
         m_InMethod = false;
+    }
+
+    void CompilerVisitor::binaryOperator(SimpleNode* node, uint16_t index, bool native)
+    {
+        node->jjtChildAccept(0, this, nullptr);
+
+        emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+        emit16Bits(index);
+        emitByte(native);
+        
+        node->jjtChildAccept(1, this, nullptr);
+
+        emitBytes(AS_OPCODE(OpCode::OP_CALL), 1);
     }
 
     int CompilerVisitor::addLocal(const std::string& name)

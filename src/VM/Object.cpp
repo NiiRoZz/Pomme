@@ -1,4 +1,7 @@
 #include "Object.h"
+#include "VirtualMachine.h"
+
+#include <cassert>
 
 namespace Pomme
 {
@@ -31,5 +34,18 @@ namespace Pomme
         AS_METHOD_NATIVE(nativeMethods[it->second]) = function;
 
         return true;
+    }
+
+    PommeString::PommeString(VirtualMachine& vm, ObjInstance* instance)
+    {
+        instance->linkMethodNative(vm.getFunctionName("operator+", "int"), std::bind(&PommeString::pommeOperatorPlus, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+    }
+
+    Value PommeString::pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args)
+    {
+        assert(argcount == 1);
+        assert(IS_INSTANCE(args[0]) && AS_INSTANCE(args[0])->klass->classType == ClassType::STRING);
+
+        return OBJ_VAL(instance);
     }
 }

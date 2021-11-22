@@ -149,7 +149,7 @@ void pommeInt() #pommeInt:
 void pommeFloat() #pommeFloat:
 {Token *t;}
 {
-   t= <FLOAT> { jjtThis->m_Value = std::stof(t->image);  }
+   t= <FLOAT> { jjtThis->m_Value = std::stod(t->image);  }
 }
 
 void pommeString() #pommeString:

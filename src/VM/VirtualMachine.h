@@ -71,6 +71,9 @@ namespace Pomme
 		ObjString* newString();
 		ObjString* copyString(const char* chars, int length);
 
+		ObjInstance* newInt(uint64_t value);
+		ObjInstance* newFloat(double value);
+
 		ObjInstance* newInstance(const std::string& className);
 		ObjInstance* newInstance(uint16_t slot);
 
@@ -101,8 +104,6 @@ namespace Pomme
 		void freeObject(Obj* object);
 
 		bool isFalsey(Value value);
-
-		bool valuesEqual(Value a, Value b);
 
 		bool callValue(const Value& callee, int argCount);
 		bool call(ObjFunction* function, int argCount);
@@ -137,5 +138,8 @@ namespace Pomme
 		Value globals[GLOBALS_MAX];
 
 		Obj* objects;
+
+		ObjClass* intClass;
+		ObjClass* floatClass;
 	};
 }

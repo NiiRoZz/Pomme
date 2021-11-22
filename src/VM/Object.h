@@ -45,6 +45,15 @@ namespace Pomme
         OBJ_STRING,
     };
 
+    enum class ClassType: uint8_t
+    {
+        INT,
+        FLOAT,
+        BOOL,
+        STRING,
+        CLASS,
+    };
+
     struct Obj
     {
         ObjType type;
@@ -66,7 +75,7 @@ namespace Pomme
     struct ObjInstance;
 
     using GlobalNativeFn = std::function<Value(int, Value*)>;
-    using MethodNativeFn = std::function<Value(int, ObjInstance*, Value*)>;
+    using MethodNativeFn = std::function<Value(VirtualMachine&, int, ObjInstance*, Value*)>;
 
     struct ObjGlobalNative: public Obj
     {
@@ -80,6 +89,7 @@ namespace Pomme
 
     struct ObjClass : public Obj
     {
+        ClassType classType;
         //Runtime
         ObjString* name;
         Value methods[METHODS_MAX]; 
@@ -104,6 +114,8 @@ namespace Pomme
         Value fields[FIELDS_MAX];
         Value nativeMethods[METHODS_MAX];
 
+        void* cppData;
+
         Value* getField(const std::string& name);
         Value* getStaticField(const std::string& name);
 
@@ -120,4 +132,13 @@ namespace Pomme
     {
         return IS_OBJ(value) && AS_OBJ(value)->type == type;
     }
+
+    struct PommeString
+    {
+        ObjString* value;
+
+        PommeString(VirtualMachine& vm, ObjInstance* instance);
+
+        Value pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args);
+    };
 }
