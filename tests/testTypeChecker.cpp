@@ -42,7 +42,7 @@ TEST(TEST_TYPECHECKER, ClassComplete)
 
 TEST(TEST_TYPECHECKER, FileComplete)
 {
-    TEST_TYPECHECKER_TEST("void meth(){};  void xd(int j){}; class test { int a = 8;  boolean b = 8; void meth(int abc){ boolean b = 7; }; }; \n");
+    TEST_TYPECHECKER_TEST("void meth(){};  void xd(int j){}; class test { int a = 8; bool b = true; void meth(int abc){ bool b = false; }; }; \n");
 
     std::cout << text << std::endl;
 
@@ -304,6 +304,7 @@ TEST(TEST_TYPECHECKER, StaticVisibilityMethod)
     EXPECT_TRUE(visitor.classMap.find("test")->second.methods.find("test!")->second.keywords.count("static"));
     EXPECT_TRUE(visitor.classMap.find("test")->second.methods.find("test!")->second.keywords.count("public"));
 }
+/*
 TEST(TEST_TYPECHECKER, ExtendedClass) {
     TEST_TYPECHECKER_TEST("class test { int t; void t2(){}; }; class test2 extends test {}; \n");
 
@@ -378,6 +379,7 @@ TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) {
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.find("test::a")->second.variableType == "int");
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test2::b"));
 }
+*/
 TEST(TEST_TYPECHECKER, AccessToNonExistingMethod) {
     TEST_TYPECHECKER_TEST("class test{ void x(){ op(10); }; };\n");
 
@@ -498,7 +500,7 @@ TEST(TEST_TYPECHECKER, NotDefinedVariableInFunction) {
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
+    EXPECT_EQ(visitor.errors.size(), 2);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
@@ -635,4 +637,83 @@ TEST(TEST_TYPECHECKER, StaticAttributeAlreadyDefined)
     }
 }
 
+TEST(TEST_TYPECHECKER, TestAssignCorrectClass)
+{
+    TEST_TYPECHECKER_TEST("class A {}; class B {}; class test { void meth() { A a; a = new A(); }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, TestAssignNotCorrectClass)
+{
+    TEST_TYPECHECKER_TEST("class A {}; class B {}; class test { void meth() { A a; a = new B(); }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, TestCreateCorrectClass)
+{
+    TEST_TYPECHECKER_TEST("class A {}; class B {}; class test { void meth() { A a = new A(); }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, TestCreateNotCorrectClass)
+{
+    TEST_TYPECHECKER_TEST("class A {}; class B {}; class test { void meth() { A a = new B(); }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, TestOperatorPlus)
+{
+    TEST_TYPECHECKER_TEST("class int { int operator+(int rhs) { return 0 + rhs;  }; };  class test { void meth() { int a = 5 + 5; }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
 

@@ -510,8 +510,9 @@ namespace Pomme
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
     {
         ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(3));
+        ASTidentOp* identOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(3));
         //1: name
-        std::string identMethod = identFunc->m_MethodIdentifier;
+        std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
 
         uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(identMethod.c_str(), identMethod.length())));
 
@@ -670,7 +671,7 @@ namespace Pomme
     {
     }
 
-    void CompilerVisitor::visit(ASTlistacces *node, void * data)
+    void CompilerVisitor::visit(ASTlistaccess *node, void * data)
     {
         //We need to check for local variable or method
         node->jjtChildAccept(0, this, nullptr);
@@ -678,7 +679,7 @@ namespace Pomme
         accessProperty(nullptr, node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
-    void CompilerVisitor::visit(ASTlistaccesP *node, void * data)
+    void CompilerVisitor::visit(ASTlistaccessP *node, void * data)
     {
         accessProperty(node->jjtGetChild(0), node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
@@ -853,18 +854,24 @@ namespace Pomme
             emitMethod(dynamic_cast<ASTaccessMethode*>(left)) || emitIdent(dynamic_cast<ASTident*>(left), false, false);
         }
 
-        emitMethod(dynamic_cast<ASTaccessMethode*>(middle)) || emitIdent(dynamic_cast<ASTident*>(middle), true, false);
+        if (middle != nullptr)
+        {
+            emitMethod(dynamic_cast<ASTaccessMethode*>(middle)) || emitIdent(dynamic_cast<ASTident*>(middle), true, false);
+        }
 
         if (!hasNext) return;
 
         //We continue through the list
-        if (dynamic_cast<ASTlistaccesP*>(right) != nullptr)
+        if (dynamic_cast<ASTlistaccessP*>(right) != nullptr)
         {
             right->jjtAccept(this, &assign);
             return;
         }
 
-        emitMethod(dynamic_cast<ASTaccessMethode*>(right)) || emitIdent(dynamic_cast<ASTident*>(right), false, true);
+        if (right != nullptr)
+        {
+            emitMethod(dynamic_cast<ASTaccessMethode*>(right)) || emitIdent(dynamic_cast<ASTident*>(right), false, true);
+        }
     }
 
     void CompilerVisitor::method(SimpleNode *node, ASTident *name, uint16_t index, bool constructor)
@@ -955,5 +962,9 @@ namespace Pomme
         }
 
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *idx);
+    }
+
+    void CompilerVisitor::visit(ASTaccessTab *node, void * data)
+    {
     }
 }

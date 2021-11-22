@@ -1,0 +1,13 @@
+class float
+{
+    native float operator+(float rhs);
+    native float operator-(float rhs);
+};
+
+class int
+{
+    native int operator+(int rhs);
+    native float operator+(float rhs);
+    native int operator-(int rhs);
+    native float operator-(float rhs);
+};

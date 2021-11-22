@@ -79,6 +79,8 @@ TOKEN:
 	| <PARENTR : ")"> 
 	| <BRACEL : "{"> 
 	| <BRACER : "}">
+	| <BRACKETL : "["> 
+	| <BRACKETR : "]"> 
 	| <COLON : ":">
 	| <SEMICOLON : ";"> 
 	| <COMMA : ","> 
@@ -213,7 +215,7 @@ void identOp()         :
                                     jjtreeCloseNodeScope(jjtn000);
                                    }
                                  }
-/*@egen*/ { }/*@bgen(jjtree)*/
+/*@egen*/ { jjtn000->m_Identifier = t->image; }/*@bgen(jjtree)*/
         } catch (...) {
           if (jjtc000) {
             jjtree.clearNodeScope(jjtn000);
@@ -1330,7 +1332,7 @@ void instr()       :
                    jjtreeOpenNodeScope(jjtn001);
                  }
                  try {
-/*@egen*/ listacces()/*@bgen(jjtree)*/
+/*@egen*/ listaccess()/*@bgen(jjtree)*/
                  } catch (...) {
                    if (jjtc001) {
                      jjtree.clearNodeScope(jjtn001);
@@ -1355,7 +1357,7 @@ void instr()       :
                    jjtreeOpenNodeScope(jjtn002);
                  }
                  try {
-/*@egen*/ listacces()/*@bgen(jjtree)*/
+/*@egen*/ listaccess()/*@bgen(jjtree)*/
                  } catch (...) {
                    if (jjtc002) {
                      jjtree.clearNodeScope(jjtn002);
@@ -1522,30 +1524,30 @@ void instr()       :
                                                                     }
                                                                   }
 /*@egen*/                
-	| listacces() ( <ASSIGNEMENT>/*@bgen(jjtree) #assignement( 2) */
-                                      {
-                                        ASTassignement *jjtn009 = new ASTassignement(JJTASSIGNEMENT);
-                                        bool jjtc009 = true;
-                                        jjtree.openNodeScope(jjtn009);
-                                        jjtreeOpenNodeScope(jjtn009);
-                                      }
-                                      try {
+	| listaccess() ( <ASSIGNEMENT>/*@bgen(jjtree) #assignement( 2) */
+                                       {
+                                         ASTassignement *jjtn009 = new ASTassignement(JJTASSIGNEMENT);
+                                         bool jjtc009 = true;
+                                         jjtree.openNodeScope(jjtn009);
+                                         jjtreeOpenNodeScope(jjtn009);
+                                       }
+                                       try {
 /*@egen*/ exp()/*@bgen(jjtree)*/
-                                      } catch (...) {
-                                        if (jjtc009) {
-                                          jjtree.clearNodeScope(jjtn009);
-                                          jjtc009 = false;
-                                        } else {
-                                          jjtree.popNode();
-                                        }
-                                      } {
-                                        if (jjtc009) {
-                                          jjtree.closeNodeScope(jjtn009,  2);
-                                          if (jjtree.nodeCreated()) {
-                                           jjtreeCloseNodeScope(jjtn009);
-                                          }
-                                        }
-                                      }
+                                       } catch (...) {
+                                         if (jjtc009) {
+                                           jjtree.clearNodeScope(jjtn009);
+                                           jjtc009 = false;
+                                         } else {
+                                           jjtree.popNode();
+                                         }
+                                       } {
+                                         if (jjtc009) {
+                                           jjtree.closeNodeScope(jjtn009,  2);
+                                           if (jjtree.nodeCreated()) {
+                                            jjtreeCloseNodeScope(jjtn009);
+                                           }
+                                         }
+                                       }
 /*@egen*/                 
 					| <ADDEQ>/*@bgen(jjtree) #addeq( 2) */
                                                   {
@@ -2912,7 +2914,7 @@ void fact()       :
                                                }
                                              }
 /*@egen*/              
-	| listacces()
+	| listaccess()
 	|/*@bgen(jjtree) pommeTrue */
           {
             ASTpommeTrue *jjtn002 = new ASTpommeTrue(JJTPOMMETRUE);
@@ -2992,18 +2994,18 @@ void fact()       :
 /*@egen*/           
 }
 
-void listacces()       :
+void listaccess()       :
 {}
 {
-  	access() ( 	<POINT> access()/*@bgen(jjtree) #listacces( 3) */
+  	access() ( 	<POINT> access()/*@bgen(jjtree) #listaccess( 3) */
                                          {
-                                           ASTlistacces *jjtn001 = new ASTlistacces(JJTLISTACCES);
+                                           ASTlistaccess *jjtn001 = new ASTlistaccess(JJTLISTACCESS);
                                            bool jjtc001 = true;
                                            jjtree.openNodeScope(jjtn001);
                                            jjtreeOpenNodeScope(jjtn001);
                                          }
                                          try {
-/*@egen*/ listaccesP()/*@bgen(jjtree)*/
+/*@egen*/ listaccessP()/*@bgen(jjtree)*/
                                          } catch (...) {
                                            if (jjtc001) {
                                              jjtree.clearNodeScope(jjtn001);
@@ -3019,26 +3021,51 @@ void listacces()       :
                                              }
                                            }
                                          }
+/*@egen*/               
+	  			| <BRACKETL> exp() <BRACKETR>/*@bgen(jjtree) #accessTab( 3) */
+                                                              {
+                                                                ASTaccessTab *jjtn002 = new ASTaccessTab(JJTACCESSTAB);
+                                                                bool jjtc002 = true;
+                                                                jjtree.openNodeScope(jjtn002);
+                                                                jjtreeOpenNodeScope(jjtn002);
+                                                              }
+                                                              try {
+/*@egen*/ listaccessP()/*@bgen(jjtree)*/
+                                                              } catch (...) {
+                                                                if (jjtc002) {
+                                                                  jjtree.clearNodeScope(jjtn002);
+                                                                  jjtc002 = false;
+                                                                } else {
+                                                                  jjtree.popNode();
+                                                                }
+                                                              } {
+                                                                if (jjtc002) {
+                                                                  jjtree.closeNodeScope(jjtn002,  3);
+                                                                  if (jjtree.nodeCreated()) {
+                                                                   jjtreeCloseNodeScope(jjtn002);
+                                                                  }
+                                                                }
+                                                              }
 /*@egen*/              
 				| {}
 	  		)
 }
 
-void listaccesP()       :
+void listaccessP()       :
 {}
 {
 	(
 		<POINT> ( 
 				access() (	
-							<POINT> access()/*@bgen(jjtree) #listaccesP( 3) */
+							<POINT> access()/*@bgen(jjtree) #listaccessP( 3) */
                                                                          {
-                                                                           ASTlistaccesP *jjtn001 = new ASTlistaccesP(JJTLISTACCESP);
+                                                                           ASTlistaccessP *jjtn001 = new ASTlistaccessP(JJTLISTACCESSP);
                                                                            bool jjtc001 = true;
                                                                            jjtree.openNodeScope(jjtn001);
                                                                            jjtreeOpenNodeScope(jjtn001);
                                                                          }
                                                                          try {
-/*@egen*/ listaccesP()/*@bgen(jjtree)*/
+/*@egen*/ listaccessP()/*@bgen(jjtree)*/
                                                                          } catch (...) {
                                                                            if (jjtc001) {
                                                                              jjtree.clearNodeScope(jjtn001);
@@ -3054,39 +3081,64 @@ void listaccesP()       :
                                                                              }
                                                                            }
                                                                          }
-/*@egen*/               
+/*@egen*/                
+							| <BRACKETL> exp() <BRACKETR>/*@bgen(jjtree) #accessTab( 3) */
+                                                                                      {
+                                                                                        ASTaccessTab *jjtn002 = new ASTaccessTab(JJTACCESSTAB);
+                                                                                        bool jjtc002 = true;
+                                                                                        jjtree.openNodeScope(jjtn002);
+                                                                                        jjtreeOpenNodeScope(jjtn002);
+                                                                                      }
+                                                                                      try {
+/*@egen*/ listaccessP()/*@bgen(jjtree)*/
+                                                                                      } catch (...) {
+                                                                                        if (jjtc002) {
+                                                                                          jjtree.clearNodeScope(jjtn002);
+                                                                                          jjtc002 = false;
+                                                                                        } else {
+                                                                                          jjtree.popNode();
+                                                                                        }
+                                                                                      } {
+                                                                                        if (jjtc002) {
+                                                                                          jjtree.closeNodeScope(jjtn002,  3);
+                                                                                          if (jjtree.nodeCreated()) {
+                                                                                           jjtreeCloseNodeScope(jjtn002);
+                                                                                          }
+                                                                                        }
+                                                                                      }
+/*@egen*/              
 							| {}
 						)
 			)
 		|/*@bgen(jjtree) acnil */
                   {
-                    ASTacnil *jjtn002 = new ASTacnil(JJTACNIL);
-                    bool jjtc002 = true;
-                    jjtree.openNodeScope(jjtn002);
-                    jjtreeOpenNodeScope(jjtn002);
+                    ASTacnil *jjtn003 = new ASTacnil(JJTACNIL);
+                    bool jjtc003 = true;
+                    jjtree.openNodeScope(jjtn003);
+                    jjtreeOpenNodeScope(jjtn003);
                   }
                   try {
 /*@egen*//*@bgen(jjtree)*/
                   {
-                    jjtree.closeNodeScope(jjtn002, true);
-                    jjtc002 = false;
+                    jjtree.closeNodeScope(jjtn003, true);
+                    jjtc003 = false;
                     if (jjtree.nodeCreated()) {
-                     jjtreeCloseNodeScope(jjtn002);
+                     jjtreeCloseNodeScope(jjtn003);
                     }
                   }
 /*@egen*/ {}/*@bgen(jjtree)*/
                   } catch (...) {
-                    if (jjtc002) {
-                      jjtree.clearNodeScope(jjtn002);
-                      jjtc002 = false;
+                    if (jjtc003) {
+                      jjtree.clearNodeScope(jjtn003);
+                      jjtc003 = false;
                     } else {
                       jjtree.popNode();
                     }
                   } {
-                    if (jjtc002) {
-                      jjtree.closeNodeScope(jjtn002, true);
+                    if (jjtc003) {
+                      jjtree.closeNodeScope(jjtn003, true);
                       if (jjtree.nodeCreated()) {
-                       jjtreeCloseNodeScope(jjtn002);
+                       jjtreeCloseNodeScope(jjtn003);
                       }
                     }
                   }
@@ -3122,7 +3174,7 @@ void access()       :
                                                        }
                                                      }
 /*@egen*/                  
-	| ident()
+	| ident() 
 }
 
 void number()       :

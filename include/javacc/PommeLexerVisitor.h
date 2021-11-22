@@ -102,8 +102,9 @@ class PommeLexerVisitor
   virtual void  visit(ASTpommeTrue *node, void * data) = 0;
   virtual void  visit(ASTpommeFalse *node, void * data) = 0;
   virtual void  visit(ASTpommeNull *node, void * data) = 0;
-  virtual void  visit(ASTlistacces *node, void * data) = 0;
-  virtual void  visit(ASTlistaccesP *node, void * data) = 0;
+  virtual void  visit(ASTlistaccess *node, void * data) = 0;
+  virtual void  visit(ASTaccessTab *node, void * data) = 0;
+  virtual void  visit(ASTlistaccessP *node, void * data) = 0;
   virtual void  visit(ASTacnil *node, void * data) = 0;
   virtual void  visit(ASTaccessMethode *node, void * data) = 0;
   virtual ~PommeLexerVisitor() { }
@@ -393,10 +394,13 @@ public:
   virtual void  visit(ASTpommeNull *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTlistacces *node, void * data) {
+  virtual void  visit(ASTlistaccess *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTlistaccesP *node, void * data) {
+  virtual void  visit(ASTaccessTab *node, void * data) {
+    defaultVisit(node, data);
+  }
+  virtual void  visit(ASTlistaccessP *node, void * data) {
     defaultVisit(node, data);
   }
   virtual void  visit(ASTacnil *node, void * data) {
@@ -409,4 +413,4 @@ public:
 };
 }
 #endif
-/* JavaCC - OriginalChecksum=6914b670d28c2fab95e39245049d04fc (do not edit this line) */
+/* JavaCC - OriginalChecksum=fcfb24d1b6b794d9af71fd7345fa6aab (do not edit this line) */

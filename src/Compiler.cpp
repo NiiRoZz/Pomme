@@ -8,6 +8,7 @@
 #include "TypeChecker.h"
 
 #include <iostream>
+#include <fstream>
 
 namespace Pomme
 {
@@ -19,8 +20,12 @@ namespace Pomme
 
 	void Compiler::addFile(const std::string& filePath)
 	{
-		std::cerr << "Compiler::addFile not implemented yet" << std::endl;
-		std::exit(1);
+		std::ifstream t(filePath);
+		if (!t.good()) return;
+
+		std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
+		addString(str);
 	}
 
 	void Compiler::addString(const std::string& data)

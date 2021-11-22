@@ -40,7 +40,7 @@ namespace Pomme
             std::unordered_set<std::string> parameters;
             std::unordered_set<std::string> keywords;
             std::unordered_map<std::string, std::string> variables;
-            int index;
+            uint16_t index = 0u;
 
             friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass)
             {
@@ -96,9 +96,11 @@ namespace Pomme
             std::unordered_set<std::string> children;
             std::string parent;
 
+            FunctionClass* getMethod(const std::string& methodName);
+
             void addAttribute(std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
                               TypeCheckerVisitor *typeCheckerVisitor);
-            void addFunction(std::string& functionType, std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, TypeCheckerVisitor* typeCheckerVisitor);
+            void addFunction(const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, TypeCheckerVisitor* typeCheckerVisitor);
 
             ClassClass& operator=(const ClassClass& other)
             {
@@ -164,8 +166,56 @@ namespace Pomme
         std::string child_name;
 
         bool instrs_context = false;
-        int path_number = 1;
+        uint8_t path_number = 1;
         int current_scopes = 0;
+
+        template<typename T>
+        void visitBinaryOperator(T* node, const std::string& name, std::string* returnType)
+        {
+            std::string leftType;
+            node->jjtChildAccept(0, this, &leftType);
+
+            std::string rightType;
+            node->jjtChildAccept(1, this, &rightType);
+
+            if (leftType == "")
+            {
+                errors.push_back("Can't find variable type of left expression");
+                return;
+            }
+
+            if (rightType == "")
+            {
+                errors.push_back("Can't find variable type of right expression");
+                return;
+            }
+
+            auto itLeft = classMap.find(leftType);
+            if (itLeft == classMap.end())
+            {
+                errors.push_back("Can't find class name : " + leftType);
+                return;
+            }
+
+            auto itRight = classMap.find(rightType);
+            if (itRight == classMap.end())
+            {
+                errors.push_back("Can't find class name : " + rightType);
+                return;
+            }
+
+            std::string nameFunc = name + NAME_FUNC_SEPARATOR + rightType + HEADER_FUNC_SEPARATOR;
+
+            FunctionClass* functionClass = itLeft->second.getMethod(nameFunc);
+            if (functionClass == nullptr)
+            {
+                errors.push_back("Can't find method " + nameFunc);
+                return;
+            }
+
+            node->index = functionClass->index;
+            if (returnType != nullptr) *returnType = functionClass->returnType;
+        }
 
         void visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords);
         void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
@@ -294,10 +344,10 @@ namespace Pomme
         void visit(ASTpommeTrue *node, void * data);
         void visit(ASTpommeFalse *node, void * data);
         void visit(ASTpommeNull *node, void * data);
-        void visit(ASTlistacces *node, void * data);
-        void visit(ASTlistaccesP *node, void * data);
+        void visit(ASTlistaccess *node, void * data);
+        void visit(ASTlistaccessP *node, void * data);
         void visit(ASTacnil *node, void * data);
         void visit(ASTaccessMethode *node, void * data);
-
+        void visit(ASTaccessTab *node, void * data);
 	};
 }

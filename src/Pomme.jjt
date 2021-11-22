@@ -78,6 +78,8 @@ TOKEN:
 	| <PARENTR : ")"> 
 	| <BRACEL : "{"> 
 	| <BRACER : "}">
+	| <BRACKETL : "["> 
+	| <BRACKETR : "]"> 
 	| <COLON : ":">
 	| <SEMICOLON : ";"> 
 	| <COMMA : ","> 
@@ -135,7 +137,7 @@ void ident() #ident:
 void identOp() #identOp:
 {Token *t;}
 {
-	t = <IDENTIFIEROPERATOR> { }
+	t = <IDENTIFIEROPERATOR> { jjtThis->m_Identifier = t->image; }
 }
 
 void pommeInt() #pommeInt:
@@ -279,15 +281,15 @@ void instr() #void :
 {}
 {
 	LOOKAHEAD(2) var()
-	| <INCR> listacces() #incrementPre(1)
-	| <DECR> listacces() #decrementPre(1)
+	| <INCR> listaccess() #incrementPre(1)
+	| <DECR> listaccess() #decrementPre(1)
 	| <RETURN> exp() #pommeReturn(1)
 	| <WHILE> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> #pommeWhile(2)
 	| <BREAK> #pommeBreak
 	| <IF> <PARENTL> exp() <PARENTR> <BRACEL> instrs() <BRACER> pommeElse() #pommeIf(3)
 	| <PRINT> <PARENTL> exp() <PARENTR> #pommePrint(1)
 	| <SWITCH> <PARENTL> exp() <PARENTR> <BRACEL> listcases() <BRACER> #pommeSwitch(2)
-	| listacces() ( <ASSIGNEMENT> exp() #assignement(2) 
+	| listaccess() ( <ASSIGNEMENT> exp() #assignement(2) 
 					| <ADDEQ> exp() #addeq(2) 
 					| <MINUSEQ> exp() #minuseq(2) 
 					| <DIVEQ> exp() #diveq(2) 
@@ -469,7 +471,7 @@ void fact() #void :
 {}
 {
 	<NEWEXP> ident() <PARENTL> listexp() <PARENTR> #pommeNew(2) 
-	| listacces()
+	| listaccess()
 	| <TRUE> #pommeTrue
 	| <FALSE> #pommeFalse
 	| number()
@@ -477,21 +479,23 @@ void fact() #void :
 	| <NULLEXP> #pommeNull
 }
 
-void listacces() #void :
+void listaccess() #void :
 {}
 {
-  	access() ( 	<POINT> access() listaccesP() #listacces(3)
+  	access() ( 	<POINT> access() listaccessP() #listaccess(3)
+	  			| <BRACKETL> exp() <BRACKETR> listaccessP() #accessTab(3)
 				| {}
 	  		)
 }
 
-void listaccesP() #void :
+void listaccessP() #void :
 {}
 {
 	(
 		<POINT> ( 
 				access() (	
-							<POINT> access() listaccesP() #listaccesP(3)
+							<POINT> access() listaccessP() #listaccessP(3)
+							| <BRACKETL> exp() <BRACKETR> listaccessP() #accessTab(3)
 							| {}
 						)
 			)
@@ -503,7 +507,7 @@ void access() #void :
 {}
 {
 	LOOKAHEAD(2) identmeth() <PARENTL> listexp() <PARENTR> #accessMethode(2)
-	| ident()
+	| ident() 
 }
 
 void number() #void :

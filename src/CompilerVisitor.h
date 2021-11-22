@@ -118,10 +118,11 @@ namespace Pomme
 		void visit(ASTpommeTrue *node, void * data);
 		void visit(ASTpommeFalse *node, void * data);
 		void visit(ASTpommeNull *node, void * data);
-		void visit(ASTlistacces *node, void * data);
-		void visit(ASTlistaccesP *node, void * data);
+		void visit(ASTlistaccess *node, void * data);
+		void visit(ASTlistaccessP *node, void * data);
 		void visit(ASTacnil *node, void * data);
 		void visit(ASTaccessMethode *node, void * data);
+		void visit(ASTaccessTab *node, void * data);
 
 	private:
 

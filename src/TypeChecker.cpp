@@ -14,10 +14,10 @@ namespace Pomme
     TypeCheckerVisitor TypeChecker::typeCheck(SimpleNode* tree)
 	{
 		TypeCheckerVisitor visitor;
-		tree->jjtAccept(&visitor, nullptr); // class definition
-        /*visitor.path_number++;
-        tree->jjtAccept(&visitor, nullptr); // method definition
+		tree->jjtAccept(&visitor, nullptr); // class/method definition
         visitor.path_number++;
+        tree->jjtAccept(&visitor, nullptr); // expression typing
+        /*visitor.path_number++;
         tree->jjtAccept(&visitor, nullptr); // expression typing*/
 
         std::cout << visitor << std::endl;

@@ -13,7 +13,7 @@ input
      ident
      enil
      instrs
-      listacces
+      listaccess
        ident
        accessMethode
         ident

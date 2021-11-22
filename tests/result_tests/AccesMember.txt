@@ -52,7 +52,7 @@ input
        pommeVariable
         ident
         ident
-        listacces
+        listaccess
          ident
          ident
          acnil
@@ -60,61 +60,69 @@ input
         pommeVariable
          ident
          ident
-         listacces
+         listaccess
           ident
           ident
           ident
         instrs
-         listacces
+         pommeVariable
           ident
-          accessMethode
-           identOp
-           exnil
-          acnil
+          ident
+          accessTab
+           ident
+           pommeInt
+           acnil
          instrs
-          listacces
+          listaccess
            ident
            accessMethode
             identOp
             exnil
            acnil
           instrs
-           listacces
+           listaccess
             ident
             accessMethode
              identOp
              exnil
             acnil
            instrs
-            listacces
+            listaccess
              ident
              accessMethode
               identOp
               exnil
              acnil
             instrs
-             listacces
-              ident
+             listaccess
               ident
               accessMethode
-               ident
+               identOp
                exnil
+              acnil
              instrs
-              listacces
+              listaccess
                ident
                ident
-               listaccesP
-                accessMethode
-                 ident
-                 exnil
+               accessMethode
                 ident
-                acnil
+                exnil
               instrs
-               listacces
-                accessMethode
-                 ident
-                 exnil
+               listaccess
                 ident
-                acnil
-               inil
+                ident
+                listaccessP
+                 accessMethode
+                  ident
+                  exnil
+                 ident
+                 acnil
+               instrs
+                listaccess
+                 accessMethode
+                  ident
+                  exnil
+                 ident
+                 acnil
+                inil
     scinil

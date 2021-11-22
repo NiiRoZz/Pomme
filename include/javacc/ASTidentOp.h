@@ -16,6 +16,10 @@ public:
 
   /** Accept the visitor. **/
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
+
+  std::string m_Identifier;
+  std::string m_MethodIdentifier;
+  uint16_t m_IndexAttribute = 0;
 };
 
 }

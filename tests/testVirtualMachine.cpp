@@ -14,13 +14,14 @@ using namespace Pomme;
 	std::string s = testString;\
 	VirtualMachine vm;\
     Compiler compiler(vm);\
+	compiler.addFile("std.pomme");\
 	compiler.addString(s);\
 	ObjFunction *function = compiler.compile(true);\
 	EXPECT_TRUE(function != nullptr);\
 
 TEST(TEST_VM, BasicTest)
 {
-    TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; print(a + 20.0 + b); print(\"Hello world, My name is Lucas\"); if (1 == 1) {print(10.0);}; if (0 == 1) {print(20.0);}; float d = 50.0; \n };\n");
+    TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; print(a + 20.0 + b); \n };\n");
 
 	InterpretResult result = vm.interpret(function);
 

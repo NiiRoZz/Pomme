@@ -96,7 +96,7 @@ TEST(TEST_LEXER_PARSER, 1Function1Member)
 
 TEST(TEST_LEXER_PARSER, AccessMember)
 {
-	TEST_PARSER_FILE("Test glob() { return new Test() ; }; class Test{ int64_t b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int64_t a = t.b; int64_t c = t.t.b; t.operator+=(); t.operator*(); t.operatorbool(); t.operator++(); t.t.salut(); t.t.salut().a; glob().t; };\n", "tests/AccesMember.txt");
+	TEST_PARSER_FILE("Test glob() { return new Test() ; }; class Test{ int64_t b = 8; Test t = new Test(); }; void main(){ Test t = new Test(); int64_t a = t.b; int64_t c = t.t.b; int64_t y = t[50]; t.operator+=(); t.operator*(); t.operatorbool(); t.operator++(); t.t.salut(); t.t.salut().a; glob().t; };\n", "tests/AccesMember.txt");
 }
 
 TEST(TEST_LEXER_PARSER, TestIfElse)
