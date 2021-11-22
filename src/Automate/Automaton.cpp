@@ -164,5 +164,4 @@ namespace Pomme {
             it->second.finalState = true;
         }
     }
-    
 }

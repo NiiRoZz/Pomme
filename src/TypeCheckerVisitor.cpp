@@ -138,7 +138,7 @@ namespace Pomme
         }else
         {
             FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
-                                   std::unordered_set<std::string>(),0); // todo global index
+                                   std::unordered_set<std::string>(),globalFunctionsMap.size());
             globalFunctionsMap.emplace(functionIdent, function);
         }
     }
