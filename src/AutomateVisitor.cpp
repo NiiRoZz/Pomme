@@ -276,13 +276,16 @@ namespace Pomme
     void AutomateVisitor::visit(ASTpommeNull *node, void * data)
     {
     }
-    void AutomateVisitor::visit(ASTlistacces *node, void * data)
+    void AutomateVisitor::visit(ASTlistaccess *node, void * data)
     {
     }
     void AutomateVisitor::visit(ASTacnil *node, void * data)
     {
     }
     void AutomateVisitor::visit(ASTaccessMethode *node, void * data)
+    {
+    }
+    void AutomateVisitor::visit(ASTaccessTab *node, void * data)
     {
     }
 }
