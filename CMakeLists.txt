@@ -51,7 +51,8 @@ add_library(${APP}
   "src/CompilerVisitor.cpp"
   "src/TypeCheckerVisitor.cpp"
   "src/PommeNode.cpp"
-  "src/CommonVisitorFunction.cpp")
+  "src/CommonVisitorFunction.cpp"
+  "src/AutomateVisitor.cpp")
 
 if(JAVACC_GENERATE MATCHES ON)
   add_custom_target(
