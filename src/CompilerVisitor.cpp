@@ -916,28 +916,21 @@ namespace Pomme
 
     int CompilerVisitor::addLocal(const std::string& name)
     {
-        int idx = localCount;
-
-        Local* local = &locals[localCount++];
+        Local* local = &locals[localCount];
         local->name = name;
         local->depth = scopeDepth;
 
-        return idx;
+        return localCount++;
     }
 
     void CompilerVisitor::namedVariable(const std::string& name, bool assign)
     {
-        OpCode op = OpCode::OP_GET_LOCAL;
-
-        if (assign)
-        {
-            op = OpCode::OP_SET_LOCAL;
-        }
+        OpCode op = (assign) ? OpCode::OP_SET_LOCAL : OpCode::OP_GET_LOCAL;
 
         //LOCALS
-        for (uint8_t i = localCount - 1; i >= 0; i--)
+        for (int i = localCount - 1; i >= 0; i--)
         {
-            Local& local = locals[i];
+            const Local& local = locals[i];
 
             if (local.depth != -1 && local.depth < scopeDepth)
             {

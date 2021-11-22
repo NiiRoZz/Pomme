@@ -28,20 +28,6 @@ namespace Pomme
         } as; 
     };
 
-    struct ValueArray
-    {
-    public:
-        void write(const Value& value);
-
-    public:
-        int capacity;
-        int count;
-        Value* values;
-    };
-
-    void initValueArray(ValueArray* array);
-    void freeValueArray(ValueArray* array);
-
     #define IS_BOOL(value)    ((value).type == ValueType::VAL_BOOL)
     #define IS_NIL(value)     ((value).type == ValueType::VAL_NIL)
     #define IS_NULL(value)     ((value).type == ValueType::VAL_NULL)

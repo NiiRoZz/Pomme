@@ -267,32 +267,18 @@ namespace Pomme
 		return stackTop[-1 - depth];
 	}
 
-    Obj* VirtualMachine::allocateObject(size_t size, ObjType type)
-    {
-        Obj* object = (Obj*)reallocate(NULL, 0, size);
-        object->type = type;
-
-        object->next = objects;
-        objects = object;
-
-        return object;
-    }
-
-    ObjString* VirtualMachine::allocateString(char* chars, int length)
+    ObjString* VirtualMachine::newString()
     {
         ObjString* string = ALLOCATE_OBJ(this, ObjString, ObjType::OBJ_STRING);
-        string->length = length;
-        string->chars = chars;
         return string;
     }
 
     ObjString* VirtualMachine::copyString(const char* chars, int length)
     {
-        char* heapChars = ALLOCATE(char, length + 1);
-        std::memcpy(heapChars, chars, length);
-        heapChars[length] = '\0';
+        ObjString* string = newString();
+        string->chars = std::string(chars, length);
 
-        return allocateString(heapChars, length);
+        return string;
     }
 
     ObjInstance* VirtualMachine::newInstance(const std::string& className)
@@ -308,29 +294,18 @@ namespace Pomme
         ObjFunction* function = ALLOCATE_OBJ(this, ObjFunction, ObjType::OBJ_FUNCTION);
         function->arity = 0;
         function->name = NULL;
-        initChunk(&function->chunk);
         return function;
     }
 
     ObjGlobalNative* VirtualMachine::newGlobalNative()
     {
-        ObjGlobalNative* native = new ObjGlobalNative();
-        native->obj.type = ObjType::OBJ_GLOBAL_NATIVE;
-
-        native->obj.next = objects;
-        objects = (Obj*) native;
-
+        ObjGlobalNative* native = ALLOCATE_OBJ(this, ObjGlobalNative, ObjType::OBJ_GLOBAL_NATIVE);
         return native;
     }
 
     ObjMethodNative* VirtualMachine::newMethodNative()
     {
-        ObjMethodNative* native = new ObjMethodNative();
-        native->obj.type = ObjType::OBJ_METHOD_NATIVE;
-
-        native->obj.next = objects;
-        objects = (Obj*) native;
-
+        ObjMethodNative* native = ALLOCATE_OBJ(this, ObjMethodNative, ObjType::OBJ_METHOD_NATIVE);
         return native;
     }
 
@@ -375,7 +350,7 @@ namespace Pomme
         CallFrame* frame = &frames[frameCount - 1];
 
         #define READ_BYTE() (*frame->ip++)
-        #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+        #define READ_CONSTANT() (frame->function->chunk.constants[READ_BYTE()])
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
         #define READ_UINT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
@@ -715,47 +690,50 @@ namespace Pomme
         {
             case ObjType::OBJ_FUNCTION:
             {
-                ObjFunction* function = (ObjFunction*)object;
-                freeChunk(&function->chunk);
-                FREE(ObjFunction, object);
+                ObjFunction* function = static_cast<ObjFunction*>(object);
+                delete function;
                 break;
             }
 
             case ObjType::OBJ_CLASS:
             {
-                delete object;
+                ObjClass* klass = static_cast<ObjClass*>(object);
+                delete klass;
                 break;
             } 
 
             case ObjType::OBJ_GLOBAL_NATIVE:
             {
-                delete object;
+                ObjGlobalNative* method = static_cast<ObjGlobalNative*>(object);
+                delete method;
                 break;
             }
 
             case ObjType::OBJ_METHOD_NATIVE:
             {
-                delete object;
+                ObjMethodNative* method = static_cast<ObjMethodNative*>(object);
+                delete method;
                 break;
             }
 
             case ObjType::OBJ_STRING:
             {
-                ObjString* string = (ObjString*)object;
-                FREE_ARRAY(char, string->chars, string->length + 1);
-                FREE(ObjString, object);
+                ObjString* string = static_cast<ObjString*>(object);
+                delete string;
                 break;
             }
 
             case ObjType::OBJ_INSTANCE:
             {
-                FREE(ObjInstance, object);
+                ObjInstance* instance = static_cast<ObjInstance*>(object);
+                delete instance;
                 break;
             }
 
             case ObjType::OBJ_BOUND_METHOD:
             {
-                FREE(ObjBoundMethod, object);
+                ObjBoundMethod* method = static_cast<ObjBoundMethod*>(object);
+                delete method;
                 break;
             }
         }
@@ -843,7 +821,7 @@ namespace Pomme
         CallFrame* frame = &frames[frameCount++];
 
         frame->function = function;
-        frame->ip = function->chunk.code;
+        frame->ip = function->chunk.code.data();
         frame->slots = stackTop - argCount - 1;
 
         return true;
@@ -871,13 +849,13 @@ namespace Pomme
                 printObject(*AS_BOUND_METHOD(value)->method);
                 break;
             case ObjType::OBJ_CLASS:
-                printf("class %s", AS_CLASS(value)->name->chars);
+                printf("class %s", AS_CLASS(value)->name->chars.c_str());
                 break;
             case ObjType::OBJ_FUNCTION:
                 printFunction(AS_FUNCTION(value));
                 break;
             case ObjType::OBJ_INSTANCE:
-                printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
+                printf("%s instance", AS_INSTANCE(value)->klass->name->chars.c_str());
                 break;
             case ObjType::OBJ_GLOBAL_NATIVE:
             case ObjType::OBJ_METHOD_NATIVE:
@@ -897,7 +875,7 @@ namespace Pomme
             return;
         }
 
-        printf("<fn %s>", function->name->chars);
+        printf("<fn %s>", function->name->chars.c_str());
     }
 
     void VirtualMachine::defineMethod(uint16_t slot, ObjString* name, bool isNative)
@@ -950,12 +928,9 @@ namespace Pomme
 
     ObjClass* VirtualMachine::newClass(ObjString* name)
     {
-        ObjClass* klass = new ObjClass();
-        klass->obj.type = ObjType::OBJ_CLASS;
-
-        klass->obj.next = objects;
-        objects = (Obj*) klass;
+        ObjClass* klass = ALLOCATE_OBJ(this, ObjClass, ObjType::OBJ_CLASS);
         klass->name = name;
+
         return klass;
     }
 
@@ -1064,7 +1039,7 @@ namespace Pomme
     {
         uint8_t constant = chunk->code[offset + 1];
         printf("%-16s %4d '", name, constant);
-        printValue(chunk->constants.values[constant]);
+        printValue(chunk->constants[constant]);
         printf("'\n");
         return offset + 2;
     }

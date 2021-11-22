@@ -23,16 +23,16 @@ namespace Pomme
     #define IS_METHOD_NATIVE(value) isObjType(value, ObjType::OBJ_METHOD_NATIVE)
     #define IS_STRING(value)        isObjType(value, ObjType::OBJ_STRING)
 
-    #define AS_BOUND_METHOD(value) ((ObjBoundMethod*)AS_OBJ(value))
-    #define AS_CLASS(value)        ((ObjClass*)AS_OBJ(value))
-    #define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
-    #define AS_INSTANCE(value)     ((ObjInstance*)AS_OBJ(value))
+    #define AS_BOUND_METHOD(value) (static_cast<ObjBoundMethod*>(AS_OBJ(value)))
+    #define AS_CLASS(value)        (static_cast<ObjClass*>(AS_OBJ(value)))
+    #define AS_FUNCTION(value)     (static_cast<ObjFunction*>(AS_OBJ(value)))
+    #define AS_INSTANCE(value)     (static_cast<ObjInstance*>(AS_OBJ(value)))
     #define AS_GLOBAL_NATIVE(value) \
-        (((ObjGlobalNative*)AS_OBJ(value))->function)
+        (static_cast<ObjGlobalNative*>(AS_OBJ(value))->function)
     #define AS_METHOD_NATIVE(value) \
-        (((ObjMethodNative*)AS_OBJ(value))->function)
-    #define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
-    #define AS_CSTRING(value)      (((ObjString*)AS_OBJ(value))->chars)
+        (static_cast<ObjMethodNative*>(AS_OBJ(value))->function)
+    #define AS_STRING(value)       (static_cast<ObjString*>(AS_OBJ(value)))
+    #define AS_CSTRING(value)      (AS_STRING(value)->chars.c_str())
 
     enum class ObjType: uint8_t
     {
@@ -51,16 +51,13 @@ namespace Pomme
         Obj* next;
     };
 
-    struct ObjString
+    struct ObjString: public Obj
     {
-        Obj obj;
-        int length;
-        char* chars;
+        std::string chars;
     };
 
-    struct ObjFunction
+    struct ObjFunction: public Obj
     {
-        Obj obj;
         int arity;
         Chunk chunk;
         ObjString* name;
@@ -71,22 +68,19 @@ namespace Pomme
     using GlobalNativeFn = std::function<Value(int, Value*)>;
     using MethodNativeFn = std::function<Value(int, ObjInstance*, Value*)>;
 
-    struct ObjGlobalNative
+    struct ObjGlobalNative: public Obj
     {
-        Obj obj;
         GlobalNativeFn function;
     };
 
-    struct ObjMethodNative
+    struct ObjMethodNative: public Obj
     {
-        Obj obj;
         MethodNativeFn function;
     };
 
-    struct ObjClass
+    struct ObjClass : public Obj
     {
         //Runtime
-        Obj obj;
         ObjString* name;
         Value methods[METHODS_MAX]; 
         Value nativeMethods[METHODS_MAX];
@@ -104,9 +98,8 @@ namespace Pomme
         std::unordered_map<std::string, uint16_t> staticFieldsIndices;
     };
 
-    struct ObjInstance
+    struct ObjInstance: public Obj
     {
-        Obj obj;
         ObjClass* klass;
         Value fields[FIELDS_MAX];
         Value nativeMethods[METHODS_MAX];
@@ -117,14 +110,12 @@ namespace Pomme
         bool linkMethodNative(const std::string& methodName, MethodNativeFn function);
     };
 
-    struct ObjBoundMethod
+    struct ObjBoundMethod: public Obj
     {
-        Obj obj;
         Value receiver;
         Value* method;
     };
     
-
     static inline bool isObjType(Value value, ObjType type)
     {
         return IS_OBJ(value) && AS_OBJ(value)->type == type;

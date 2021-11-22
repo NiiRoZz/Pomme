@@ -165,21 +165,4 @@ namespace Pomme {
         }
     }
     
-    void Automaton::prettyPrint(std::ostream& os) const{
-        for (const auto& it : this->m_state)
-        {
-            std::cout << it.first << " = " << it.second << std::endl;
-        }
-        for (const auto& it : this->m_transition)
-        {
-            std::cout << it.first << " = ";
-            for(auto ot : it.second)
-            {
-                std::cout << ot << std::endl;
-            }
-        }
-    }
-    
-    
-    
 }

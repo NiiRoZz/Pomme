@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <iostream>
 
 #include "Value.h"
 
@@ -74,18 +75,16 @@ namespace Pomme
     struct Chunk
     {
     public:
+        ~Chunk() {std::cout << "~Chunk" << std::endl;}
+
         void writeChunk(uint8_t byte, int line);
         int addConstant(const Value& value);
 
     public:
-        int count;
-        int capacity;
-        uint8_t* code;
-        int* lines;
+        uint64_t count;
+        std::vector<uint8_t> code;
+        std::vector<int> lines;
 
-        ValueArray constants;
+        std::vector<Value> constants;
     };
-
-    void initChunk(Chunk* chunk);
-    void freeChunk(Chunk* chunk);
 }

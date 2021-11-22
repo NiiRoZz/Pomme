@@ -55,9 +55,20 @@ namespace Pomme
 		Value pop();
 		Value peek(int depth);
 
-		Obj* allocateObject(size_t size, ObjType type);
+		template<typename T>
+		T* allocateObject(ObjType type)
+		{
+			T* t = new T();
+			Obj* object = static_cast<Obj*>(t);
+			object->type = type;
 
-		ObjString* allocateString(char* chars, int length);
+			object->next = objects;
+			objects = object;
+
+			return t;
+		}
+
+		ObjString* newString();
 		ObjString* copyString(const char* chars, int length);
 
 		ObjInstance* newInstance(const std::string& className);
