@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <cstring>
+#include <variant>
 
 #include "Value.h"
 #include "Chunk.h"
@@ -15,22 +16,27 @@ namespace Pomme
 {
     #define OBJ_TYPE(value)        (AS_OBJ(value)->type)
 
-    #define IS_BOUND_METHOD(value)  isObjType(value, ObjType::OBJ_BOUND_METHOD)
-    #define IS_CLASS(value)         isObjType(value, ObjType::OBJ_CLASS)
-    #define IS_FUNCTION(value)      isObjType(value, ObjType::OBJ_FUNCTION)
-    #define IS_INSTANCE(value)      isObjType(value, ObjType::OBJ_INSTANCE)
-    #define IS_GLOBAL_NATIVE(value) isObjType(value, ObjType::OBJ_GLOBAL_NATIVE)
-    #define IS_METHOD_NATIVE(value) isObjType(value, ObjType::OBJ_METHOD_NATIVE)
-    #define IS_STRING(value)        isObjType(value, ObjType::OBJ_STRING)
+    #define IS_BOUND_METHOD(value)              isObjType(value, ObjType::OBJ_BOUND_METHOD)
+    #define IS_CLASS(value)                     isObjType(value, ObjType::OBJ_CLASS)
+    #define IS_PRIMITIVE(value)                 isObjType(value, ObjType::OBJ_PRIMITIVE)
+    #define IS_FUNCTION(value)                  isObjType(value, ObjType::OBJ_FUNCTION)
+    #define IS_INSTANCE(value)                  isObjType(value, ObjType::OBJ_INSTANCE)
+    #define IS_GLOBAL_NATIVE(value)             isObjType(value, ObjType::OBJ_GLOBAL_NATIVE)
+    #define IS_METHOD_NATIVE(value)             isObjType(value, ObjType::OBJ_METHOD_NATIVE)
+    #define IS_METHOD_PRIMITIVE_NATIVE(value)   isObjType(value, ObjType::OBJ_METHOD_PRIMITIVE_NATIVE)
+    #define IS_STRING(value)                    isObjType(value, ObjType::OBJ_STRING)
 
     #define AS_BOUND_METHOD(value) (static_cast<ObjBoundMethod*>(AS_OBJ(value)))
     #define AS_CLASS(value)        (static_cast<ObjClass*>(AS_OBJ(value)))
+    #define AS_PRIMITIVE(value)     (static_cast<ObjPrimitive*>(AS_OBJ(value)))
     #define AS_FUNCTION(value)     (static_cast<ObjFunction*>(AS_OBJ(value)))
     #define AS_INSTANCE(value)     (static_cast<ObjInstance*>(AS_OBJ(value)))
     #define AS_GLOBAL_NATIVE(value) \
         (static_cast<ObjGlobalNative*>(AS_OBJ(value))->function)
     #define AS_METHOD_NATIVE(value) \
         (static_cast<ObjMethodNative*>(AS_OBJ(value))->function)
+    #define AS_METHOD_PRIMITIVE_NATIVE(value) \
+        (static_cast<ObjMethodPrimitiveNative*>(AS_OBJ(value))->function)
     #define AS_STRING(value)       (static_cast<ObjString*>(AS_OBJ(value)))
     #define AS_CSTRING(value)      (AS_STRING(value)->chars.c_str())
 
@@ -38,20 +44,21 @@ namespace Pomme
     {
         OBJ_BOUND_METHOD,
         OBJ_CLASS,
+        OBJ_PRIMITIVE,
         OBJ_FUNCTION,
         OBJ_INSTANCE,
         OBJ_GLOBAL_NATIVE,
         OBJ_METHOD_NATIVE,
+        OBJ_METHOD_PRIMITIVE_NATIVE,
         OBJ_STRING,
     };
 
-    enum class ClassType: uint8_t
+    enum class PrimitiveType: uint8_t
     {
         INT,
         FLOAT,
         BOOL,
         STRING,
-        CLASS,
     };
 
     struct Obj
@@ -73,9 +80,11 @@ namespace Pomme
     };
 
     struct ObjInstance;
+    struct ObjPrimitive;
 
-    using GlobalNativeFn = std::function<Value(int, Value*)>;
+    using GlobalNativeFn = std::function<Value(VirtualMachine&, int, Value*)>;
     using MethodNativeFn = std::function<Value(VirtualMachine&, int, ObjInstance*, Value*)>;
+    using MethodPrimitiveNativeFn = std::function<Value(VirtualMachine&, int, ObjPrimitive*, Value*)>;
 
     struct ObjGlobalNative: public Obj
     {
@@ -87,9 +96,13 @@ namespace Pomme
         MethodNativeFn function;
     };
 
+    struct ObjMethodPrimitiveNative: public Obj
+    {
+        MethodPrimitiveNativeFn function;
+    };
+
     struct ObjClass : public Obj
     {
-        ClassType classType;
         //Runtime
         ObjString* name;
         Value methods[METHODS_MAX]; 
@@ -114,12 +127,26 @@ namespace Pomme
         Value fields[FIELDS_MAX];
         Value nativeMethods[METHODS_MAX];
 
-        void* cppData;
-
         Value* getField(const std::string& name);
         Value* getStaticField(const std::string& name);
 
         bool linkMethodNative(const std::string& methodName, MethodNativeFn function);
+    };
+
+    struct PommeString
+    {
+        ObjString* value;
+
+        PommeString(VirtualMachine& vm, ObjInstance* instance);
+
+        Value pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args);
+    };
+
+    struct ObjPrimitive: public Obj
+    {
+        ObjClass* klass;
+        PrimitiveType primitiveType;
+        std::variant<int64_t, double, bool, PommeString*> value;
     };
 
     struct ObjBoundMethod: public Obj
@@ -132,13 +159,4 @@ namespace Pomme
     {
         return IS_OBJ(value) && AS_OBJ(value)->type == type;
     }
-
-    struct PommeString
-    {
-        ObjString* value;
-
-        PommeString(VirtualMachine& vm, ObjInstance* instance);
-
-        Value pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args);
-    };
 }

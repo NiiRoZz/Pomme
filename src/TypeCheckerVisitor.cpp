@@ -967,6 +967,8 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeReturn *node, void * data)
     {
+        std::string type;
+        node->jjtChildrenAccept(this, &type);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeWhile *node, void * data)
@@ -1342,6 +1344,12 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTpommeNew *node, void * data)
     {
         const std::string& className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+
+        if (CommonVisitorFunction::isNativeType(className))
+        {
+            errors.push_back("can't use new on primitive types");
+            return;
+        }
 
         auto it = classMap.find(className);
         if (it == classMap.end())

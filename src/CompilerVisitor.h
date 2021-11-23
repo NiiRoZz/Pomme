@@ -129,7 +129,10 @@ namespace Pomme
 		void emitByte(uint8_t byte);
 		void emitBytes(uint8_t byte1, uint8_t byte2);
 		void emit16Bits(uint16_t val);
-		void emit64Bits(uint64_t val);
+		void emit64Bits(uint8_t* val);
+
+		void emitInt(uint64_t val);
+		void emitFloat(double val);
 
 		void emitReturn();
 
@@ -165,6 +168,7 @@ namespace Pomme
 		int scopeDepth;
 
 		bool m_InClass;
+		bool m_InNativeClass;
 		bool m_InMethod;
 	};
 }

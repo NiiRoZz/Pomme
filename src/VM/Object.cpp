@@ -44,7 +44,7 @@ namespace Pomme
     Value PommeString::pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args)
     {
         assert(argcount == 1);
-        assert(IS_INSTANCE(args[0]) && AS_INSTANCE(args[0])->klass->classType == ClassType::STRING);
+        //assert(IS_INSTANCE(args[0]) && AS_INSTANCE(args[0])->klass-> == ClassType::STRING);
 
         return OBJ_VAL(instance);
     }

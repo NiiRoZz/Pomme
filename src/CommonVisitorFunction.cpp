@@ -5,25 +5,38 @@
 #include "VM/Memory.h"
 #include "PommeLexerTree.h"
 
-std::string CommonVisitorFunction::getParametersType(Pomme::Node *node) {
-    auto* currHeaders = dynamic_cast<Pomme::ASTheaders*>(node);
-    std::string parametersType;
+#include <unordered_set>
 
-    while (currHeaders != nullptr)
+namespace Pomme
+{
+    std::string CommonVisitorFunction::getParametersType(Pomme::Node *node)
     {
-        auto* currHeader = dynamic_cast<Pomme::ASTheader*>(currHeaders->jjtGetChild(0));
-        auto* identHeader = dynamic_cast<Pomme::ASTident*>(currHeader->jjtGetChild(0));
+        auto* currHeaders = dynamic_cast<Pomme::ASTheaders*>(node);
+        std::string parametersType;
 
-        parametersType += identHeader->m_Identifier + HEADER_FUNC_SEPARATOR;
+        while (currHeaders != nullptr)
+        {
+            auto* currHeader = dynamic_cast<Pomme::ASTheader*>(currHeaders->jjtGetChild(0));
+            auto* identHeader = dynamic_cast<Pomme::ASTident*>(currHeader->jjtGetChild(0));
 
-        currHeaders = dynamic_cast<Pomme::ASTheaders*>(currHeaders->jjtGetChild(1));
+            parametersType += identHeader->m_Identifier + HEADER_FUNC_SEPARATOR;
+
+            currHeaders = dynamic_cast<Pomme::ASTheaders*>(currHeaders->jjtGetChild(1));
+        }
+
+        return parametersType;
     }
 
-    return parametersType;
-}
+    std::string CommonVisitorFunction::getTypeName(Pomme::Node *node)
+    {
+        auto* identType = dynamic_cast<Pomme::ASTident*>(node);
 
-std::string CommonVisitorFunction::getTypeName(Pomme::Node *node) {
-    auto* identType = dynamic_cast<Pomme::ASTident*>(node);
+        return ((identType != nullptr) ? identType->m_Identifier : "void");
+    }
 
-    return ((identType != nullptr) ? identType->m_Identifier : "void");
+    bool CommonVisitorFunction::isNativeType(const std::string& name)
+    {
+        static std::unordered_set<std::string> nativeTypes = {"int", "float", "bool", "string"};
+        return nativeTypes.count(name);
+    }
 }

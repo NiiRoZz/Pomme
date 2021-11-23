@@ -3,6 +3,7 @@
 #include "Chunk.h"
 #include "Object.h"
 #include "Common.h"
+#include "Memory.h"
 
 #include <array>
 #include <unordered_map>
@@ -42,6 +43,7 @@ namespace Pomme
 
 		bool linkGlobalNative(const std::string& name, GlobalNativeFn function);
 		bool linkMethodNative(const std::string& className, const std::string& methodName, MethodNativeFn function);
+		bool linkMethodNative(const std::string& className, const std::string& methodName, MethodPrimitiveNativeFn function);
 
 		Value* getStaticField(const std::string& className, const std::string& fieldName);
 
@@ -71,8 +73,9 @@ namespace Pomme
 		ObjString* newString();
 		ObjString* copyString(const char* chars, int length);
 
-		ObjInstance* newInt(uint64_t value);
-		ObjInstance* newFloat(double value);
+		ObjPrimitive* newInt(uint64_t value);
+		ObjPrimitive* newFloat(double value);
+		ObjPrimitive* newBool(bool value);
 
 		ObjInstance* newInstance(const std::string& className);
 		ObjInstance* newInstance(uint16_t slot);
@@ -80,12 +83,15 @@ namespace Pomme
 		ObjFunction* newFunction();
 		ObjGlobalNative* newGlobalNative();
 		ObjMethodNative* newMethodNative();
+		ObjMethodPrimitiveNative* newMethodPrimitiveNative();
 
 		std::size_t addGlobal(const std::string& name);
 		std::optional<std::size_t> getGlobal(const std::string& name);
 
 		void printStack();
 		int stackSize();
+
+		void printValue(const Value& value);
 		
 	private:
 		InterpretResult run();
@@ -108,7 +114,6 @@ namespace Pomme
 		bool callValue(const Value& callee, int argCount);
 		bool call(ObjFunction* function, int argCount);
 
-		void printValue(const Value& value);
 		void printObject(const Value& value);
 		void printFunction(ObjFunction* function);
 
@@ -118,6 +123,17 @@ namespace Pomme
 		ObjClass* newClass(ObjString* name);
 		ObjInstance* newInstance(ObjClass* klass);
 		ObjBoundMethod* newBoundMethod(const Value& receiver, Value* method);
+
+		template<typename T>
+		ObjPrimitive* newPrimitive(ObjClass* klass, PrimitiveType type, T value)
+		{
+			ObjPrimitive* primitive = ALLOCATE_OBJ(this, ObjPrimitive, ObjType::OBJ_PRIMITIVE);
+			primitive->klass = klass;
+			primitive->primitiveType = type;
+			primitive->value = value;
+
+			return primitive;
+		}
 
 		int disassembleInstruction(Chunk* chunk, int offset);
 		int simpleInstruction(const char* name, int offset);
@@ -141,5 +157,7 @@ namespace Pomme
 
 		ObjClass* intClass;
 		ObjClass* floatClass;
+		ObjClass* boolClass;
+		ObjClass* stringClass;
 	};
 }

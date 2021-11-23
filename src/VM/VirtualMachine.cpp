@@ -1,5 +1,5 @@
 #include "VirtualMachine.h"
-#include "Memory.h"
+#include "CommonVisitorFunction.h"
 
 #include <iostream>
 #include <assert.h>
@@ -13,6 +13,8 @@ namespace Pomme
     , objects(nullptr)
     , intClass(nullptr)
     , floatClass(nullptr)
+    , boolClass(nullptr)
+    , stringClass(nullptr)
     {
     }
 
@@ -237,6 +239,25 @@ namespace Pomme
         return true;
     }
 
+    bool VirtualMachine::linkMethodNative(const std::string& className, const std::string& methodName, MethodPrimitiveNativeFn function)
+    {
+        if (!CommonVisitorFunction::isNativeType(className)) return false;
+
+        auto it = globalsIndices.find(className);
+        if (it == globalsIndices.end()) return false;
+
+        assert(IS_CLASS(globals[it->second]));
+
+        ObjClass* klass = AS_CLASS(globals[it->second]);
+
+        auto ot = klass->nativeMethodsIndices.find(methodName);
+        if (ot == klass->nativeMethodsIndices.end()) return false;
+
+        AS_METHOD_PRIMITIVE_NATIVE(klass->nativeMethods[ot->second]) = function;
+
+        return true;
+    }
+
     Value* VirtualMachine::getStaticField(const std::string& className, const std::string& fieldName)
     {
         auto it = globalsIndices.find(className);
@@ -283,28 +304,31 @@ namespace Pomme
         return string;
     }
 
-    ObjInstance* VirtualMachine::newInt(uint64_t value)
+    ObjPrimitive* VirtualMachine::newInt(uint64_t value)
     {
         if (intClass == nullptr) return nullptr;
 
         assert(IS_CLASS(OBJ_VAL(intClass)));
 
-        ObjInstance* instance = newInstance(intClass);
-        instance->cppData = new uint64_t(value);
-
-        return instance;
+        return newPrimitive(intClass, PrimitiveType::INT, static_cast<int64_t>(value));
     }
 
-    ObjInstance* VirtualMachine::newFloat(double value)
+    ObjPrimitive* VirtualMachine::newFloat(double value)
     {
         if (floatClass == nullptr) return nullptr;
 
         assert(IS_CLASS(OBJ_VAL(floatClass)));
 
-        ObjInstance* instance = newInstance(floatClass);
-        instance->cppData = new double(value);
+        return newPrimitive(floatClass, PrimitiveType::FLOAT, value);
+    }
 
-        return instance;
+    ObjPrimitive* VirtualMachine::newBool(bool value)
+    {
+        if (boolClass == nullptr) return nullptr;
+
+        assert(IS_CLASS(OBJ_VAL(boolClass)));
+
+        return newPrimitive(boolClass, PrimitiveType::BOOL, value);
     }
 
     ObjInstance* VirtualMachine::newInstance(const std::string& className)
@@ -332,6 +356,12 @@ namespace Pomme
     ObjMethodNative* VirtualMachine::newMethodNative()
     {
         ObjMethodNative* native = ALLOCATE_OBJ(this, ObjMethodNative, ObjType::OBJ_METHOD_NATIVE);
+        return native;
+    }
+
+    ObjMethodPrimitiveNative* VirtualMachine::newMethodPrimitiveNative()
+    {
+        ObjMethodPrimitiveNative* native = ALLOCATE_OBJ(this, ObjMethodPrimitiveNative, ObjType::OBJ_METHOD_PRIMITIVE_NATIVE);
         return native;
     }
 
@@ -380,8 +410,8 @@ namespace Pomme
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
         #define READ_UINT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
-        #define READ_UINT64() \
-            (frame->ip += 8, (uint64_t)((static_cast<uint64_t>(frame->ip[-8]) << 56) | (static_cast<uint64_t>(frame->ip[-7]) << 48) |(static_cast<uint64_t>(frame->ip[-6]) << 40) | (static_cast<uint64_t>(frame->ip[-5]) << 32) | (static_cast<uint64_t>(frame->ip[-4]) << 24) | (static_cast<uint64_t>(frame->ip[-3]) << 16) | (static_cast<uint64_t>(frame->ip[-2]) << 8) | static_cast<uint64_t>(frame->ip[-1])))
+        #define READ_64BITS(type, name) \
+            frame->ip += 8; type name; std::memcpy(&name, &(frame->ip[-8]), sizeof(type));
         
         #define AS_OPCODE(code) static_cast<uint8_t>(code)
 
@@ -408,13 +438,15 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_INT):
                 {
-                    push(OBJ_VAL(newInt(READ_UINT64())));
+                    READ_64BITS(uint64_t, value);
+                    push(OBJ_VAL(newInt(value)));
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_FLOAT):
                 {
-                    push(OBJ_VAL(newFloat(READ_UINT64())));
+                    READ_64BITS(double, value);
+                    push(OBJ_VAL(newFloat(value)));
                     break;
                 }
 
@@ -504,7 +536,7 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_GET_METHOD):
                 {
-                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
+                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)) || IS_PRIMITIVE(peek(0)));
 
                     uint16_t slot = READ_UINT16();
                     assert(slot >= 0u && slot < METHODS_MAX);
@@ -532,6 +564,24 @@ namespace Pomme
                         ObjBoundMethod* bound = newBoundMethod(peek(0), method);
                         obj = (Obj*) bound;
                     }
+                    else if (IS_PRIMITIVE(peek(0)))
+                    {
+                        ObjPrimitive* primitive = AS_PRIMITIVE(peek(0));
+                        Value *method;
+
+                        if (native)
+                        {
+                            method = &primitive->klass->nativeMethods[slot];
+                        }
+                        else
+                        {
+                            method = &primitive->klass->methods[slot];
+                        }
+
+                        assert(IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method));
+                        ObjBoundMethod* bound = newBoundMethod(peek(0), method);
+                        obj = (Obj*) bound;
+                    }
                     else
                     {
                         ObjClass* klass = AS_CLASS(peek(0));
@@ -540,6 +590,8 @@ namespace Pomme
                         ObjFunction* func = AS_FUNCTION(klass->methods[slot]);
                         obj = (Obj*) func;
                     }
+
+                    assert(obj != nullptr);
 
                     pop(); // Instance or Class.
                     push(OBJ_VAL(obj));
@@ -744,7 +796,6 @@ namespace Pomme
             case ObjType::OBJ_INSTANCE:
             {
                 ObjInstance* instance = static_cast<ObjInstance*>(object);
-                delete instance->cppData;
                 delete instance;
                 break;
             }
@@ -779,9 +830,20 @@ namespace Pomme
                         return call(AS_FUNCTION(*bound->method), argCount);
                     }
 
-                    MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
-                    assert(native);
-                    Value result = native(*this, argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
+                    Value result;
+
+                    if (IS_PRIMITIVE(bound->receiver))
+                    {
+                        MethodPrimitiveNativeFn native = AS_METHOD_PRIMITIVE_NATIVE(*bound->method);
+                        assert(native);
+                        result = native(*this, argCount, AS_PRIMITIVE(bound->receiver), stackTop - argCount);
+                    }
+                    else
+                    {
+                        MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
+                        assert(native);
+                        result = native(*this, argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
+                    }
 
                     stackTop -= argCount + 1;
                     push(result);
@@ -795,7 +857,7 @@ namespace Pomme
                 case ObjType::OBJ_GLOBAL_NATIVE:
                 {
                     GlobalNativeFn& native = AS_GLOBAL_NATIVE(callee);
-                    Value result = native(argCount, stackTop - argCount);
+                    Value result = native(*this, argCount, stackTop - argCount);
                     
                     stackTop -= argCount + 1;
                     push(result);
@@ -858,25 +920,43 @@ namespace Pomme
                 printFunction(AS_FUNCTION(value));
                 break;
             case ObjType::OBJ_INSTANCE:
-                if (AS_INSTANCE(value)->klass->classType == ClassType::INT)
-                {
-                    std::cout << *static_cast<int64_t*>(AS_INSTANCE(value)->cppData);
-                }
-                else if (AS_INSTANCE(value)->klass->classType == ClassType::FLOAT)
-                {
-                    std::cout << *static_cast<double*>(AS_INSTANCE(value)->cppData);
-                }
-                else
-                {
-                    std::cout << AS_INSTANCE(value)->klass->name->chars.c_str() << " instance";
-                }
+                std::cout << AS_INSTANCE(value)->klass->name->chars.c_str() << " instance";
                 break;
             case ObjType::OBJ_GLOBAL_NATIVE:
             case ObjType::OBJ_METHOD_NATIVE:
+            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE:
                 std::cout << "<native fn>";
                 break;
             case ObjType::OBJ_STRING:
                 std::cout << AS_CSTRING(value);
+                break;
+            case ObjType::OBJ_PRIMITIVE:
+                switch (AS_PRIMITIVE(value)->primitiveType)
+                {
+                    case PrimitiveType::INT:
+                    {
+                        std::cout << std::get<int64_t>(AS_PRIMITIVE(value)->value);
+                        break;
+                    }
+
+                    case PrimitiveType::FLOAT:
+                    {
+                        std::cout << std::get<double>(AS_PRIMITIVE(value)->value);
+                        break;
+                    }
+
+                    case PrimitiveType::BOOL:
+                    {
+                        std::cout << std::get<bool>(AS_PRIMITIVE(value)->value);
+                        break;
+                    }
+
+                    case PrimitiveType::STRING:
+                    {
+                        std::cout << std::get<PommeString*>(AS_PRIMITIVE(value)->value)->value->chars;
+                        break;
+                    }
+                }
                 break;
         }
     }
@@ -947,21 +1027,19 @@ namespace Pomme
 
         if (name->chars == "int")
         {
-            klass->classType = ClassType::INT;
             intClass = klass;
         }
         else if (name->chars == "float")
         {
-            klass->classType = ClassType::FLOAT;
             floatClass = klass;
         }
         else if (name->chars == "bool")
         {
-            klass->classType = ClassType::BOOL;
+            boolClass = klass;
         }
-        else
+        else if (name->chars == "string")
         {
-            klass->classType = ClassType::CLASS;
+            stringClass = klass;
         }
 
         return klass;

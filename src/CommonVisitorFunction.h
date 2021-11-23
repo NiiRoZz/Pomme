@@ -6,11 +6,16 @@
 #include <string>
 #include <Node.h>
 
-class CommonVisitorFunction {
-public:
-    static std::string getParametersType(Pomme::Node* node);
-    static std::string getTypeName(Pomme::Node* node);
-};
+namespace Pomme
+{
+    class CommonVisitorFunction
+    {
+    public:
+        static std::string getParametersType(Pomme::Node* node);
+        static std::string getTypeName(Pomme::Node* node);
 
+        static bool isNativeType(const std::string& name);
+    };
+}
 
 #endif //POMME_COMMONVISITORFUNCTION_H

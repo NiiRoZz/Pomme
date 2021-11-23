@@ -15,6 +15,7 @@ namespace Pomme
     , localCount(0)
     , scopeDepth(0)
     , m_InClass(false)
+    , m_InNativeClass(false)
     , m_InMethod(false)
 	{
 	}
@@ -66,16 +67,12 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeInt *node, void * data) 
     {
-        emitByte(AS_OPCODE(OpCode::OP_INT));
-        emit64Bits(node->m_Value);
+        emitInt(node->m_Value);
     }
 
     void CompilerVisitor::visit(ASTpommeFloat *node, void * data) 
     {
-        emitByte(AS_OPCODE(OpCode::OP_FLOAT));
-        std::cout << "sizeof(double) " << sizeof(double) << std::endl;
-        assert(sizeof(double) == 8);
-        emit64Bits(node->m_Value);
+        emitFloat(node->m_Value);
     }
 
     void CompilerVisitor::visit(ASTpommeString *node, void * data) 
@@ -452,10 +449,11 @@ namespace Pomme
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
 
         m_InClass = true;
+        m_InNativeClass = CommonVisitorFunction::isNativeType(name);
 
         node->jjtChildAccept(1, this, nullptr);
 
-        m_InClass = false;
+        m_InNativeClass = m_InClass = false;
 
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
@@ -484,7 +482,14 @@ namespace Pomme
 
         uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(identMethod.c_str(), identMethod.length())));
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodNative())));
+        if (m_InNativeClass)
+        {
+            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodPrimitiveNative())));
+        }
+        else
+        {
+            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodNative())));
+        }
         
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
         emit16Bits(node->index);
@@ -666,6 +671,7 @@ namespace Pomme
         //We are in class and calling a method of this class without the "this" prefix
         else if (node->methodCall)
         {
+            std::cout << "methodCall" << std::endl;
             namedVariable("this", false);
 
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
@@ -705,16 +711,24 @@ namespace Pomme
         emitByte(val & 0xff);
     }
 
-    void CompilerVisitor::emit64Bits(uint64_t val)
+    void CompilerVisitor::emit64Bits(uint8_t* val)
     {
-        emitByte((val >> 56) & 0xFF);
-        emitByte((val >> 48) & 0xFF);
-        emitByte((val >> 40) & 0xFF);
-        emitByte((val >> 32) & 0xFF);
-        emitByte((val >> 24) & 0xFF);
-        emitByte((val >> 16) & 0xFF);
-        emitByte((val >> 8) & 0xFF);
-        emitByte((val >> 0) & 0xFF);
+        for (int i = 0; i < 8; ++i)
+        {
+            emitByte(val[i]);
+        }
+    }
+
+    void CompilerVisitor::emitInt(uint64_t val)
+    {
+        emitByte(AS_OPCODE(OpCode::OP_INT));
+        emit64Bits(reinterpret_cast<uint8_t*>(&val));
+    }
+
+    void CompilerVisitor::emitFloat(double val)
+    {
+        emitByte(AS_OPCODE(OpCode::OP_FLOAT));
+        emit64Bits(reinterpret_cast<uint8_t*>(&val));
     }
 
 	void CompilerVisitor::endCompiler()
@@ -764,7 +778,11 @@ namespace Pomme
     {
         if (typeName == "int")
         {
-
+            emitInt(0);
+        }
+        else if (typeName == "float")
+        {
+            emitFloat(0.0);
         }
         else
         {
@@ -814,6 +832,8 @@ namespace Pomme
             if (method == nullptr) return false; 
 
             assert(!assign);
+
+            std::cout << "emitMethod index : " << method->index << std::endl;
 
             emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
             emit16Bits(method->index);
@@ -911,6 +931,8 @@ namespace Pomme
     void CompilerVisitor::binaryOperator(SimpleNode* node, uint16_t index, bool native)
     {
         node->jjtChildAccept(0, this, nullptr);
+
+        std::cout << "binaryOperator index : " << index << std::endl;
 
         emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
         emit16Bits(index);
