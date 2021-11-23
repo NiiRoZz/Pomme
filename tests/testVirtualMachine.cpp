@@ -34,6 +34,33 @@ void defineStdNative(VirtualMachine& vm)
 		return OBJ_VAL(vm.newInt(std::get<int64_t>(primitive->value) + std::get<int64_t>(rhs->value)));
 	}));
 
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+		assert(argCount == 1);
+        assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+
+		ObjPrimitive* rhs = AS_PRIMITIVE(args[0]);
+		
+		return OBJ_VAL(vm.newInt(std::get<int64_t>(primitive->value) - std::get<int64_t>(rhs->value)));
+	}));
+
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+		assert(argCount == 1);
+        assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+
+		ObjPrimitive* rhs = AS_PRIMITIVE(args[0]);
+		
+		return OBJ_VAL(vm.newFloat((double) std::get<int64_t>(primitive->value) + std::get<double>(rhs->value)));
+	}));
+
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+		assert(argCount == 1);
+        assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+
+		ObjPrimitive* rhs = AS_PRIMITIVE(args[0]);
+		
+		return OBJ_VAL(vm.newFloat((double) std::get<int64_t>(primitive->value) - std::get<double>(rhs->value)));
+	}));
+
 	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
         assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
@@ -105,7 +132,7 @@ TEST(TEST_VM, GlobalNativeTest)
 {
 	TEST_VM_TEST("native float t(int a, int b, int c, float d); void f() { print(t(10, 20, 30, 40.5)); };\n");
 
-	vm.linkGlobalNative(vm.getFunctionName("t", "int", "int", "int", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int", "int", "int", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		std::cout << "From native argcount : " << argCount << std::endl; 
 
 		for (int i = 0; i < argCount; ++i)
@@ -115,7 +142,7 @@ TEST(TEST_VM, GlobalNativeTest)
 		}
 	
 		return OBJ_VAL(vm.newFloat(500.5));
-	});
+	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -304,6 +331,25 @@ TEST(TEST_VM, ClassLinkMethodInstanceTest)
 	}));
 
 	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {OBJ_VAL(vm.newFloat(510.23))});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
+{
+	TEST_VM_TEST("native void t(float a, float b); void f() { t(10 + 40.5, 10 - 40.5); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 2);
+	
+		EXPECT_EQ(std::get<double>(AS_PRIMITIVE(args[0])->value), 50.5);
+		EXPECT_EQ(std::get<double>(AS_PRIMITIVE(args[1])->value), -30.5);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
