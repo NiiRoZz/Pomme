@@ -24,13 +24,14 @@ namespace Pomme
         public:
 
             FunctionClass(std::string  returnType, std::string  functionName,std::string  functionIdent,
-                          std::unordered_set<std::string>  parameters, std::unordered_set<std::string>  keywords, int index)
+                          std::unordered_set<std::string>  parameters, std::unordered_set<std::string>  keywords, int index, bool native)
             : returnType(std::move(returnType)),
             functionName(std::move(functionName)),
             functionIdent(std::move(functionIdent)),
             parameters(std::move(parameters)),
             keywords(std::move(keywords)),
-            index(index)
+            index(index),
+            native(native)
             {
             }
 
@@ -41,6 +42,7 @@ namespace Pomme
             std::unordered_set<std::string> keywords;
             std::unordered_map<std::string, std::string> variables;
             uint16_t index = 0u;
+            bool native = false;
 
             friend std::ostream & operator<<(std::ostream & str, const FunctionClass & klass)
             {
@@ -214,11 +216,12 @@ namespace Pomme
             }
 
             node->index = functionClass->index;
+            node->native = functionClass->native;
             if (returnType != nullptr) *returnType = functionClass->returnType;
         }
 
         void visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords);
-        void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent,
+        void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent, bool native,
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
         std::unordered_set<std::string> buildSignature(ASTheaders *headers);

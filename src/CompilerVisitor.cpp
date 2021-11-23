@@ -342,13 +342,13 @@ namespace Pomme
     void CompilerVisitor::visit(ASTpommeAdd *node, void * data) 
     {
         //TODO native
-        binaryOperator(node, node->index, true);
+        binaryOperator(node, node->index, node->native);
     }
 
     void CompilerVisitor::visit(ASTpommeMinus *node, void * data) 
     {
         //TODO native
-        binaryOperator(node, node->index, true);
+        binaryOperator(node, node->index, node->native);
     }
 
     void CompilerVisitor::visit(ASTpommeShiftR *node, void * data) 
@@ -362,7 +362,7 @@ namespace Pomme
     void CompilerVisitor::visit(ASTpommeMult *node, void * data) 
     {
         //TODO native
-        binaryOperator(node, node->index, true);
+        binaryOperator(node, node->index, node->native);
     }
 
     void CompilerVisitor::visit(ASTpommeDiv *node, void * data) 
@@ -468,9 +468,13 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeMethode *node, void * data)
     {
-        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+        auto* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+        auto* identOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(2));
+
+        std::string ident = (identFunc != nullptr) ? identFunc->m_Identifier : identOp->m_Identifier;
+        std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
         
-        method(node, name, node->index, false);
+        method(node, ident, identMethod, node->index, false);
     }
 
     void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
@@ -637,7 +641,7 @@ namespace Pomme
     {
         auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
         
-        method(node, name, node->index, true);
+        method(node, name->m_Identifier, name->m_MethodIdentifier, node->index, true);
     }
 
     void CompilerVisitor::visit(ASTpommeDestructor *node, void * data)
@@ -881,17 +885,16 @@ namespace Pomme
         }
     }
 
-    void CompilerVisitor::method(SimpleNode *node, ASTident *name, uint16_t index, bool constructor)
+    void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor)
     {
-        std::string& ident = name->m_MethodIdentifier;
-        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(ident.c_str(), ident.length())));
+        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())));
         
         m_InMethod = true;
 
         ObjFunction* currentFunction = function;
         function = m_Vm.newFunction();
 
-        function->name = m_Vm.copyString(name->m_Identifier.c_str(), name->m_Identifier.length());
+        function->name = m_Vm.copyString(ident.c_str(), ident.length());
 
         beginScope(); 
 

@@ -355,4 +355,22 @@ TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, CustomOperatorPlusTest)
+{
+	TEST_VM_TEST("native void t(float a); class Test { int x = 20; float operator+(float y) {return x + y;}; }; void f() {Test oui = new Test(); t(oui + 10.0); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<double>(AS_PRIMITIVE(args[0])->value), 30.0);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 #undef TEST_VM_TEST

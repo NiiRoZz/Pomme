@@ -115,7 +115,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent,
+    void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent, bool native,
                                                std::unordered_set<std::string> parameters)
     {
         std::cout << "Adding global function " << functionName << " with type " << functionType << " with ident " << functionIdent << std::endl;
@@ -133,7 +133,7 @@ namespace Pomme
         }else
         {
             FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
-                                   std::unordered_set<std::string>(),globalFunctionsMap.size());
+                                   std::unordered_set<std::string>(),globalFunctionsMap.size(), native);
             globalFunctionsMap.emplace(functionIdent, function);
         }
     }
@@ -226,7 +226,7 @@ namespace Pomme
             if(access == methods.end())
             {
                 FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
-                                   std::move(keywords), methods.size());
+                                   std::move(keywords), methods.size(), isNative);
                 methods.emplace(functionName, function);
                 std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
             }else
@@ -895,6 +895,7 @@ namespace Pomme
                     ),
                     functionName,
                     functionIdent,
+                    false,
                     parameters
                 );
                 break;
@@ -937,6 +938,7 @@ namespace Pomme
                     ),
                     functionName,
                     functionIdent,
+                    true,
                     parameters
                 );
 
@@ -969,6 +971,8 @@ namespace Pomme
     {
         std::string type;
         node->jjtChildrenAccept(this, &type);
+
+        //TODO: check if it's equal to the return type of the current function
     }
 
     void TypeCheckerVisitor::visit(ASTpommeWhile *node, void * data)
