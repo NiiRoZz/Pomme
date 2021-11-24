@@ -14,7 +14,7 @@ using namespace Pomme;
 	std::string s = testString;\
 	VirtualMachine vm;\
     Compiler compiler(vm);\
-	compiler.addFile(std::string(POMME_BIN_PATH) + "/std.pomme");\
+	compiler.addFile(std::string(POMME_BIN_PATH) + "std.pomme");\
 	compiler.addString(s);\
 	ObjFunction *function = compiler.compile(true);\
 	EXPECT_TRUE(function != nullptr);\
