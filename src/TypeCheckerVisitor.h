@@ -225,8 +225,11 @@ namespace Pomme
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
         std::unordered_set<std::string> buildSignature(ASTheaders *headers);
-        std::string getExpTypes(Pomme::Node* node);
+        bool getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className);
+        bool getExpType(ASTlistexp* node, ASTaccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className);
         std::unordered_set<std::string> buildKeyword(ASTidentFuncs *node);
+
+        bool checkAccessMethod(ASTaccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
 
         friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass)
         {

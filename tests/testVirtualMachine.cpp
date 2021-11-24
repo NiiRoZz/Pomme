@@ -61,6 +61,12 @@ void defineStdNative(VirtualMachine& vm)
 		return OBJ_VAL(vm.newFloat((double) std::get<int64_t>(primitive->value) - std::get<double>(rhs->value)));
 	}));
 
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+		assert(argCount == 0);
+		
+		return OBJ_VAL(vm.newBool(std::get<int64_t>(primitive->value)));
+	}));
+
 	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
         assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
@@ -363,6 +369,51 @@ TEST(TEST_VM, CustomOperatorPlusTest)
 		EXPECT_TRUE(argCount == 1);
 	
 		EXPECT_EQ(std::get<double>(AS_PRIMITIVE(args[0])->value), 30.0);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, boolTest)
+{
+	TEST_VM_TEST("native void t(bool b); void f() {t(true); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<bool>(AS_PRIMITIVE(args[0])->value), true);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, operatorBoolTest)
+{
+	TEST_VM_TEST("native void t(bool b, int c); native void h(bool b); void f() { t(10, 10); h(0); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 2);
+	
+		EXPECT_EQ(std::get<bool>(AS_PRIMITIVE(args[0])->value), true);
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[1])->value), 10);
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<bool>(AS_PRIMITIVE(args[0])->value), false);
 
 		return NULL_VAL;
 	}));

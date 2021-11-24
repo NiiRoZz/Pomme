@@ -420,12 +420,12 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeTrue *node, void * data) 
     {
-        emitByte(AS_OPCODE(OpCode::OP_TRUE));
+        emitBytes(AS_OPCODE(OpCode::OP_BOOL), 1u);
     }
 
     void CompilerVisitor::visit(ASTpommeFalse *node, void * data) 
     {
-        emitByte(AS_OPCODE(OpCode::OP_FALSE));
+        emitBytes(AS_OPCODE(OpCode::OP_BOOL), 0u);
     }
 
     void CompilerVisitor::visit(ASTpommeNull *node, void * data) 
@@ -691,6 +691,18 @@ namespace Pomme
         {
             argCount++;
             exp->jjtGetChild(0)->jjtAccept(this, nullptr);
+
+            if (exp->convert)
+            {
+                if (exp->convertTo == "bool")
+                {
+                    emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+                    emit16Bits(exp->index);
+                    emitByte(exp->native);
+
+                    emitBytes(AS_OPCODE(OpCode::OP_CALL), 0);
+                }
+            }
 
             exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
         }

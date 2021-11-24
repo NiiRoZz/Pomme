@@ -6,11 +6,14 @@
 #include "MyErrorHandler.h"
 
 #include <iostream>
+#include <fstream>
 
 using namespace Pomme;
 
 #define TEST_TYPECHECKER_TEST(testString) \
-	std::string s = testString;\
+    std::ifstream t(std::string(POMME_BIN_PATH) + "std.pomme");\
+	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());\
+	std::string s = str + testString;\
 	CharStream charStream(s.c_str(), s.size() - 1, 1, 1);\
 	MyErrorHandler *myErrorHandler = new MyErrorHandler();\
 	PommeLexerTokenManager scanner(&charStream);\
@@ -703,7 +706,7 @@ TEST(TEST_TYPECHECKER, TestCreateNotCorrectClass)
 
 TEST(TEST_TYPECHECKER, TestOperatorPlus)
 {
-    TEST_TYPECHECKER_TEST("class int { int operator+(int rhs) { return 0 + rhs;  }; };  class test { void meth() { int a = 5 + 5; }; }; \n");
+    TEST_TYPECHECKER_TEST("class test { void meth() { int a = 5 + 5; }; }; \n");
 
     std::cout << text << std::endl;
 

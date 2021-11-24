@@ -450,6 +450,13 @@ namespace Pomme
                     break;
                 }
 
+                case AS_OPCODE(OpCode::OP_BOOL):
+                {
+                    bool value = static_cast<bool>(READ_BYTE());
+                    push(OBJ_VAL(newBool(value)));
+                    break;
+                }
+
                 case AS_OPCODE(OpCode::OP_PRINT):
                 {
 					printValue(pop());
@@ -1087,10 +1094,6 @@ namespace Pomme
                 return simpleInstruction("OP_NEGATE", offset);
             case AS_OPCODE(OpCode::OP_NULL):
                 return simpleInstruction("OP_NULL", offset);
-            case AS_OPCODE(OpCode::OP_TRUE):
-                return simpleInstruction("OP_TRUE", offset);
-            case AS_OPCODE(OpCode::OP_FALSE):
-                return simpleInstruction("OP_FALSE", offset);
             case AS_OPCODE(OpCode::OP_PRINT):
                 return simpleInstruction("OP_PRINT", offset);
             case AS_OPCODE(OpCode::OP_POP):

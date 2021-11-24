@@ -292,25 +292,104 @@ namespace Pomme
         return parameters;
     }
 
-    std::string TypeCheckerVisitor::getExpTypes(Pomme::Node* node)
+    bool TypeCheckerVisitor::getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className)
     {
-        auto *functionParameters = dynamic_cast<ASTlistexp*>(node);
+        auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+    
         std::string typeExp = "";
+        return getExpType(functionParameters, node, variableType, functionIdent, typeExp, className);
+    }
 
-        while(functionParameters != nullptr)
+    bool TypeCheckerVisitor::getExpType(ASTlistexp* node, ASTaccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className)
+    {
+        if (node == nullptr)
         {
-            std::string type;
-            functionParameters->jjtGetChild(0)->jjtAccept(this, &type);
-            typeExp += type + HEADER_FUNC_SEPARATOR;
-            functionParameters = dynamic_cast<ASTlistexp*>(functionParameters->jjtGetChild(1));
+            std::cout << functionIdent << current << " className : " << className << std::endl;
+            //global scope
+            if (className == "")
+            {
+                auto ut = globalFunctionsMap.find(functionIdent + current);
+                if (ut != globalFunctionsMap.end())
+                {
+                    functionIdent += current;
+                    accessNode->name = functionIdent;
+                    accessNode->global = true;
+                    accessNode->native = ut->second.native;
+                    accessNode->index = ut->second.index;
+                    if (variableType != nullptr) *variableType = ut->second.returnType;
+                    return true;
+                }
+            }
+            else
+            {
+                auto it = classMap.find(className);
+                if (it != classMap.end())
+                {
+                    FunctionClass* function = it->second.getMethod(functionIdent + current);
+                    if (function != nullptr)
+                    {
+                        functionIdent += current;
+                        accessNode->global = false;
+                        accessNode->native = function->native;
+                        accessNode->index = function->index;
+                        accessNode->methodCall = variableType == nullptr || *variableType == "";
+                        if (variableType != nullptr) *variableType = function->returnType;
+                        return true;
+                    }
+                    else
+                    {
+                        auto ut = globalFunctionsMap.find(functionIdent + current);
+                        if (ut != globalFunctionsMap.end())
+                        {
+                            functionIdent += current;
+                            accessNode->global = true;
+                            accessNode->native = ut->second.native;
+                            accessNode->index = ut->second.index;
+                            *variableType = ut->second.returnType;
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
-        return typeExp;
+        std::string next = current;
+
+        std::string type;
+        node->jjtGetChild(0)->jjtAccept(this, &type);
+
+        current += type + HEADER_FUNC_SEPARATOR;
+        
+        if (getExpType(dynamic_cast<ASTlistexp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, current, className))
+        {
+            node->convert = false;
+            return true;
+        }
+
+        auto it = classMap.find(type);
+        std::cout << "type : " << type << std::endl;
+        if (it == classMap.end()) assert (false);
+
+        if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
+        {
+            next += std::string("bool") + HEADER_FUNC_SEPARATOR;
+            if (getExpType(dynamic_cast<ASTlistexp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, next, className))
+            {
+                node->convert = true;
+                node->convertTo = "bool";
+                node->index = fnc->index;
+                node->native = fnc->native;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     std::unordered_set<std::string> TypeCheckerVisitor::buildKeyword(ASTidentFuncs *node)
     {
-
         std::unordered_set<std::string> keywords;
 
         auto* nodeStatic = dynamic_cast<ASTpommeStatic*>(node->jjtGetChild(0));
@@ -1362,24 +1441,12 @@ namespace Pomme
             return;
         }
 
-        auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
-        std::string typeExp = getExpTypes(functionParameters);
-        std::string functionIdent = className + NAME_FUNC_SEPARATOR + typeExp;
+        node->foundConstructor = false;
 
-        auto ot = it->second.methods.find(functionIdent);
-
-        if (ot == it->second.methods.end())
-        {
-            node->foundConstructor = false;
-        }
-        else
-        {
-            node->foundConstructor = true;
-            node->index = ot->second.index;
-        }
+        //TODO: find constructor
 
         if (data == nullptr) return;
-        
+            
         auto* variableType = static_cast<std::string*>(data);
         *variableType = className;
     }
@@ -1436,108 +1503,27 @@ namespace Pomme
 
         auto *identNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
         std::string functionName = identNode->m_Identifier;
+        std::string functionIdent = identNode->m_Identifier + NAME_FUNC_SEPARATOR;
 
-        auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
-        std::string typeExp = getExpTypes(functionParameters);
-        std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + typeExp;
-
-        std::cout << "functionIdent : " << functionIdent << " variableType : " << variableType << " class_context : " << class_context << std::endl;
-
-        //std::cout << "class_name_caller : " << class_name_caller << " " << ((class_name_caller != nullptr) ? *class_name_caller : "") << std::endl;
-
-        node->name = functionIdent;
+        std::string className;
 
         if(variableType != nullptr && *variableType != "")
         {
-            auto it = classMap.find(*variableType);
-            if (it != classMap.end())
-            {
-                auto ot = it->second.methods.find(functionIdent);
-                if (ot != it->second.methods.end())
-                {
-                    node->global = false;
-                    node->index = ot->second.index;
-                    *variableType = class_name;
-                    std::cout << " INDEX  == " << node->index << std::endl;
-                }
-                else
-                {
-                    auto pt = it->second.nativeMethods.find(functionIdent);
-                    if (pt != it->second.nativeMethods.end())
-                    {
-                        node->index = pt->second.index;
-                        node->native = true;
-                        *variableType = class_name;
-                        std::cout << " NATIVE INDEX  == " << node->index << std::endl;
-                    }
-                    else
-                    {
-                        errors.push_back("No function " + functionName + " implemented in class " + *variableType);
-                        return;
-                    }
-                }
-            }
+            className = *variableType;
         }
-        else if(class_context)
+        else if (class_context)
         {
-            auto it = classMap.find(class_name);
-            if (it != classMap.end())
-            {
-                auto ot = it->second.methods.find(functionIdent);
-                if (ot != it->second.methods.end())
-                {
-                    node->global = false;
-                    node->index = ot->second.index;
-                    node->methodCall = true;
-                    if( variableType != nullptr)
-                    {
-                        *variableType = class_name;
-                    }
-                    std::cout << " INDEX  == " << node->index << std::endl;
-                }
-                else
-                {
-                    auto pt = it->second.nativeMethods.find(functionIdent);
-                    if (pt != it->second.nativeMethods.end())
-                    {
-                        node->index = pt->second.index;
-                        node->native = true;
-                        node->methodCall = true;
-                        if( variableType != nullptr)
-                        {
-                            *variableType = class_name;
-                        }
-                        std::cout << " NATIVE INDEX  == " << node->index << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "global scope 1 ?" << std::endl;
-                        auto ut = globalFunctionsMap.find(functionIdent);
-                        if (ut == globalFunctionsMap.end())
-                        {
-                            errors.push_back("No function " + functionName + " implemented in file ");
-                            return;
-                        }
-
-                        node->global = true;
-                        if( variableType != nullptr)
-                        {
-                            *variableType = ut->second.returnType;
-                        }
-                    }
-                }
-            }
+            className = class_name;
         }
-        else // global scope
+        else
         {
-            auto ut = globalFunctionsMap.find(functionIdent);
-            if( ut == globalFunctionsMap.end())
-            {
-                errors.push_back("No global function " + functionName + " implemented in file ");
-                return;
-            }
+            className = "";
+        }
 
-            node->global = true;
+        if (!getMethodType(node, variableType, functionIdent, className))
+        {
+            //TODO: error
+            errors.push_back("can't find method");
         }
     }
 
