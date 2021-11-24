@@ -14,7 +14,7 @@ using namespace Pomme;
 	std::string s = testString;\
 	VirtualMachine vm;\
     Compiler compiler(vm);\
-	compiler.addFile("std.pomme");\
+	compiler.addFile(std::string(POMME_BIN_PATH) + "/std.pomme");\
 	compiler.addString(s);\
 	ObjFunction *function = compiler.compile(true);\
 	EXPECT_TRUE(function != nullptr);\
@@ -82,6 +82,8 @@ void defineStdNative(VirtualMachine& vm)
 
 TEST(TEST_VM, BasicTest)
 {
+	std::cout << POMME_BIN_PATH << std::endl;
+
     TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; print(a + 20.0 + b); \n };\n");
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});

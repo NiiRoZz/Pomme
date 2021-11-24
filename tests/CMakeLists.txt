@@ -18,6 +18,8 @@ target_include_directories(pomme_tests
     ${JAVACC_GENERATED_SRC_DIR}
 )
 
+target_compile_definitions(pomme_tests PRIVATE POMME_BIN_PATH="${CMAKE_CURRENT_BINARY_DIR}/../")
+
 target_link_libraries(pomme_tests
   PRIVATE
     Pomme
