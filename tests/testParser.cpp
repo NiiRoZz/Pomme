@@ -23,7 +23,7 @@ using namespace Pomme;
 	tree->dump("");\
 	std::string text = buffer.str();\
 	std::cout.rdbuf(old);\
-	std::ifstream t(file);\
+	std::ifstream t(std::string(POMME_BIN_PATH) + file);\
 	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());\
 	std::cout << "File : " << str << std::endl;\
 	std::cout << "Text : " << text << std::endl;\
