@@ -686,12 +686,7 @@ namespace Pomme
         //We are in class and calling a method of this class without the "this" prefix
         else if (node->methodCall)
         {
-            std::cout << "methodCall" << std::endl;
             namedVariable("this", false);
-
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
-            emit16Bits(node->index);
-            emitByte(node->native);
         }
 
         uint8_t argCount = 0;
@@ -707,18 +702,32 @@ namespace Pomme
             {
                 if (exp->convertTo == "bool")
                 {
-                    emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+                    emitByte(AS_OPCODE(OpCode::OP_INVOKE));
                     emit16Bits(exp->index);
                     emitByte(exp->native);
-
-                    emitBytes(AS_OPCODE(OpCode::OP_CALL), 0);
+                    emitByte(0);
                 }
             }
 
             exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
         }
 
-        emitBytes(AS_OPCODE(OpCode::OP_CALL), argCount);
+        if (node->methodCall)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emit16Bits(node->index);
+            emitByte(node->native);
+            emitByte(argCount);
+            return;
+        }
+        
+        if (node->global)
+        {
+            emitBytes(AS_OPCODE(OpCode::OP_CALL), argCount);
+            return;
+        }
+
+        *static_cast<int*>(data) = argCount;
     }
 
 	void CompilerVisitor::emitByte(uint8_t byte)
@@ -862,11 +871,14 @@ namespace Pomme
 
             std::cout << "emitMethod index : " << method->index << std::endl;
 
-            emitByte(AS_OPCODE(OpCode::OP_GET_METHOD));
+            int argCount;
+
+            method->jjtAccept(this, &argCount);
+
+            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
             emit16Bits(method->index);
             emitByte(method->native);
-
-            method->jjtAccept(this, &assign);
+            emitByte(argCount);
 
             return true;
         };
@@ -992,8 +1004,7 @@ namespace Pomme
         //LOCALS
         for (int i = localCount - 1; i >= 0; i--)
         {
-            const Local& local = locals[i];
-            if (name == local.name)
+            if (name == locals[i].name)
             {
                 emitBytes(AS_OPCODE(op), i);
                 return;

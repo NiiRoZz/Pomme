@@ -369,7 +369,6 @@ namespace Pomme
         }
 
         auto it = classMap.find(type);
-        std::cout << "type : " << type << std::endl;
         if (it == classMap.end()) assert (false);
 
         if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
