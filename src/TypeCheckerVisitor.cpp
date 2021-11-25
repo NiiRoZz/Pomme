@@ -440,17 +440,15 @@ namespace Pomme
             case 2u:
             {
                 auto* variableType = static_cast<std::string*>(data);
-                std::string currentClassName = "";
-                //Special case, where we had the type of return of left expression
-                if (variableType != nullptr && *variableType != "")
-                {
-                    currentClassName = *variableType;
-                }
-                //Special case, where we don't have the type of return, and we are not in class_context
-                else if (class_context)
-                {
-                    currentClassName = class_name;
-                }
+                std::string currentClassName = [&] () {
+                    //Special case, where we had the type of return of left expression
+                    if (variableType != nullptr && *variableType != "") return (*variableType).c_str();
+
+                    //Special case, where we don't have the type of return, and we are not in class_context
+                    if (class_context) return class_name.c_str();
+
+                    return "";
+                }();     
                 
                 std::cout << "ASTident identifier : " << node->m_Identifier << " currentClassName : " << currentClassName << std::endl;
 
@@ -723,7 +721,14 @@ namespace Pomme
             {
                 std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
                 auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(1));
-                std::string functionType;
+                std::string functionType = [&] () {
+                    if(type == nullptr)
+                    {
+                        return "void";
+                    }
+
+                    return type->m_Identifier.c_str();
+                }();
                 auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
                 auto* nameOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(2));
                 assert(name != nullptr || nameOp != nullptr);
@@ -756,14 +761,6 @@ namespace Pomme
                             errors.push_back("Overriding method " + functionName + " while your parent class don't have this method defined");
                         }
                     }
-                }
-
-                if(type == nullptr)
-                {
-                    functionType = "void";
-                }else
-                {
-                    functionType = type->m_Identifier;
                 }
 
                 auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
@@ -809,7 +806,14 @@ namespace Pomme
                 }
 
                 auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(2));
-                std::string functionType;
+                std::string functionType = [&] () {
+                    if(type == nullptr)
+                    {
+                        return "void";
+                    }
+
+                    return type->m_Identifier.c_str();
+                }();
                 auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(3));
                 auto* nameOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(3));
                 assert(name != nullptr || nameOp != nullptr);
@@ -835,14 +839,6 @@ namespace Pomme
                 {
                     errors.push_back("you can't override a native method");
                     return;
-                }
-
-                if(type == nullptr)
-                {
-                    functionType = "void";
-                }else
-                {
-                    functionType = type->m_Identifier;
                 }
 
                 auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(4)); // headers
@@ -1505,20 +1501,19 @@ namespace Pomme
         std::string functionName = identNode->m_Identifier;
         std::string functionIdent = identNode->m_Identifier + NAME_FUNC_SEPARATOR;
 
-        std::string className;
+        std::string className = [&] () {
+            if(variableType != nullptr && *variableType != "")
+            {
+                return (*variableType).c_str();
+            }
+            
+            if (class_context)
+            {
+                return class_name.c_str();
+            }
 
-        if(variableType != nullptr && *variableType != "")
-        {
-            className = *variableType;
-        }
-        else if (class_context)
-        {
-            className = class_name;
-        }
-        else
-        {
-            className = "";
-        }
+            return "";
+        }();
 
         if (!getMethodType(node, variableType, functionIdent, className))
         {

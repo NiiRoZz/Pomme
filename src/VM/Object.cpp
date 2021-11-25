@@ -38,7 +38,9 @@ namespace Pomme
 
     PommeString::PommeString(VirtualMachine& vm, ObjInstance* instance)
     {
-        instance->linkMethodNative(vm.getFunctionName("operator+", "int"), std::bind(&PommeString::pommeOperatorPlus, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+        instance->linkMethodNative(vm.getFunctionName("operator+", "int"), [&] (VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args) {
+            return pommeOperatorPlus(vm, argcount, instance, args);
+        });
     }
 
     Value PommeString::pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args)
