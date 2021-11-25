@@ -111,6 +111,9 @@ namespace Pomme
 
 		bool isFalsey(Value value);
 
+		Obj* getMethod(int peekDepth, uint16_t slot, bool native);
+
+		bool invoke(int argCount, uint16_t slot, bool native);
 		bool callValue(const Value& callee, int argCount);
 		bool call(ObjFunction* function, int argCount);
 

@@ -152,6 +152,8 @@ namespace Pomme
 
 		void accessProperty(Node* left, Node* middle, Node* right, void * data);
 		void method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor);
+		
+		void unaryOperator(SimpleNode *node, uint16_t index, bool native);
 		void binaryOperator(SimpleNode *node, uint16_t index, bool native);
 
 		int addLocal(const std::string& name);

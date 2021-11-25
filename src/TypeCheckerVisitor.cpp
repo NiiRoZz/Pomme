@@ -1063,8 +1063,39 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeIf *node, void * data)
     {
-        current_scopes++;
+        std::string type;
+        node->jjtChildAccept(0, this, &type);
 
+        node->convert = false;
+        node->testNull = false;
+
+        if (type != "bool")
+        {
+            auto it = classMap.find(type);
+            if (it == classMap.end())
+            {
+                errors.push_back("Can't find class name : " + type);
+                return;
+            }
+
+            if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
+            {
+                node->convert = true;
+                node->index = fnc->index;
+                node->native = fnc->native;
+            }
+            else
+            {
+                node->testNull = true;
+            }
+        }
+
+        current_scopes++;
+        node->jjtChildAccept(1, this, data);
+        current_scopes--;
+
+        current_scopes++;
+        node->jjtChildAccept(2, this, data);
         current_scopes--;
     }
 
@@ -1410,6 +1441,7 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeUnary *node, void * data)
     {
+        visitUnaryOperator(node, "operator-", static_cast<std::string*>(data));
     }
 
     void TypeCheckerVisitor::visit(ASTpommeNot *node, void * data)

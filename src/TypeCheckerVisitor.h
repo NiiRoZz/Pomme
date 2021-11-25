@@ -172,6 +172,39 @@ namespace Pomme
         int current_scopes = 0;
 
         template<typename T>
+        void visitUnaryOperator(T* node, const std::string& name, std::string* returnType)
+        {
+            std::string type;
+            node->jjtChildAccept(0, this, &type);
+
+            if (type == "")
+            {
+                errors.push_back("Can't find variable type of left expression");
+                return;
+            }
+
+            auto it = classMap.find(type);
+            if (it == classMap.end())
+            {
+                errors.push_back("Can't find class name : " + type);
+                return;
+            }
+
+            std::string nameFunc = name + NAME_FUNC_SEPARATOR;
+
+            FunctionClass* functionClass = it->second.getMethod(nameFunc);
+            if (functionClass == nullptr)
+            {
+                errors.push_back("Can't find method " + nameFunc);
+                return;
+            }
+
+            node->index = functionClass->index;
+            node->native = functionClass->native;
+            if (returnType != nullptr) *returnType = functionClass->returnType;
+        }
+
+        template<typename T>
         void visitBinaryOperator(T* node, const std::string& name, std::string* returnType)
         {
             std::string leftType;

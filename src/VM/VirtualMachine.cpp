@@ -432,7 +432,16 @@ namespace Pomme
                 }
 
                 case AS_OPCODE(OpCode::OP_NULL):        push(NULL_VAL); break;
-				//case AS_OPCODE(OpCode::OP_NEGATE): 		push(NUMBER_VAL(-AS_NUMBER(pop()))); break;
+
+                case AS_OPCODE(OpCode::OP_TEST_NOT_NULL):
+                {
+                    bool isNull = IS_NULL(peek(0));
+                    Value value = OBJ_VAL(newBool(!isNull));
+
+                    pop(); //pop obj/null value
+                    push(value);
+                    break;
+                }
 
 				case AS_OPCODE(OpCode::OP_POP):			pop(); break;
 
@@ -452,15 +461,14 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_BOOL):
                 {
-                    bool value = static_cast<bool>(READ_BYTE());
-                    push(OBJ_VAL(newBool(value)));
+                    push(OBJ_VAL(newBool(static_cast<bool>(READ_BYTE()))));
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_PRINT):
                 {
 					printValue(pop());
-                    printf("\n");
+                    std::cout << "\n";
                     break;
                 }
 
@@ -550,58 +558,24 @@ namespace Pomme
 
                     bool native = READ_BYTE();
 
-                    Obj* obj = nullptr;
-
-                    if (IS_INSTANCE(peek(0)))
-                    {
-                        ObjInstance* instance = AS_INSTANCE(peek(0));
-                        Value *method;
-
-                        if (native)
-                        {
-                            method = &instance->nativeMethods[slot];
-                        }
-                        else
-                        {
-                            method = &instance->klass->methods[slot];
-                        }
-
-                        assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
-
-                        ObjBoundMethod* bound = newBoundMethod(peek(0), method);
-                        obj = (Obj*) bound;
-                    }
-                    else if (IS_PRIMITIVE(peek(0)))
-                    {
-                        ObjPrimitive* primitive = AS_PRIMITIVE(peek(0));
-                        Value *method;
-
-                        if (native)
-                        {
-                            method = &primitive->klass->nativeMethods[slot];
-                        }
-                        else
-                        {
-                            method = &primitive->klass->methods[slot];
-                        }
-
-                        assert(IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method));
-                        ObjBoundMethod* bound = newBoundMethod(peek(0), method);
-                        obj = (Obj*) bound;
-                    }
-                    else
-                    {
-                        ObjClass* klass = AS_CLASS(peek(0));
-                        assert(IS_FUNCTION(klass->methods[slot]));
-
-                        ObjFunction* func = AS_FUNCTION(klass->methods[slot]);
-                        obj = (Obj*) func;
-                    }
-
-                    assert(obj != nullptr);
+                    Obj* obj = getMethod(0, slot, native);
 
                     pop(); // Instance or Class.
                     push(OBJ_VAL(obj));
+                    break;
+                }
+
+                case AS_OPCODE(OpCode::OP_INVOKE):
+                {
+                    uint16_t slot = READ_UINT16();
+                    bool native = READ_BYTE();
+                    int argCount = READ_BYTE();
+                    if (!invoke(argCount, slot, native))
+                    {
+                        return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    frame = &frames[frameCount - 1];
                     break;
                 }
 
@@ -635,12 +609,6 @@ namespace Pomme
                     }
 
                     frame = &frames[frameCount - 1];
-                    break;
-                }
-
-                case AS_OPCODE(OpCode::OP_INCR_POST):
-                {
-                    
                     break;
                 }
 
@@ -717,7 +685,8 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_NOT):
                 {
-                    //push(BOOL_VAL(isFalsey(pop())));
+                    assert(IS_PRIMITIVE(peek(0)) && AS_PRIMITIVE(peek(0))->primitiveType == PrimitiveType::BOOL);
+                    push(OBJ_VAL(newBool(!(std::get<bool>(AS_PRIMITIVE(peek(0))->value)))));
                     break;
                 }
 
@@ -818,62 +787,93 @@ namespace Pomme
 
     bool VirtualMachine::isFalsey(Value value)
     {
-        return IS_NULL(value);
+        if (IS_NULL(value)) return true;
+
+        assert(IS_PRIMITIVE(value) && AS_PRIMITIVE(value)->primitiveType == PrimitiveType::BOOL);
+
+        return !(std::get<bool>(AS_PRIMITIVE(value)->value));
+    }
+
+    Obj* VirtualMachine::getMethod(int peekDepth, uint16_t slot, bool native)
+    {
+        if (IS_INSTANCE(peek(peekDepth)))
+        {
+            ObjInstance* instance = AS_INSTANCE(peek(peekDepth));
+            Value *method = (native) ? &instance->nativeMethods[slot] : &instance->klass->methods[slot];
+
+            assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
+            return static_cast<Obj*>(newBoundMethod(peek(peekDepth), method));
+        }
+        
+        if (IS_PRIMITIVE(peek(peekDepth)))
+        {
+            ObjPrimitive* primitive = AS_PRIMITIVE(peek(peekDepth));
+            Value *method = (native) ? &primitive->klass->nativeMethods[slot] : &primitive->klass->methods[slot];
+
+            assert(IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method));
+            return static_cast<Obj*>(newBoundMethod(peek(peekDepth), method));
+        }
+
+        assert(AS_CLASS(peek(peekDepth)));
+
+        ObjClass* klass = AS_CLASS(peek(peekDepth));
+        assert(IS_FUNCTION(klass->methods[slot]));
+
+        return static_cast<Obj*>(AS_FUNCTION(klass->methods[slot]));
+    }
+
+    bool VirtualMachine::invoke(int argCount, uint16_t slot, bool native)
+    {
+        return callValue(OBJ_VAL(getMethod(argCount, slot, native)), argCount);
     }
 
     bool VirtualMachine::callValue(const Value& callee, int argCount)
     {
-        if (IS_OBJ(callee))
+        if (!IS_OBJ(callee)) return false;
+
+        switch (OBJ_TYPE(callee))
         {
-            switch (OBJ_TYPE(callee))
+            case ObjType::OBJ_BOUND_METHOD:
             {
-                case ObjType::OBJ_BOUND_METHOD:
+                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+
+                if (IS_FUNCTION(*bound->method))
                 {
-                    ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                    stackTop[-argCount - 1] = bound->receiver;
+                    return call(AS_FUNCTION(*bound->method), argCount);
+                }
 
-                    if (IS_FUNCTION(*bound->method))
-                    {
-                        stackTop[-argCount - 1] = bound->receiver;
-                        return call(AS_FUNCTION(*bound->method), argCount);
-                    }
-
-                    Value result;
-
+                Value result = [&] () {
                     if (IS_PRIMITIVE(bound->receiver))
                     {
                         MethodPrimitiveNativeFn native = AS_METHOD_PRIMITIVE_NATIVE(*bound->method);
                         assert(native);
-                        result = native(*this, argCount, AS_PRIMITIVE(bound->receiver), stackTop - argCount);
-                    }
-                    else
-                    {
-                        MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
-                        assert(native);
-                        result = native(*this, argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
+                        return native(*this, argCount, AS_PRIMITIVE(bound->receiver), stackTop - argCount);
                     }
 
-                    stackTop -= argCount + 1;
-                    push(result);
-                    
-                    return true;
-                }
+                    MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
+                    assert(native);
+                    return native(*this, argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
+                }();
 
-                case ObjType::OBJ_FUNCTION: 
-                    return call(AS_FUNCTION(callee), argCount);
+                stackTop -= argCount + 1;
+                push(result);
                 
-                case ObjType::OBJ_GLOBAL_NATIVE:
-                {
-                    GlobalNativeFn& native = AS_GLOBAL_NATIVE(callee);
-                    Value result = native(*this, argCount, stackTop - argCount);
-                    
-                    stackTop -= argCount + 1;
-                    push(result);
+                return true;
+            }
 
-                    return true;
-                }
+            case ObjType::OBJ_FUNCTION: 
+                return call(AS_FUNCTION(callee), argCount);
+            
+            case ObjType::OBJ_GLOBAL_NATIVE:
+            {
+                GlobalNativeFn& native = AS_GLOBAL_NATIVE(callee);
+                Value result = native(*this, argCount, stackTop - argCount);
+                
+                stackTop -= argCount + 1;
+                push(result);
 
-                default:
-                    break; // Non-callable object type.
+                return true;
             }
         }
 
@@ -882,15 +882,8 @@ namespace Pomme
 
     bool VirtualMachine::call(ObjFunction* function, int argCount)
     {
-        if (argCount != function->arity)
+        if (argCount != function->arity || frameCount == FRAMES_MAX)
         {
-            //runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
-            return false;
-        }
-
-        if (frameCount == FRAMES_MAX)
-        {
-            //runtimeError("Stack overflow.");
             return false;
         }
 
@@ -905,12 +898,13 @@ namespace Pomme
 
     void VirtualMachine::printValue(const Value& value)
     {
-        //TODO
-        switch (value.type)
+        if (value.type == ValueType::VAL_NULL)
         {
-            case ValueType::VAL_NULL: printf("null"); break;
-            case ValueType::VAL_OBJ: printObject(value); break;
+            std::cout << "null";
+            return;
         }
+
+        printObject(value);
     }
 
     void VirtualMachine::printObject(const Value& value)
@@ -930,9 +924,13 @@ namespace Pomme
                 std::cout << AS_INSTANCE(value)->klass->name->chars.c_str() << " instance";
                 break;
             case ObjType::OBJ_GLOBAL_NATIVE:
+                std::cout << "<global native fn>";
+                break;
             case ObjType::OBJ_METHOD_NATIVE:
+                std::cout << "<method native fn>";
+                break;
             case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE:
-                std::cout << "<native fn>";
+                std::cout << "<method primitive native fn>";
                 break;
             case ObjType::OBJ_STRING:
                 std::cout << AS_CSTRING(value);
@@ -1000,7 +998,6 @@ namespace Pomme
             klass->methodsIndices.emplace(name->chars, slot);
         }
 
-        
         pop();
     }
 
@@ -1094,15 +1091,17 @@ namespace Pomme
                 return simpleInstruction("OP_NEGATE", offset);
             case AS_OPCODE(OpCode::OP_NULL):
                 return simpleInstruction("OP_NULL", offset);
+            case AS_OPCODE(OpCode::OP_TEST_NOT_NULL):
+                return simpleInstruction("OP_TEST_NOT_NULL", offset);
             case AS_OPCODE(OpCode::OP_PRINT):
                 return simpleInstruction("OP_PRINT", offset);
             case AS_OPCODE(OpCode::OP_POP):
                 return simpleInstruction("OP_POP", offset);
             /*case AS_OPCODE(OpCode::OP_GET_GLOBAL):
                 return constantInstruction("OP_GET_GLOBAL", chunk, offset);
+            */
             case AS_OPCODE(OpCode::OP_SET_GLOBAL):
                 return constantInstruction("OP_SET_GLOBAL", chunk, offset);
-            */
             case AS_OPCODE(OpCode::OP_GET_LOCAL):
                 return byteInstruction("OP_GET_LOCAL", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_LOCAL):
