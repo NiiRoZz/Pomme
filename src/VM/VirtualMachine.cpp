@@ -299,7 +299,7 @@ namespace Pomme
     ObjString* VirtualMachine::copyString(const char* chars, int length)
     {
         ObjString* string = newString();
-        string->chars = std::string(chars, length);
+        string->chars = std::move(std::string(chars, length));
 
         return string;
     }
