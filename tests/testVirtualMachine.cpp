@@ -45,6 +45,15 @@ void defineStdNative(VirtualMachine& vm)
 		return OBJ_VAL(vm.newInt(std::get<int64_t>(primitive->value) - std::get<int64_t>(rhs->value)));
 	}));
 
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator<", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+		assert(argCount == 1);
+        assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+
+		ObjPrimitive* rhs = AS_PRIMITIVE(args[0]);
+		
+		return OBJ_VAL(vm.newBool(std::get<int64_t>(primitive->value) < std::get<int64_t>(rhs->value)));
+	}));
+
 	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 0);
 		
@@ -480,6 +489,24 @@ TEST(TEST_VM, operatorBoolTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, operatorBoolIfTest)
+{
+	TEST_VM_TEST("native void t(int c); void f() { int z = 0; if (10 < 20) {z = 20; }; t(z); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 20);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, operatorBoolCustomTest)
 {
 	TEST_VM_TEST("native void h(bool b); class TestClass { bool operatorbool() { return true; }; }; void f() { h(new TestClass()); };\n");
@@ -534,15 +561,53 @@ TEST(TEST_VM, methodCallInClassTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
-
-static void methodCallInClassBench(benchmark::State& state)
+TEST(TEST_VM, fibTest)
 {
-	TEST_VM_TEST("class TestClass { native void t(int c); void meth() { t(10); }; }; void f() { TestClass oui = new TestClass(); oui.meth(); };\n");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(35); t(z); };\n");
 
-	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1346269);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+static void fibNativeBench(benchmark::State& state)
+{
+	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(31)); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("fib", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 
-		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 10);
+		const auto fib = [](int64_t n) {
+			const auto fib_impl = [](int64_t n, const auto& impl) -> int64_t
+			{
+				if (n < 2)
+				{
+					return n;
+				}
+				else
+				{
+					return impl(n - 2, impl) + impl(n - 1, impl);
+				}
+			};
+			return fib_impl(n, fib_impl);
+		};
+
+		return OBJ_VAL(vm.newInt(fib(std::get<int64_t>(AS_PRIMITIVE(args[0])->value))));
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1346269);
 
 		return NULL_VAL;
 	}));
@@ -556,11 +621,35 @@ static void methodCallInClassBench(benchmark::State& state)
 	}
 }
 
-BENCHMARK(methodCallInClassBench)->Unit(benchmark::kMicrosecond);
+BENCHMARK(fibNativeBench)->Unit(benchmark::kSecond);
 
-TEST(TEST_VM, benchmark1Test)
+static void fibNoNativeBench(benchmark::State& state)
 {
-	::benchmark::RunSpecifiedBenchmarks("methodCallInClassBench");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(31)); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+	
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1346269);
+
+		return NULL_VAL;
+	}));
+
+	for (auto _ : state)
+	{
+		result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+		EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+		EXPECT_EQ(vm.stackSize(), 0);
+	}
+}
+
+BENCHMARK(fibNoNativeBench)->Unit(benchmark::kSecond);
+
+TEST(TEST_VM, benchmarkTest)
+{
+	::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
+	::benchmark::RunSpecifiedBenchmarks("fibNoNativeBench");
 }
 
 

@@ -8,10 +8,12 @@ class int
 {
     native int operator+(int rhs);
     native float operator+(float rhs);
+    
     native int operator-(int rhs);
     native float operator-(float rhs);
     native int operator-();
 
+    native bool operator<(int rhs);
     native bool operator==(int rhs);
 
     native bool operatorbool();

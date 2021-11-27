@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 
     //::testing::GTEST_FLAG(filter) = "TEST_LEXER_PARSER.*";
     //::testing::GTEST_FLAG(filter) = "TEST_TYPECHECKER.*";
-    ::testing::GTEST_FLAG(filter) = "TEST_VM.ben*";
+    ::testing::GTEST_FLAG(filter) = "TEST_VM.fibTest*";
     //::testing::GTEST_FLAG(filter) = "TEST_AUTOMATE.*";
 
     return RUN_ALL_TESTS();

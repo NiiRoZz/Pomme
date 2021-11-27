@@ -277,6 +277,11 @@ namespace Pomme
     {
     	*stackTop = value;
         stackTop++;
+        if ((stackTop - stack) >= STACK_MAX)
+        {
+            assert(false);
+            abort();
+        }
     }
 
     Value VirtualMachine::pop()
@@ -570,6 +575,7 @@ namespace Pomme
                     uint16_t slot = READ_UINT16();
                     bool native = READ_BYTE();
                     int argCount = READ_BYTE();
+                    
                     if (!invoke(argCount, slot, native))
                     {
                         return InterpretResult::INTERPRET_RUNTIME_ERROR;
@@ -846,8 +852,9 @@ namespace Pomme
                 Value result = [&] () {
                     if (IS_PRIMITIVE(bound->receiver))
                     {
-                        MethodPrimitiveNativeFn native = AS_METHOD_PRIMITIVE_NATIVE(*bound->method);
+                        MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*bound->method);
                         assert(native);
+
                         return native(*this, argCount, AS_PRIMITIVE(bound->receiver), stackTop - argCount);
                     }
 
@@ -892,6 +899,12 @@ namespace Pomme
         frame->function = function;
         frame->ip = function->chunk.code.data();
         frame->slots = stackTop - argCount - 1;
+
+        if (frameCount >= FRAMES_MAX)
+        {
+            assert(false);
+            abort();
+        }
 
         return true;
     }
