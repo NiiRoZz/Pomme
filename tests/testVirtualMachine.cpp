@@ -8,6 +8,8 @@
 #include "PommeLexerTokenManager.h"
 #include "MyErrorHandler.h"
 
+#include <benchmark/benchmark.h>
+
 using namespace Pomme;
 
 #define TEST_VM_TEST(testString) \
@@ -530,6 +532,35 @@ TEST(TEST_VM, methodCallInClassTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+
+static void methodCallInClassBench(benchmark::State& state)
+{
+	TEST_VM_TEST("class TestClass { native void t(int c); void meth() { t(10); }; }; void f() { TestClass oui = new TestClass(); oui.meth(); };\n");
+
+	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 10);
+
+		return NULL_VAL;
+	}));
+
+	for (auto _ : state)
+	{
+		result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+		EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+		EXPECT_EQ(vm.stackSize(), 0);
+	}
+}
+
+BENCHMARK(methodCallInClassBench)->Unit(benchmark::kMicrosecond);
+
+TEST(TEST_VM, benchmark1Test)
+{
+	::benchmark::RunSpecifiedBenchmarks("methodCallInClassBench");
 }
 
 

@@ -30,10 +30,6 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
-if(NOT MSVC)
-  add_definitions(-Wall -Wextra -g -pedantic)
-endif()
-
 include(GNUInstallDirs)
 
 # Add directories for generated include files
@@ -79,6 +75,12 @@ else()
 endif()
 
 target_sources(${APP} PRIVATE ${JAVACC_SRC_FILES})
+
+if(NOT MSVC)
+  target_compile_options(${APP} PRIVATE -Wall -Wextra -g -pedantic)
+elseif(MSVC)
+  target_compile_options(${APP} PRIVATE )
+endif()
 
 install(
   TARGETS ${APP}

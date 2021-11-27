@@ -9,6 +9,10 @@ add_executable(pomme_tests
   testAutomate.cpp
 )
 
+SET(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+
+add_subdirectory(googlebenchmark)
+
 
 target_include_directories(pomme_tests
   PRIVATE
@@ -24,6 +28,7 @@ target_link_libraries(pomme_tests
   PRIVATE
     Pomme
     Threads::Threads
+    benchmark::benchmark
 )
 
 add_test(

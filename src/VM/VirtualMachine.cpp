@@ -417,8 +417,8 @@ namespace Pomme
 
         for (;;)
         {
-            printStack();
-            disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
+            //printStack();
+            //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
 
             uint8_t instruction;
 
