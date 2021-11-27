@@ -28,6 +28,8 @@ namespace Pomme {
         bool isStateInitial(int state) const ;
         void setStateFinal(int state) ;
         bool isStateFinal(int state) const ;
+        State * getState(int state);
+        int getState(const std::string& name);
 
         bool addTransition(int from, int to);
         bool removeTransition(int from, int to );
@@ -36,11 +38,11 @@ namespace Pomme {
 
         friend std::ostream & operator<<(std::ostream & str, const Automaton & klass)
         {
-          for(auto it : klass.m_state)
+          for(const auto& it : klass.m_state)
           {
               str << it.second << std::endl;
           }
-          for(auto it : klass.m_transition)
+          for(const auto& it : klass.m_transition)
           {
               for(auto ot : it.second)
               {

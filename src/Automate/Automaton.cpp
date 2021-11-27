@@ -27,6 +27,7 @@ namespace Pomme {
     
     bool Automaton::addState(int state)
     {
+        std::cout << "Addding state " << state << std::endl;
         if(state >= 0){
             auto it = this->m_state.find(state);
             if(it != this->m_state.end())
@@ -85,6 +86,8 @@ namespace Pomme {
     }
     
     bool Automaton::addTransition(int from, int to){
+
+        std::cout << "Adding transition from " << from << " to " << to << std::endl;
         auto fromState = this->m_state.find(from);
         auto toState = this->m_state.find(to);
 
@@ -163,5 +166,29 @@ namespace Pomme {
         {
             it->second.finalState = true;
         }
+    }
+
+    State* Automaton::getState(int state)
+    {
+        auto it = this->m_state.find(state);
+        if(it != this->m_state.end())
+        {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
+    int Automaton::getState(const std::string& name)
+    {
+        for(auto it : this->m_state)
+        {
+            std::cout << dynamic_cast<ASTident*>(it.second.node->jjtGetChild(0))->m_Identifier << std::endl;
+
+            if( dynamic_cast<ASTident*>(it.second.node->jjtGetChild(0))->m_Identifier == name)
+            {
+                return it.second.name;
+            }
+        }
+        return -1;
     }
 }

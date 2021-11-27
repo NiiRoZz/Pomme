@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <SimpleNode.h>
 
 
 namespace Pomme {
@@ -15,11 +16,18 @@ namespace Pomme {
         int name;
         bool finalState;
         bool initialState;
+        Node* node;
+
+        bool modded;
+        bool extend;
 
         State(int name):
         name(name),
         finalState(false),
-        initialState(false)
+        initialState(false),
+        node(nullptr),
+        extend(false),
+        modded(false)
         {
 
         }

@@ -3,6 +3,7 @@
 
 #include "PommeLexerVisitor.h"
 #include "Automate/Automaton.h"
+#include "CommonVisitorFunction.h"
 
 namespace Pomme
 {
@@ -10,7 +11,11 @@ namespace Pomme
     {
     public:
         Automaton dependanceGraph;
+        int nbState = 0;
+        std::unordered_map<std::string,std::unordered_set<std::string>> classToBeResolved;
 
+        void addState(Node* node);
+        bool resolved(Node* node);
         void visit(SimpleNode *node, void * data);
         void visit(ASTinput *node, void * data);
         void visit(ASTident *node, void * data);
