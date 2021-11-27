@@ -8,6 +8,7 @@ namespace Pomme
     {
         bool resolved = false;
         std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::vector<std::string> toDelete;
         for(const auto& it : classToBeResolved)
         {
             for(const auto& ot : it.second)
@@ -16,11 +17,29 @@ namespace Pomme
                 {
                     addState(node);
                     int stateNumber = dependanceGraph.getState(it.first);
+                    toDelete.push_back(dynamic_cast<ASTident*>(dependanceGraph.getState(stateNumber)->node->jjtGetChild(0))->m_Identifier);
                     dependanceGraph.addTransition(stateNumber , nbState - 1);
                     resolved = true;
                 }
             }
         }
+
+        if(resolved)
+        {
+            for(const auto& it : toDelete)
+            {
+                auto ut = classToBeResolved.find(it);
+                if(ut != classToBeResolved.end())
+                {
+                    ut->second.erase(ident);
+                    if(ut->second.empty())
+                    {
+                        classToBeResolved.erase(ut);
+                    }
+                }
+            }
+        }
+
         return resolved;
     }
 

@@ -284,3 +284,37 @@ TEST(TEST_AUTOMATE, Graph_Complex) {
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,1));
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(3,1));
 }
+
+TEST(TEST_AUTOMATE, Graph_Multiple) {
+    TEST_AUTOMATE_TEST("class test2{}; class test3{}; class test{ test2 x; test3 y; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,1));
+}
+
+TEST(TEST_AUTOMATE, Graph_MultipleAfter) {
+    TEST_AUTOMATE_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,2));
+
+    for(auto it : visitor.classToBeResolved)
+    {
+        std::cout << it.first << " = ";
+        for(auto ut : it.second)
+        {
+            std::cout << ut << " ";
+        }
+        std::cout << std::endl;
+    }
+}
