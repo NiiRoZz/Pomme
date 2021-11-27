@@ -20,6 +20,7 @@ using namespace Pomme;
 	compiler.addString(s);\
 	ObjFunction *function = compiler.compile(true);\
 	EXPECT_TRUE(function != nullptr);\
+	vm.started = true;\
 	InterpretResult result = vm.interpret(function);\
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);\
 	defineStdNative(vm);\
@@ -563,7 +564,7 @@ TEST(TEST_VM, methodCallInClassTest)
 
 TEST(TEST_VM, fibTest)
 {
-	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(35); t(z); };\n");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(31); t(z); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);

@@ -923,7 +923,7 @@ namespace Pomme
     void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor)
     {
         uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())));
-        
+
         m_InMethod = true;
 
         ObjFunction* currentFunction = function;
@@ -969,8 +969,6 @@ namespace Pomme
     void CompilerVisitor::unaryOperator(SimpleNode* node, uint16_t index, bool native)
     {
         node->jjtChildAccept(0, this, nullptr);
-
-        std::cout << "unaryOperator index : " << index << std::endl;
 
         emitByte(AS_OPCODE(OpCode::OP_INVOKE));
         emit16Bits(index);

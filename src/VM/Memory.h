@@ -5,6 +5,4 @@
 
 namespace Pomme
 {
-    #define ALLOCATE_OBJ(vm, type, objectType) \
-        vm->allocateObject<type>(objectType)
 }

@@ -5,6 +5,7 @@
 #include <functional>
 #include <cstring>
 #include <variant>
+#include <cassert>
 
 #include "Value.h"
 #include "Chunk.h"
@@ -53,6 +54,25 @@ namespace Pomme
         OBJ_STRING,
     };
 
+    static const char* ObjTypeToCStr(ObjType type)
+    {
+        switch (type)
+        {
+            case ObjType::OBJ_BOUND_METHOD: return "OBJ_BOUND_METHOD";
+            case ObjType::OBJ_CLASS: return "OBJ_CLASS";
+            case ObjType::OBJ_PRIMITIVE: return "OBJ_PRIMITIVE";
+            case ObjType::OBJ_FUNCTION: return "OBJ_FUNCTION";
+            case ObjType::OBJ_INSTANCE: return "OBJ_INSTANCE";
+            case ObjType::OBJ_GLOBAL_NATIVE: return "OBJ_GLOBAL_NATIVE";
+            case ObjType::OBJ_METHOD_NATIVE: return "OBJ_METHOD_NATIVE";
+            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE: return "OBJ_METHOD_PRIMITIVE_NATIVE";
+            case ObjType::OBJ_STRING: return "OBJ_STRING";
+        }
+
+        assert(false);
+        return "";
+    }
+
     enum class PrimitiveType: uint8_t
     {
         INT,
@@ -64,6 +84,7 @@ namespace Pomme
     struct Obj
     {
         ObjType type;
+        bool isMarked;
         Obj* next;
     };
 

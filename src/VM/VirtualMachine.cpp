@@ -4,10 +4,13 @@
 #include <iostream>
 #include <assert.h>
 
+#define GC_HEAP_GROW_FACTOR 2
+
 namespace Pomme
 {
     VirtualMachine::VirtualMachine()
-    : stackTop(stack)
+    : started(false)
+    , stackTop(stack)
     , frameCount(0)
     , globalsIndicesCount(0)
     , objects(nullptr)
@@ -15,7 +18,10 @@ namespace Pomme
     , floatClass(nullptr)
     , boolClass(nullptr)
     , stringClass(nullptr)
+    , bytesAllocated(0)
+    , nextGC(1024u * 1024u)
     {
+        grayStack.reserve(GLOBALS_MAX + STACK_MAX);
     }
 
     VirtualMachine::~VirtualMachine()
@@ -297,7 +303,7 @@ namespace Pomme
 
     ObjString* VirtualMachine::newString()
     {
-        ObjString* string = ALLOCATE_OBJ(this, ObjString, ObjType::OBJ_STRING);
+        ObjString* string = allocateObject<ObjString>(ObjType::OBJ_STRING);
         return string;
     }
 
@@ -346,7 +352,7 @@ namespace Pomme
 
     ObjFunction* VirtualMachine::newFunction()
     {
-        ObjFunction* function = ALLOCATE_OBJ(this, ObjFunction, ObjType::OBJ_FUNCTION);
+        ObjFunction* function = allocateObject<ObjFunction>(ObjType::OBJ_FUNCTION);
         function->arity = 0;
         function->name = NULL;
         return function;
@@ -354,19 +360,19 @@ namespace Pomme
 
     ObjGlobalNative* VirtualMachine::newGlobalNative()
     {
-        ObjGlobalNative* native = ALLOCATE_OBJ(this, ObjGlobalNative, ObjType::OBJ_GLOBAL_NATIVE);
+        ObjGlobalNative* native = allocateObject<ObjGlobalNative>(ObjType::OBJ_GLOBAL_NATIVE);
         return native;
     }
 
     ObjMethodNative* VirtualMachine::newMethodNative()
     {
-        ObjMethodNative* native = ALLOCATE_OBJ(this, ObjMethodNative, ObjType::OBJ_METHOD_NATIVE);
+        ObjMethodNative* native = allocateObject<ObjMethodNative>(ObjType::OBJ_METHOD_NATIVE);
         return native;
     }
 
     ObjMethodPrimitiveNative* VirtualMachine::newMethodPrimitiveNative()
     {
-        ObjMethodPrimitiveNative* native = ALLOCATE_OBJ(this, ObjMethodPrimitiveNative, ObjType::OBJ_METHOD_PRIMITIVE_NATIVE);
+        ObjMethodPrimitiveNative* native = allocateObject<ObjMethodPrimitiveNative>(ObjType::OBJ_METHOD_PRIMITIVE_NATIVE);
         return native;
     }
 
@@ -738,11 +744,16 @@ namespace Pomme
 
     void VirtualMachine::freeObject(Obj* object)
     {
+        #ifdef DEBUG_LOG_GC
+        std::cout << object << " free type " << ObjTypeToCStr(object->type) << std::endl;
+        #endif
+
         switch (object->type)
         {
             case ObjType::OBJ_FUNCTION:
             {
                 ObjFunction* function = static_cast<ObjFunction*>(object);
+                bytesAllocated -= sizeof(ObjFunction);
                 delete function;
                 break;
             }
@@ -750,6 +761,7 @@ namespace Pomme
             case ObjType::OBJ_CLASS:
             {
                 ObjClass* klass = static_cast<ObjClass*>(object);
+                bytesAllocated -= sizeof(ObjClass);
                 delete klass;
                 break;
             } 
@@ -757,6 +769,7 @@ namespace Pomme
             case ObjType::OBJ_GLOBAL_NATIVE:
             {
                 ObjGlobalNative* method = static_cast<ObjGlobalNative*>(object);
+                bytesAllocated -= sizeof(ObjGlobalNative);
                 delete method;
                 break;
             }
@@ -764,6 +777,7 @@ namespace Pomme
             case ObjType::OBJ_METHOD_NATIVE:
             {
                 ObjMethodNative* method = static_cast<ObjMethodNative*>(object);
+                bytesAllocated -= sizeof(ObjMethodNative);
                 delete method;
                 break;
             }
@@ -771,6 +785,7 @@ namespace Pomme
             case ObjType::OBJ_STRING:
             {
                 ObjString* string = static_cast<ObjString*>(object);
+                bytesAllocated -= sizeof(ObjString);
                 delete string;
                 break;
             }
@@ -778,6 +793,7 @@ namespace Pomme
             case ObjType::OBJ_INSTANCE:
             {
                 ObjInstance* instance = static_cast<ObjInstance*>(object);
+                bytesAllocated -= sizeof(ObjInstance);
                 delete instance;
                 break;
             }
@@ -785,6 +801,7 @@ namespace Pomme
             case ObjType::OBJ_BOUND_METHOD:
             {
                 ObjBoundMethod* method = static_cast<ObjBoundMethod*>(object);
+                bytesAllocated -= sizeof(ObjBoundMethod);
                 delete method;
                 break;
             }
@@ -987,7 +1004,7 @@ namespace Pomme
             return;
         }
 
-        std::cout << "<fn " << function->name->chars.c_str() << ">";
+        std::cout << "<fn " << function->name->chars << ">";
     }
 
     void VirtualMachine::defineMethod(uint16_t slot, ObjString* name, bool isNative)
@@ -1039,7 +1056,7 @@ namespace Pomme
 
     ObjClass* VirtualMachine::newClass(ObjString* name)
     {
-        ObjClass* klass = ALLOCATE_OBJ(this, ObjClass, ObjType::OBJ_CLASS);
+        ObjClass* klass = allocateObject<ObjClass>(ObjType::OBJ_CLASS);
         klass->name = name;
 
         if (name->chars == "int")
@@ -1064,7 +1081,7 @@ namespace Pomme
 
     ObjInstance* VirtualMachine::newInstance(ObjClass* klass)
     {
-        ObjInstance* instance = ALLOCATE_OBJ(this, ObjInstance, ObjType::OBJ_INSTANCE);
+        ObjInstance* instance = allocateObject<ObjInstance>(ObjType::OBJ_INSTANCE);
         instance->klass = klass;
         std::memcpy(instance->fields, klass->defaultFields, sizeof(Value) * FIELDS_MAX);
         std::memcpy(instance->nativeMethods, klass->nativeMethods, sizeof(Value) * METHODS_MAX);
@@ -1073,7 +1090,7 @@ namespace Pomme
 
     ObjBoundMethod* VirtualMachine::newBoundMethod(const Value& receiver, Value* method)
     {
-        ObjBoundMethod* bound = ALLOCATE_OBJ(this, ObjBoundMethod, ObjType::OBJ_BOUND_METHOD);
+        ObjBoundMethod* bound = allocateObject<ObjBoundMethod>(ObjType::OBJ_BOUND_METHOD);
         bound->receiver = receiver;
         bound->method = method;
         return bound;
@@ -1169,5 +1186,178 @@ namespace Pomme
         jump |= chunk->code[offset + 2];
         printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
         return offset + 3;
+    }
+
+    void VirtualMachine::collectGarbage()
+    {
+        #ifdef DEBUG_LOG_GC
+        std::cout << "-- gc begin\n";
+        std::size_t before = bytesAllocated;
+        #endif
+
+        markRoots();
+        traceReferences();
+        sweep();
+
+        #ifndef DEBUG_STRESS_GC
+        nextGC = bytesAllocated * GC_HEAP_GROW_FACTOR;
+        #endif
+
+        grayStack.clear();
+
+        #ifdef DEBUG_LOG_GC
+        std::cout << "-- gc end\n";
+        std::cout << "   collected " << unsigned(before - bytesAllocated) << " bytes (from " << unsigned(before) << " to " << unsigned(bytesAllocated) << ") next at " << nextGC << std::endl;
+        #endif
+    }
+
+    void VirtualMachine::markRoots()
+    {
+        for (Value* slot = stack; slot < stackTop; ++slot)
+        {
+            markValue(*slot);
+        }
+
+        for (int i = 0; i < frameCount; i++)
+        {
+            markObject(static_cast<Obj*>(frames[i].function));
+        }
+
+        for (int i = 0; i < globalsIndicesCount; i++)
+        {
+            markValue(globals[i]);
+        }
+    }
+
+    void VirtualMachine::markValue(Value& value)
+    {
+        if (IS_OBJ(value)) markObject(AS_OBJ(value));
+    }
+
+    void VirtualMachine::markObject(Obj* object)
+    {
+        if (object == nullptr || object->isMarked) return;
+
+        #ifdef DEBUG_LOG_GC
+        std::cout << object << " mark ";
+        printValue(OBJ_VAL(object));
+        std::cout << std::endl;
+        #endif
+
+        object->isMarked = true;
+
+        grayStack.push_back(object);
+    }
+
+    void VirtualMachine::markArray(Value* array, std::size_t count)
+    {
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            markValue(array[i]);
+        }
+    }
+
+    void VirtualMachine::traceReferences()
+    {
+        #ifdef DEBUG_LOG_GC
+        std::cout << "grayStack.size() : " << grayStack.size() << std::endl;
+        #endif
+
+        for (std::size_t i = 0; i < grayStack.size(); ++i)
+        {
+            blackenObject(grayStack[i]);
+        }
+    }
+
+    void VirtualMachine::blackenObject(Obj* object)
+    {
+        #ifdef DEBUG_LOG_GC
+        std::cout << object << " blacken ";
+        printValue(OBJ_VAL(object));
+        std::cout << std::endl;
+        #endif
+
+        switch (object->type)
+        {
+            case ObjType::OBJ_BOUND_METHOD:
+            {
+                ObjBoundMethod* bound = static_cast<ObjBoundMethod*>(object);
+                markValue(bound->receiver);
+                markValue(*bound->method);
+                break;
+            }
+
+            case ObjType::OBJ_CLASS:
+            {
+                ObjClass* klass = static_cast<ObjClass*>(object);
+                markObject(static_cast<Obj*>(klass->name));
+                markArray(klass->methods, METHODS_MAX);
+                markArray(klass->nativeMethods, METHODS_MAX);
+                markArray(klass->staticFields, FIELDS_MAX);
+                markArray(klass->defaultFields, FIELDS_MAX);
+                break;
+            }
+
+            case ObjType::OBJ_PRIMITIVE:
+            {
+                ObjPrimitive* primitive = static_cast<ObjPrimitive*>(object);
+                markObject(static_cast<Obj*>(primitive->klass));
+                break;
+            }
+            
+            case ObjType::OBJ_FUNCTION:
+            {
+                ObjFunction* function = static_cast<ObjFunction*>(object);
+                markObject(static_cast<Obj*>(function->name));
+                markArray(function->chunk.constants.data(), function->chunk.constants.size());
+                break;
+            }
+
+            case ObjType::OBJ_INSTANCE:
+            {
+                ObjInstance* instance = static_cast<ObjInstance*>(object);
+                markObject(static_cast<Obj*>(instance->klass));
+                markArray(instance->fields, FIELDS_MAX);
+                markArray(instance->nativeMethods, METHODS_MAX);
+                break;
+            }
+
+            case ObjType::OBJ_GLOBAL_NATIVE:
+            case ObjType::OBJ_METHOD_NATIVE:
+            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE:
+            case ObjType::OBJ_STRING:
+            break;
+        }
+    }
+
+    void VirtualMachine::sweep()
+    {
+        Obj* previous = nullptr;
+        Obj* object = objects;
+        while (object != nullptr)
+        {
+            if (object->isMarked)
+            {
+                object->isMarked = false;
+                previous = object;
+                object = object->next;
+            }
+            else
+            {
+                Obj* unreached = object;
+                object = object->next;
+
+                if (previous != nullptr)
+                {
+                    previous->next = object;
+                }
+                else
+                {
+                    objects = object;
+                }
+
+                freeObject(unreached);
+            }
+        }
     }
 }

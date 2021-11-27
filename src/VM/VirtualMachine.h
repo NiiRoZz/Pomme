@@ -13,6 +13,9 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 #define GLOBALS_MAX UINT16_COUNT
 
+//#define DEBUG_STRESS_GC
+//#define DEBUG_LOG_GC
+
 namespace Pomme
 {
 	enum class InterpretResult: uint8_t
@@ -60,9 +63,29 @@ namespace Pomme
 		template<typename T>
 		T* allocateObject(ObjType type)
 		{
+			#ifdef DEBUG_STRESS_GC
+			collectGarbage();
+			#endif
+
+			#ifndef DEBUG_STRESS_GC
+			if (started && bytesAllocated > nextGC)
+			{
+				collectGarbage();
+			}
+			#endif
+
+			#ifndef DEBUG_STRESS_GC
+			bytesAllocated += sizeof(T);
+			#endif
+
+			#ifdef DEBUG_LOG_GC
+			std::cout << "allocate " << sizeof(T) << " for " << ObjTypeToCStr(type) << std::endl;
+			#endif
+
 			T* t = new T();
 			Obj* object = static_cast<Obj*>(t);
 			object->type = type;
+			object->isMarked = false;
 
 			object->next = objects;
 			objects = object;
@@ -92,6 +115,8 @@ namespace Pomme
 		int stackSize();
 
 		void printValue(const Value& value);
+
+		bool started;
 		
 	private:
 		InterpretResult run();
@@ -130,7 +155,7 @@ namespace Pomme
 		template<typename T>
 		ObjPrimitive* newPrimitive(ObjClass* klass, PrimitiveType type, T value)
 		{
-			ObjPrimitive* primitive = ALLOCATE_OBJ(this, ObjPrimitive, ObjType::OBJ_PRIMITIVE);
+			ObjPrimitive* primitive = allocateObject<ObjPrimitive>(ObjType::OBJ_PRIMITIVE);
 			primitive->klass = klass;
 			primitive->primitiveType = type;
 			primitive->value = value;
@@ -143,6 +168,15 @@ namespace Pomme
 		int constantInstruction(const char* name, Chunk* chunk, int offset);
 		int byteInstruction(const char* name, Chunk* chunk, int offset);
 		int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset);
+
+		void collectGarbage();
+		void markRoots();
+		void markValue(Value& value);
+		void markObject(Obj* object);
+		void markArray(Value* array, std::size_t count);
+		void traceReferences();
+		void blackenObject(Obj* object);
+		void sweep();
 
 	private:
 		CallFrame frames[FRAMES_MAX];
@@ -162,5 +196,10 @@ namespace Pomme
 		ObjClass* floatClass;
 		ObjClass* boolClass;
 		ObjClass* stringClass;
+
+		std::vector<Obj*> grayStack;
+
+		std::size_t bytesAllocated;
+  		std::size_t nextGC;
 	};
 }
