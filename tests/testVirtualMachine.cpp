@@ -582,7 +582,7 @@ TEST(TEST_VM, fibTest)
 
 static void fibNativeBench(benchmark::State& state)
 {
-	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(31)); };\n");
+	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(46)); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("fib", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
@@ -608,7 +608,7 @@ static void fibNativeBench(benchmark::State& state)
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 	
-		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1346269);
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1836311903);
 
 		return NULL_VAL;
 	}));
@@ -626,12 +626,12 @@ BENCHMARK(fibNativeBench)->Unit(benchmark::kSecond);
 
 static void fibNoNativeBench(benchmark::State& state)
 {
-	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(31)); };\n");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(46)); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 	
-		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1346269);
+		EXPECT_EQ(std::get<int64_t>(AS_PRIMITIVE(args[0])->value), 1836311903);
 
 		return NULL_VAL;
 	}));
