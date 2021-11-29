@@ -10,11 +10,11 @@ namespace Pomme
 {
     VirtualMachine::VirtualMachine()
     : started(false)
+    , frameCount(0u)
     , stackTop(stack)
-    , frameCount(0)
-    , globalsIndicesCount(0)
+    , globalsIndicesCount(0u)
     , objects(nullptr)
-    , bytesAllocated(0)
+    , bytesAllocated(0u)
     , nextGC(1024u * 1024u)
     {
         grayStack.reserve(GLOBALS_MAX + STACK_MAX);
@@ -37,7 +37,7 @@ namespace Pomme
 
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
     {
-        push(OBJ_VAL(function));
+        push(Value(static_cast<Obj*>(function)));
         call(function, 0);
 
         return run();
@@ -101,8 +101,8 @@ namespace Pomme
 
         ObjFunction* callFunction = newFunction();
 
-        ObjBoundMethod* bound = newBoundMethod(OBJ_VAL(instance), &instance->klass->methods[it->second]);
-        int id = callFunction->chunk.addConstant(OBJ_VAL(bound));
+        ObjBoundMethod* bound = newBoundMethod(Value(static_cast<Obj*>(instance)), &instance->klass->methods[it->second]);
+        int id = callFunction->chunk.addConstant(Value(static_cast<Obj*>(bound)));
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
         callFunction->chunk.writeChunk(id, 1);
 
@@ -185,8 +185,8 @@ namespace Pomme
             return {};
         }
 
-        ObjBoundMethod* bound = newBoundMethod(OBJ_VAL(instance), &instance->klass->methods[it->second]);
-        push(OBJ_VAL(bound));
+        ObjBoundMethod* bound = newBoundMethod(Value(static_cast<Obj*>(instance)), &instance->klass->methods[it->second]);
+        push(Value(static_cast<Obj*>(bound)));
 
         for (int i = 0; i < params.size(); ++i)
         {
@@ -296,7 +296,7 @@ namespace Pomme
   		return *stackTop;
     }
 
-	Value VirtualMachine::peek(int depth)
+	Value& VirtualMachine::peek(int depth)
 	{
 		return stackTop[-1 - depth];
 	}
@@ -313,27 +313,6 @@ namespace Pomme
         string->chars = std::move(std::string(chars, length));
 
         return string;
-    }
-
-    ObjPrimitive<int64_t>* VirtualMachine::newInt(uint64_t value)
-    {
-        if (primitives[static_cast<uint8_t>(PrimitiveType::INT)] == nullptr) return nullptr;
-
-        return newPrimitive<int64_t>(PrimitiveType::INT, static_cast<int64_t>(value));
-    }
-
-    ObjPrimitive<double>* VirtualMachine::newFloat(double value)
-    {
-        if (primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)] == nullptr) return nullptr;
-
-        return newPrimitive<double>(PrimitiveType::FLOAT, value);
-    }
-
-    ObjPrimitive<bool>* VirtualMachine::newBool(bool value)
-    {
-        if (primitives[static_cast<uint8_t>(PrimitiveType::BOOL)] == nullptr) return nullptr;
-
-        return newPrimitive<bool>(PrimitiveType::BOOL, value);
     }
 
     ObjInstance* VirtualMachine::newInstance(const std::string& className)
@@ -436,37 +415,37 @@ namespace Pomme
                     break;
                 }
 
-                case AS_OPCODE(OpCode::OP_NULL):        push(NULL_VAL); break;
+                case AS_OPCODE(OpCode::OP_NULL):        push(Value()); break;
 
                 case AS_OPCODE(OpCode::OP_TEST_NOT_NULL):
                 {
-                    bool isNull = IS_NULL(peek(0));
-                    Value value = PrimitiveVal(newBool(!isNull));
+                    bool isNull = peek(0).isNull();
+                    Value value = Value(!isNull);
 
                     pop(); //pop obj/null value
                     push(value);
                     break;
                 }
 
-				case AS_OPCODE(OpCode::OP_POP):			pop(); break;
+				case AS_OPCODE(OpCode::OP_POP):         pop(); break;
 
                 case AS_OPCODE(OpCode::OP_INT):
                 {
                     READ_64BITS(uint64_t, value);
-                    push(PrimitiveVal(newInt(value)));
+                    push(static_cast<int64_t>(value));
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_FLOAT):
                 {
                     READ_64BITS(double, value);
-                    push(PrimitiveVal(newFloat(value)));
+                    push(value);
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_BOOL):
                 {
-                    push(PrimitiveVal(newBool(static_cast<bool>(READ_BYTE()))));
+                    push(static_cast<bool>(READ_BYTE()));
                     break;
                 }
 
@@ -556,7 +535,7 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_GET_METHOD):
                 {
-                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)) || IS_PRIMITIVE(peek(0)));
+                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)) || peek(0).isPrimitive());
 
                     uint16_t slot = READ_UINT16();
                     assert(slot >= 0u && slot < METHODS_MAX);
@@ -566,7 +545,7 @@ namespace Pomme
                     Obj* obj = getMethod(0, slot, native);
 
                     pop(); // Instance or Class.
-                    push(OBJ_VAL(obj));
+                    push(Value(obj));
                     break;
                 }
 
@@ -653,8 +632,8 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_INHERIT):
                 {
-                    Value superclass = peek(1);
-                    ObjClass* subclass = AS_CLASS(peek(0));
+                    //Value superclass = peek(1);
+                    //ObjClass* subclass = AS_CLASS(peek(0));
 
                     //TODO: add all methods from superclass into subclass
 
@@ -691,14 +670,14 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_NOT):
                 {
-                    assert(IS_PRIMITIVE(peek(0)) && AS_PRIMITIVE(peek(0))->primitiveType == PrimitiveType::BOOL);
-                    push(PrimitiveVal(newBool(!(static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(peek(0)))->value))));
+                    assert(peek(0).isPrimitive() && peek(0).asPrimitive().isType(PrimitiveType::BOOL));
+                    push(!peek(0).asPrimitive().as.boolean);
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_CLASS):
                 {
-                    push(OBJ_VAL(newClass(READ_STRING())));
+                    push(Value(static_cast<Obj*>(newClass(READ_STRING()))));
                     break;
                 }
 
@@ -711,7 +690,7 @@ namespace Pomme
                     assert(IS_CLASS(peek(argCount)));
 
                     ObjClass* klass = AS_CLASS(peek(argCount));
-                    stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                    stackTop[-argCount - 1] = Value(static_cast<Obj*>(newInstance(klass)));
 
                     if (foundConstructor)
                     {
@@ -776,6 +755,14 @@ namespace Pomme
                 break;
             }
 
+            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE:
+            {
+                ObjMethodPrimitiveNative* method = static_cast<ObjMethodPrimitiveNative*>(object);
+                bytesAllocated -= sizeof(ObjMethodPrimitiveNative);
+                delete method;
+                break;
+            }
+
             case ObjType::OBJ_STRING:
             {
                 ObjString* string = static_cast<ObjString*>(object);
@@ -802,30 +789,32 @@ namespace Pomme
         }
     }
 
-    bool VirtualMachine::isFalsey(Value value)
+    bool VirtualMachine::isFalsey(const Value& value)
     {
-        if (IS_NULL(value)) return true;
+        if (value.isNull()) return true;
 
-        assert(IS_PRIMITIVE(value) && AS_PRIMITIVE(value)->primitiveType == PrimitiveType::BOOL);
+        assert(value.isPrimitive() && value.asPrimitive().isType(PrimitiveType::BOOL));
 
-        return !(static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(value))->value);
+        return !(value.asPrimitive().as.boolean);
     }
 
     Obj* VirtualMachine::getMethod(int peekDepth, uint16_t slot, bool native)
     {
-        if (IS_INSTANCE(peek(peekDepth)))
+        Value& parent = peek(peekDepth);
+
+        if (IS_INSTANCE(parent))
         {
-            ObjInstance* instance = AS_INSTANCE(peek(peekDepth));
+            ObjInstance* instance = AS_INSTANCE(parent);
             Value *method = (native) ? &instance->nativeMethods[slot] : &instance->klass->methods[slot];
 
             assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
-            return static_cast<Obj*>(newBoundMethod(peek(peekDepth), method));
+            return static_cast<Obj*>(newBoundMethod(parent, method));
         }
         
-        if (IS_PRIMITIVE(peek(peekDepth)))
+        if (parent.isPrimitive())
         {
-            Value *method = [&] () {
-                switch (AS_PRIMITIVE(peek(peekDepth))->primitiveType)
+            Value *method = [&] () -> Value* {
+                switch (parent.asPrimitive().type)
                 {
                     case PrimitiveType::FLOAT:
                     {
@@ -844,16 +833,21 @@ namespace Pomme
                         return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::BOOL)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::BOOL)]->methods[slot];
                         break;
                     }
+
+                    default:
+                        break;
                 }
+
+                return nullptr;
             }();
 
             assert(method != nullptr && (IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method)));
-            return static_cast<Obj*>(newBoundMethod(peek(peekDepth), method));
+            return static_cast<Obj*>(newBoundMethod(parent, method));
         }
 
-        assert(AS_CLASS(peek(peekDepth)));
+        assert(AS_CLASS(parent));
 
-        ObjClass* klass = AS_CLASS(peek(peekDepth));
+        ObjClass* klass = AS_CLASS(parent);
         assert(IS_FUNCTION(klass->methods[slot]));
 
         return static_cast<Obj*>(AS_FUNCTION(klass->methods[slot]));
@@ -861,12 +855,12 @@ namespace Pomme
 
     bool VirtualMachine::invoke(int argCount, uint16_t slot, bool native)
     {
-        return callValue(OBJ_VAL(getMethod(argCount, slot, native)), argCount);
+        return callValue(Value(getMethod(argCount, slot, native)), argCount);
     }
 
     bool VirtualMachine::callValue(const Value& callee, int argCount)
     {
-        if (!IS_OBJ(callee)) return false;
+        if (!callee.isObj()) return false;
 
         switch (OBJ_TYPE(callee))
         {
@@ -881,12 +875,12 @@ namespace Pomme
                 }
 
                 Value result = [&] () {
-                    if (IS_PRIMITIVE(bound->receiver))
+                    if (bound->receiver.isPrimitive())
                     {
                         MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*bound->method);
                         assert(native);
 
-                        return native(*this, argCount, AS_PRIMITIVE(bound->receiver), stackTop - argCount);
+                        return native(*this, argCount, &bound->receiver.asPrimitive(), stackTop - argCount);
                     }
 
                     MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
@@ -913,6 +907,9 @@ namespace Pomme
 
                 return true;
             }
+
+            default:
+                break;
         }
 
         return false;
@@ -942,46 +939,41 @@ namespace Pomme
 
     void VirtualMachine::printValue(const Value& value)
     {
-        if (value.type == ValueType::VAL_NULL)
+        if (value.isNull())
         {
             std::cout << "null";
             return;
         }
 
-        if (value.type == ValueType::VAL_PRIMITIVE)
+        if (value.isPrimitive())
         {
-            switch (AS_PRIMITIVE(value)->primitiveType)
+            const ObjPrimitive& primitive = value.asPrimitive();
+            switch (primitive.type)
             {
                 case PrimitiveType::INT:
                 {
-                    ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(value));
-                    std::cout << lhs->value;
+                    std::cout << primitive.as.number;
                     break;
                 }
 
                 
                 case PrimitiveType::FLOAT:
                 {
-                    ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(value));
-                    std::cout << lhs->value;
+                    std::cout << primitive.as.numberFloat;
                     break;
                 }
 
                 
                 case PrimitiveType::BOOL:
                 {
-                    ObjPrimitive<bool>* lhs = static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(value));
-                    std::cout << lhs->value;
+                    std::cout << primitive.as.boolean;
                     break;
                 }
 
-                /*
                 case PrimitiveType::STRING:
                 {
-                    std::cout << std::get<PommeString*>(AS_PRIMITIVE(value)->value)->value->chars;
                     break;
                 }
-                */
             }
             return;
         }
@@ -1035,7 +1027,7 @@ namespace Pomme
     {
         std::cout << "VirtualMachine::defineMethod(" << slot << ", " << name->chars << ", " << isNative << ")" << std::endl;
 
-        Value method = peek(0);
+        Value& method = peek(0);
 
         assert(IS_CLASS(peek(1)));
 
@@ -1059,7 +1051,7 @@ namespace Pomme
     {
         std::cout << "VirtualMachine::defineField(" << slot << ", " << name->chars << ", " << isStatic << ")" << std::endl;
 
-        Value value = peek(0);
+        Value& value = peek(0);
         assert(IS_CLASS(peek(1)));
 
         ObjClass* klass = AS_CLASS(peek(1));
@@ -1242,12 +1234,12 @@ namespace Pomme
             markValue(*slot);
         }
 
-        for (int i = 0; i < frameCount; i++)
+        for (std::size_t i = 0; i < frameCount; i++)
         {
             markObject(static_cast<Obj*>(frames[i].function));
         }
 
-        for (int i = 0; i < globalsIndicesCount; i++)
+        for (std::size_t i = 0; i < globalsIndicesCount; i++)
         {
             markValue(globals[i]);
         }
@@ -1255,7 +1247,7 @@ namespace Pomme
 
     void VirtualMachine::markValue(Value& value)
     {
-        if (IS_OBJ(value)) markObject(AS_OBJ(value));
+        if (value.isObj()) markObject(value.asObj());
     }
 
     void VirtualMachine::markObject(Obj* object)
@@ -1264,7 +1256,7 @@ namespace Pomme
 
         #ifdef DEBUG_LOG_GC
         std::cout << object << " mark ";
-        printValue(OBJ_VAL(object));
+        printValue(ObjVal(object));
         std::cout << std::endl;
         #endif
 
@@ -1297,7 +1289,7 @@ namespace Pomme
     {
         #ifdef DEBUG_LOG_GC
         std::cout << object << " blacken ";
-        printValue(OBJ_VAL(object));
+        printValue(ObjVal(object));
         std::cout << std::endl;
         #endif
 

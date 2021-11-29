@@ -15,7 +15,7 @@
 
 namespace Pomme
 {
-    #define OBJ_TYPE(value)        (AS_OBJ(value)->type)
+    #define OBJ_TYPE(value)        (value.asObj()->type)
 
     #define IS_BOUND_METHOD(value)              isObjType(value, ObjType::OBJ_BOUND_METHOD)
     #define IS_CLASS(value)                     isObjType(value, ObjType::OBJ_CLASS)
@@ -26,17 +26,17 @@ namespace Pomme
     #define IS_METHOD_PRIMITIVE_NATIVE(value)   isObjType(value, ObjType::OBJ_METHOD_PRIMITIVE_NATIVE)
     #define IS_STRING(value)                    isObjType(value, ObjType::OBJ_STRING)
 
-    #define AS_BOUND_METHOD(value) (static_cast<ObjBoundMethod*>(AS_OBJ(value)))
-    #define AS_CLASS(value)        (static_cast<ObjClass*>(AS_OBJ(value)))
-    #define AS_FUNCTION(value)     (static_cast<ObjFunction*>(AS_OBJ(value)))
-    #define AS_INSTANCE(value)     (static_cast<ObjInstance*>(AS_OBJ(value)))
+    #define AS_BOUND_METHOD(value) (static_cast<ObjBoundMethod*>((value).asObj()))
+    #define AS_CLASS(value)        (static_cast<ObjClass*>((value).asObj()))
+    #define AS_FUNCTION(value)     (static_cast<ObjFunction*>((value).asObj()))
+    #define AS_INSTANCE(value)     (static_cast<ObjInstance*>((value).asObj()))
     #define AS_GLOBAL_NATIVE(value) \
-        (static_cast<ObjGlobalNative*>(AS_OBJ(value))->function)
+        (static_cast<ObjGlobalNative*>((value).asObj())->function)
     #define AS_METHOD_NATIVE(value) \
-        (static_cast<ObjMethodNative*>(AS_OBJ(value))->function)
+        (static_cast<ObjMethodNative*>((value).asObj())->function)
     #define AS_METHOD_PRIMITIVE_NATIVE(value) \
-        (static_cast<ObjMethodPrimitiveNative*>(AS_OBJ(value))->function)
-    #define AS_STRING(value)       (static_cast<ObjString*>(AS_OBJ(value)))
+        (static_cast<ObjMethodPrimitiveNative*>((value).asObj())->function)
+    #define AS_STRING(value)       (static_cast<ObjString*>((value).asObj()))
     #define AS_CSTRING(value)      (AS_STRING(value)->chars.c_str())
 
     enum class ObjType: uint8_t
@@ -51,32 +51,7 @@ namespace Pomme
         OBJ_STRING,
     };
 
-    static const char* ObjTypeToCStr(ObjType type)
-    {
-        switch (type)
-        {
-            case ObjType::OBJ_BOUND_METHOD: return "OBJ_BOUND_METHOD";
-            case ObjType::OBJ_CLASS: return "OBJ_CLASS";
-            case ObjType::OBJ_FUNCTION: return "OBJ_FUNCTION";
-            case ObjType::OBJ_INSTANCE: return "OBJ_INSTANCE";
-            case ObjType::OBJ_GLOBAL_NATIVE: return "OBJ_GLOBAL_NATIVE";
-            case ObjType::OBJ_METHOD_NATIVE: return "OBJ_METHOD_NATIVE";
-            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE: return "OBJ_METHOD_PRIMITIVE_NATIVE";
-            case ObjType::OBJ_STRING: return "OBJ_STRING";
-        }
-
-        assert(false);
-        return "";
-    }
-
-    enum class PrimitiveType: uint8_t
-    {
-        INT,
-        FLOAT,
-        BOOL,
-        STRING,
-        COUNT,
-    };
+    const char* ObjTypeToCStr(ObjType type);
 
     struct Obj
     {
@@ -85,6 +60,8 @@ namespace Pomme
         Obj* next;
 
         virtual ~Obj() = default;
+
+        inline bool isType(ObjType objType) {return type == objType;}
     };
 
     struct ObjString: public Obj
@@ -100,23 +77,10 @@ namespace Pomme
     };
 
     struct ObjInstance;
-    
-    struct ObjPrimitiveType
-    {
-        virtual ~ObjPrimitiveType() = default;
-
-        PrimitiveType primitiveType;
-    };
-
-    template<typename T>
-    struct ObjPrimitive: public ObjPrimitiveType
-    {
-        T value;
-    };
 
     using GlobalNativeFn = std::function<Value(VirtualMachine&, int, Value*)>;
     using MethodNativeFn = std::function<Value(VirtualMachine&, int, ObjInstance*, Value*)>;
-    using MethodPrimitiveNativeFn = std::function<Value(VirtualMachine&, int, ObjPrimitiveType*, Value*)>;
+    using MethodPrimitiveNativeFn = std::function<Value(VirtualMachine&, int, ObjPrimitive*, Value*)>;
 
     struct ObjGlobalNative: public Obj
     {
@@ -180,8 +144,8 @@ namespace Pomme
         Value* method;
     };
     
-    static inline bool isObjType(Value value, ObjType type)
+    static inline bool isObjType(const Value& value, ObjType type)
     {
-        return IS_OBJ(value) && AS_OBJ(value)->type == type;
+        return value.isObj() && value.asObj()->isType(type);
     }
 }

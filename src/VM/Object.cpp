@@ -5,6 +5,24 @@
 
 namespace Pomme
 {
+    const char* ObjTypeToCStr(ObjType type)
+    {
+        switch (type)
+        {
+            case ObjType::OBJ_BOUND_METHOD: return "OBJ_BOUND_METHOD";
+            case ObjType::OBJ_CLASS: return "OBJ_CLASS";
+            case ObjType::OBJ_FUNCTION: return "OBJ_FUNCTION";
+            case ObjType::OBJ_INSTANCE: return "OBJ_INSTANCE";
+            case ObjType::OBJ_GLOBAL_NATIVE: return "OBJ_GLOBAL_NATIVE";
+            case ObjType::OBJ_METHOD_NATIVE: return "OBJ_METHOD_NATIVE";
+            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE: return "OBJ_METHOD_PRIMITIVE_NATIVE";
+            case ObjType::OBJ_STRING: return "OBJ_STRING";
+        }
+
+        assert(false);
+        return "";
+    }
+
     Value* ObjClass::getStaticField(const std::string& name)
     {
         auto it = staticFieldsIndices.find(name);
@@ -48,6 +66,6 @@ namespace Pomme
         assert(argcount == 1);
         //assert(IS_INSTANCE(args[0]) && AS_INSTANCE(args[0])->klass-> == ClassType::STRING);
 
-        return OBJ_VAL(instance);
+        return Value(instance);
     }
 }

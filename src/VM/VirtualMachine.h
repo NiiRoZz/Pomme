@@ -58,7 +58,7 @@ namespace Pomme
 
 		void push(const Value& value);
 		Value pop();
-		Value peek(int depth);
+		Value& peek(int depth);
 
 		template<typename T>
 		T* allocateObject(ObjType type)
@@ -96,10 +96,6 @@ namespace Pomme
 		ObjString* newString();
 		ObjString* copyString(const char* chars, int length);
 
-		ObjPrimitive<int64_t>* newInt(uint64_t value);
-		ObjPrimitive<double>* newFloat(double value);
-		ObjPrimitive<bool>* newBool(bool value);
-
 		ObjInstance* newInstance(const std::string& className);
 		ObjInstance* newInstance(uint16_t slot);
 
@@ -134,7 +130,7 @@ namespace Pomme
 
 		void freeObject(Obj* object);
 
-		bool isFalsey(Value value);
+		bool isFalsey(const Value& value);
 
 		Obj* getMethod(int peekDepth, uint16_t slot, bool native);
 
@@ -151,16 +147,6 @@ namespace Pomme
 		ObjClass* newClass(ObjString* name);
 		ObjInstance* newInstance(ObjClass* klass);
 		ObjBoundMethod* newBoundMethod(const Value& receiver, Value* method);
-
-		template<typename T>
-		ObjPrimitive<T>* newPrimitive(PrimitiveType type, T value)
-		{
-			ObjPrimitive<T>* primitive = new ObjPrimitive<T>();
-			primitive->primitiveType = type;
-			primitive->value = value;
-
-			return primitive;
-		}
 
 		int disassembleInstruction(Chunk* chunk, int offset);
 		int simpleInstruction(const char* name, int offset);
@@ -179,7 +165,7 @@ namespace Pomme
 
 	private:
 		CallFrame frames[FRAMES_MAX];
-  		int frameCount;
+  		std::size_t frameCount;
 
 		Value stack[STACK_MAX];
 		Value* stackTop;

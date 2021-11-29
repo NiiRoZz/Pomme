@@ -1,11 +1,35 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
+#include <typeinfo>
 
 namespace Pomme
 {
-    typedef struct Obj Obj;
-    typedef struct ObjPrimitiveType ObjPrimitiveType;
+    struct Obj;
+
+    enum class PrimitiveType: uint8_t
+    {
+        INT,
+        FLOAT,
+        BOOL,
+        STRING,
+        COUNT,
+    };
+
+    struct ObjPrimitive
+    {
+        PrimitiveType type;
+
+        union
+        {
+            int64_t number;
+            double numberFloat;
+            bool boolean;
+        } as;
+
+        inline bool isType(PrimitiveType primitiveType) const {return type == primitiveType;}
+    };
 
     enum class ValueType: uint8_t
     {
@@ -14,35 +38,31 @@ namespace Pomme
         VAL_PRIMITIVE,
     };
 
-    struct Value
+    class Value
     {
+    public:
+        Value();
+        Value(ValueType val);
+        Value(Obj* val);
+        Value(int64_t val);
+        Value(double val);
+        Value(bool val);
+
+        inline bool isNull() const {return type == ValueType::VAL_NULL;}
+        inline bool isObj() const {return type == ValueType::VAL_OBJ;}
+        inline bool isPrimitive() const {return type == ValueType::VAL_PRIMITIVE;}
+
+        inline ObjPrimitive& asPrimitive() {return as.primitive;}
+        inline const ObjPrimitive& asPrimitive() const {return as.primitive;}
+        Obj* asObj() const {return as.obj;}
+
+    private:
         ValueType type;
 
         union
         {
             Obj* obj;
-            ObjPrimitiveType* primitive;
+            ObjPrimitive primitive;
         } as;
     };
-
-    #define IS_NULL(value)          ((value).type == ValueType::VAL_NULL)
-    #define IS_OBJ(value)           ((value).type == ValueType::VAL_OBJ)
-    #define IS_PRIMITIVE(value)     ((value).type == ValueType::VAL_PRIMITIVE)
-
-    #define AS_OBJ(value)           ((value).as.obj)
-    #define AS_PRIMITIVE(value)     ((value).as.primitive)
-
-    #define BOOL_VAL(vm, value)     (PrimitiveVal(vm.newBool(value)))
-    #define INT_VAL(vm, value)      (PrimitiveVal(vm.newInt(value)))
-    #define FLOAT_VAL(vm, value)    (PrimitiveVal(vm.newFloat(value)))
-    #define NULL_VAL                ((Value){ValueType::VAL_NULL, nullptr})
-    #define OBJ_VAL(object)         ((Value){ValueType::VAL_OBJ, static_cast<Obj*>(object)})
-
-    static Value PrimitiveVal(ObjPrimitiveType* type)
-    {
-        Value value;
-        value.type = ValueType::VAL_PRIMITIVE;
-        value.as.primitive = type;
-        return value;
-    }
 }

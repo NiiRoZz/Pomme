@@ -28,110 +28,82 @@ using namespace Pomme;
 
 void defineStdNative(VirtualMachine& vm)
 {
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->primitiveType == PrimitiveType::INT);
-		assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+        assert(primitive->isType(PrimitiveType::INT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		ObjPrimitive<int64_t>* rhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newInt(lhs->value + rhs->value));
+		return Value(primitive->as.number + args[0].asPrimitive().as.number);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->primitiveType == PrimitiveType::INT);
-		assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+        assert(primitive->isType(PrimitiveType::INT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		ObjPrimitive<int64_t>* rhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newInt(lhs->value - rhs->value));
+		return Value(primitive->as.number - args[0].asPrimitive().as.number);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator<", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator<", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->primitiveType == PrimitiveType::INT);
-		assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+        assert(primitive->isType(PrimitiveType::INT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		ObjPrimitive<int64_t>* rhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newBool(lhs->value < rhs->value));
+		return Value(primitive->as.number < args[0].asPrimitive().as.number);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 0);
-        assert(primitive->primitiveType == PrimitiveType::INT);
+        assert(primitive->isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		
-		return PrimitiveVal(vm.newInt(-(lhs->value)));
+		return Value(-primitive->as.number);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->primitiveType == PrimitiveType::INT);
-		assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+        assert(primitive->isType(PrimitiveType::INT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		ObjPrimitive<double>* rhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newFloat((double)(lhs->value) + rhs->value));
+		return Value((double)(primitive->as.number) + args[0].asPrimitive().as.numberFloat);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->primitiveType == PrimitiveType::INT);
-		assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+        assert(primitive->isType(PrimitiveType::INT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		ObjPrimitive<double>* rhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newFloat((double)(lhs->value) - rhs->value));
+		return Value((double)(primitive->as.number) - args[0].asPrimitive().as.numberFloat);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 0);
-		assert(primitive->primitiveType == PrimitiveType::INT);
+        assert(primitive->isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		
-		return PrimitiveVal(vm.newBool(lhs->value));
+		return Value(static_cast<bool>(primitive->as.number));
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator==", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator==", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->primitiveType == PrimitiveType::INT);
-		assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+        assert(primitive->isType(PrimitiveType::INT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(primitive);
-		ObjPrimitive<int64_t>* rhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newBool(lhs->value == rhs->value));
+		return Value(primitive->as.number == args[0].asPrimitive().as.number);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-		assert(primitive->primitiveType == PrimitiveType::FLOAT);
-        assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+        assert(primitive->isType(PrimitiveType::FLOAT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
 
-		ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(primitive);
-		ObjPrimitive<double>* rhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newFloat(lhs->value + rhs->value));
+		return Value(primitive->as.numberFloat + args[0].asPrimitive().as.numberFloat);
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitiveType* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
 		assert(argCount == 1);
-		assert(primitive->primitiveType == PrimitiveType::FLOAT);
-        assert(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+        assert(primitive->isType(PrimitiveType::FLOAT));
+		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
 
-		ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(primitive);
-		ObjPrimitive<double>* rhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
-		
-		return PrimitiveVal(vm.newFloat(lhs->value - rhs->value));
+		return Value(primitive->as.numberFloat - args[0].asPrimitive().as.numberFloat);
 	}));
 }
 
@@ -161,7 +133,7 @@ TEST(TEST_VM, ScopeTest)
 {
 	TEST_VM_TEST("void f(float b) { float c = 0.0; c = 1.0; c = 2.0; print(b); print(c); };};\n");
  
-	result = vm.interpretGlobalFunction(vm.getFunctionName("f", "float"), {FLOAT_VAL(vm, 100.0)});
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f", "float"), {Value(100.0)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -174,13 +146,11 @@ TEST(TEST_VM, IfTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-	
-		EXPECT_EQ(lhs->value, 10);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 10);
 
-		return NULL_VAL;
+		return Value();
 	}));
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -195,13 +165,11 @@ TEST(TEST_VM, IfClassConditionTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-	
-		EXPECT_EQ(lhs->value, 10);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 10);
 
-		return NULL_VAL;
+		return Value();
 	}));
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -216,13 +184,11 @@ TEST(TEST_VM, IfNullConditionTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-	
-		EXPECT_EQ(lhs->value, 20);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 20);
 
-		return NULL_VAL;
+		return Value();
 	}));
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -244,7 +210,7 @@ TEST(TEST_VM, GlobalNativeTest)
 			std::cout << std::endl;
 		}
 	
-		return PrimitiveVal(vm.newFloat(500.5));
+		return Value(500.5);
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -345,15 +311,13 @@ TEST(TEST_VM, ClassNativeMethodTest)
 
 		Value* y = instance->getStaticField("y");
 		EXPECT_TRUE(y != nullptr);
-		EXPECT_TRUE(IS_PRIMITIVE(*y) && AS_PRIMITIVE(*y)->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE((*y).isPrimitive() && (*y).asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(*y));
+		EXPECT_EQ((*y).asPrimitive().as.number, 23);
 
-		EXPECT_EQ(lhs->value, 23);
-
-		*vm.getStaticField("Other", "t") = PrimitiveVal(vm.newInt(123));
+		*vm.getStaticField("Other", "t") = Value(static_cast<int64_t>(123));
 		
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -413,7 +377,7 @@ TEST(TEST_VM, ClassCallMethodFromCPPTest)
 
 	EXPECT_TRUE(instance != nullptr);
 
-	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {PrimitiveVal(vm.newFloat(625.5))});
+	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {Value(625.5)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -432,15 +396,14 @@ TEST(TEST_VM, ClassLinkMethodInstanceTest)
 		std::cout << "parameter : ";
 		vm.printValue(args[0]);
 		std::cout << std::endl;
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
 
-		ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
-		EXPECT_EQ(lhs->value, 510.23);
+		EXPECT_EQ(args[0].asPrimitive().as.numberFloat, 510.23);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
-	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {PrimitiveVal(vm.newFloat(510.23))});
+	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {Value(510.23)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -452,16 +415,13 @@ TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 2);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
-		EXPECT_TRUE(IS_PRIMITIVE(args[1]) && AS_PRIMITIVE(args[1])->primitiveType == PrimitiveType::FLOAT);
-
-		ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
-		ObjPrimitive<double>* rhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[1]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
+		EXPECT_TRUE(args[1].isPrimitive() && args[1].asPrimitive().isType(PrimitiveType::FLOAT));
 	
-		EXPECT_EQ(lhs->value, 50.5);
-		EXPECT_EQ(rhs->value, -30.5);
+		EXPECT_EQ(args[0].asPrimitive().as.numberFloat, 50.5);
+		EXPECT_EQ(args[1].asPrimitive().as.numberFloat, -30.5);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -476,13 +436,11 @@ TEST(TEST_VM, CustomOperatorPlusTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::FLOAT);
-
-		ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
 	
-		EXPECT_EQ(lhs->value, 30.0);
+		EXPECT_EQ(args[0].asPrimitive().as.numberFloat, 30.0);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -497,13 +455,11 @@ TEST(TEST_VM, boolTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::BOOL);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
 
-		ObjPrimitive<bool>* lhs = static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(args[0]));
-	
-		EXPECT_EQ(lhs->value, true);
+		EXPECT_EQ(args[0].asPrimitive().as.boolean, true);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -518,27 +474,22 @@ TEST(TEST_VM, operatorBoolTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 2);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::BOOL);
-		EXPECT_TRUE(IS_PRIMITIVE(args[1]) && AS_PRIMITIVE(args[1])->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
+		EXPECT_TRUE(args[1].isPrimitive() && args[1].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<bool>* lhs = static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(args[0]));
-		ObjPrimitive<int64_t>* rhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[1]));
-	
-		EXPECT_EQ(lhs->value, true);
-		EXPECT_EQ(rhs->value, 10);
+		EXPECT_EQ(args[0].asPrimitive().as.boolean, true);
+		EXPECT_EQ(args[1].asPrimitive().as.number, 10);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::BOOL);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
 
-		ObjPrimitive<bool>* lhs = static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(args[0]));
-	
-		EXPECT_EQ(lhs->value, false);
+		EXPECT_EQ(args[0].asPrimitive().as.boolean, false);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -553,13 +504,11 @@ TEST(TEST_VM, operatorBoolIfTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-	
-		EXPECT_EQ(lhs->value, 20);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 20);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -574,13 +523,11 @@ TEST(TEST_VM, operatorBoolCustomTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::BOOL);
-
-		ObjPrimitive<bool>* lhs = static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
 	
-		EXPECT_EQ(lhs->value, true);
+		EXPECT_EQ(args[0].asPrimitive().as.boolean, true);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -595,13 +542,11 @@ TEST(TEST_VM, unaryOperatorTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
-
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 	
-		EXPECT_EQ(lhs->value, -10);
+		EXPECT_EQ(args[0].asPrimitive().as.number, -10);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -616,13 +561,11 @@ TEST(TEST_VM, methodCallInClassTest)
 
 	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
-
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 	
-		EXPECT_EQ(lhs->value, 10);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 10);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -637,13 +580,11 @@ TEST(TEST_VM, fibTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
-
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 	
-		EXPECT_EQ(lhs->value, 1346269);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 1346269);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -658,11 +599,9 @@ static void fibNativeBench(benchmark::State& state)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("fib", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
-
-		const auto fib = [](int64_t n) {
+		const auto fib = [](int64_t n) -> int64_t {
 			const auto fib_impl = [](int64_t n, const auto& impl) -> int64_t
 			{
 				if (n < 2)
@@ -677,18 +616,16 @@ static void fibNativeBench(benchmark::State& state)
 			return fib_impl(n, fib_impl);
 		};
 
-		return PrimitiveVal(vm.newInt(fib(lhs->value)));
+		return Value(fib(args[0].asPrimitive().as.number));
 	}));
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
-
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 	
-		EXPECT_EQ(lhs->value, 1346269);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 1346269);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	for (auto _ : state)
@@ -704,17 +641,15 @@ BENCHMARK(fibNativeBench)->Unit(benchmark::kSecond);
 
 static void fibNoNativeBench(benchmark::State& state)
 {
-	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(31)); };\n");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(39)); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(IS_PRIMITIVE(args[0]) && AS_PRIMITIVE(args[0])->primitiveType == PrimitiveType::INT);
-
-		ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(args[0]));
+		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 	
-		EXPECT_EQ(lhs->value, 1346269);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 3524578);
 
-		return NULL_VAL;
+		return Value();
 	}));
 
 	for (auto _ : state)
@@ -730,7 +665,7 @@ BENCHMARK(fibNoNativeBench)->Unit(benchmark::kSecond);
 
 TEST(TEST_VM, benchmarkTest)
 {
-	::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
+	//::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
 	::benchmark::RunSpecifiedBenchmarks("fibNoNativeBench");
 }
 
