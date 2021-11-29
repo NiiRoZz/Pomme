@@ -641,13 +641,13 @@ BENCHMARK(fibNativeBench)->Unit(benchmark::kSecond);
 
 static void fibNoNativeBench(benchmark::State& state)
 {
-	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(39)); };\n");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(31)); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.number, 3524578);
+		EXPECT_EQ(args[0].asPrimitive().as.number, 1346269);
 
 		return Value();
 	}));

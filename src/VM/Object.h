@@ -71,7 +71,7 @@ namespace Pomme
 
     struct ObjFunction: public Obj
     {
-        int arity;
+        uint16_t arity;
         Chunk chunk;
         ObjString* name;
     };
@@ -140,6 +140,14 @@ namespace Pomme
 
     struct ObjBoundMethod: public Obj
     {
+        ObjBoundMethod() = default;
+        
+        ObjBoundMethod(Value receiv, Value* meth)
+        : receiver(std::move(receiv))
+        , method(meth)
+        {
+        }
+
         Value receiver;
         Value* method;
     };

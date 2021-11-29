@@ -73,7 +73,10 @@ namespace Pomme
         }
 
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
-        callFunction->chunk.writeChunk(params.size(), 1);
+        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
+        callFunction->chunk.writeChunk(0u, 1);
+        
 
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
         
@@ -101,8 +104,7 @@ namespace Pomme
 
         ObjFunction* callFunction = newFunction();
 
-        ObjBoundMethod* bound = newBoundMethod(Value(static_cast<Obj*>(instance)), &instance->klass->methods[it->second]);
-        int id = callFunction->chunk.addConstant(Value(static_cast<Obj*>(bound)));
+        int id = callFunction->chunk.addConstant(Value(static_cast<Obj*>(instance)));
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
         callFunction->chunk.writeChunk(id, 1);
 
@@ -113,8 +115,12 @@ namespace Pomme
             callFunction->chunk.writeChunk(id, 1);
         }
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
-        callFunction->chunk.writeChunk(params.size(), 1);
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
+        callFunction->chunk.writeChunk((it->second >> 8) & 0xff, 1);
+        callFunction->chunk.writeChunk(it->second & 0xff, 1);
+        callFunction->chunk.writeChunk(0u, 1);
+        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
 
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
         
@@ -151,7 +157,9 @@ namespace Pomme
         callFunction->arity = function->arity;
 
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
-        callFunction->chunk.writeChunk(params.size(), 1);
+        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
+        callFunction->chunk.writeChunk(0u, 1);
 
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
 
@@ -185,8 +193,7 @@ namespace Pomme
             return {};
         }
 
-        ObjBoundMethod* bound = newBoundMethod(Value(static_cast<Obj*>(instance)), &instance->klass->methods[it->second]);
-        push(Value(static_cast<Obj*>(bound)));
+        push(Value(static_cast<Obj*>(instance)));
 
         for (int i = 0; i < params.size(); ++i)
         {
@@ -198,8 +205,12 @@ namespace Pomme
         callFunction->name = function->name;
         callFunction->arity = function->arity;
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
-        callFunction->chunk.writeChunk(params.size(), 1);
+        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
+        callFunction->chunk.writeChunk((it->second >> 8) & 0xff, 1);
+        callFunction->chunk.writeChunk(it->second & 0xff, 1);
+        callFunction->chunk.writeChunk(0u, 1);
+        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
 
         callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
 
@@ -279,15 +290,17 @@ namespace Pomme
         return &klass->staticFields[ot->second];
     }
 
-    void VirtualMachine::push(const Value& value)
+    void VirtualMachine::push(Value value)
     {
-    	*stackTop = value;
+    	*stackTop = std::move(value);
         stackTop++;
+
+        #ifndef NDEBUG
         if ((stackTop - stack) >= STACK_MAX)
         {
             assert(false);
-            abort();
         }
+        #endif
     }
 
     Value VirtualMachine::pop()
@@ -533,27 +546,11 @@ namespace Pomme
                     break;
                 }
 
-                case AS_OPCODE(OpCode::OP_GET_METHOD):
-                {
-                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)) || peek(0).isPrimitive());
-
-                    uint16_t slot = READ_UINT16();
-                    assert(slot >= 0u && slot < METHODS_MAX);
-
-                    bool native = READ_BYTE();
-
-                    Obj* obj = getMethod(0, slot, native);
-
-                    pop(); // Instance or Class.
-                    push(Value(obj));
-                    break;
-                }
-
                 case AS_OPCODE(OpCode::OP_INVOKE):
                 {
                     uint16_t slot = READ_UINT16();
                     bool native = READ_BYTE();
-                    int argCount = READ_BYTE();
+                    uint16_t argCount = READ_UINT16();
                     
                     if (!invoke(argCount, slot, native))
                     {
@@ -587,8 +584,9 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_CALL):
                 {
-					int argCount = READ_BYTE();
-                    if (!callValue(peek(argCount), argCount))
+					uint16_t argCount = READ_UINT16();
+                    bool native = READ_BYTE();
+                    if (!callValue(peek(argCount), argCount, native))
                     {
                         return InterpretResult::INTERPRET_RUNTIME_ERROR;
                     }
@@ -683,7 +681,7 @@ namespace Pomme
 
                 case AS_OPCODE(OpCode::OP_NEW):
                 {
-                    int argCount = READ_BYTE();
+                    uint16_t argCount = READ_UINT16();
                     bool foundConstructor = READ_BYTE();
                     uint16_t slot = READ_UINT16();
 
@@ -798,135 +796,92 @@ namespace Pomme
         return !(value.asPrimitive().as.boolean);
     }
 
-    Obj* VirtualMachine::getMethod(int peekDepth, uint16_t slot, bool native)
+    bool VirtualMachine::invoke(uint16_t argCount, uint16_t slot, bool native)
     {
-        Value& parent = peek(peekDepth);
+        Value& parent = peek(argCount);
 
-        if (IS_INSTANCE(parent))
-        {
+        ObjBoundMethod bound = [&] () -> ObjBoundMethod {
+            if (parent.isPrimitive())
+            {
+                Value *method = (native) ? &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->methods[slot];
+
+                assert(method != nullptr && (IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method)));
+                return ObjBoundMethod(parent, method);
+            }
+
+            assert(IS_INSTANCE(parent));
+
             ObjInstance* instance = AS_INSTANCE(parent);
             Value *method = (native) ? &instance->nativeMethods[slot] : &instance->klass->methods[slot];
 
             assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
-            return static_cast<Obj*>(newBoundMethod(parent, method));
+            return ObjBoundMethod(parent, method);
+        }();
+
+        return callBoundMethod(bound, argCount);
+    }
+
+    bool VirtualMachine::callValue(const Value& callee, uint16_t argCount, bool native)
+    {
+        if (!native)
+        {
+            assert(AS_FUNCTION(callee));
+
+            return call(AS_FUNCTION(callee), argCount);
         }
+
+        assert(IS_GLOBAL_NATIVE(callee));
+
+        GlobalNativeFn& nativeFn = AS_GLOBAL_NATIVE(callee);
+        Value result = nativeFn(*this, argCount, stackTop - argCount);
         
-        if (parent.isPrimitive())
+        stackTop -= argCount + 1;
+        push(result);
+
+        return true;
+    }
+
+    bool VirtualMachine::callBoundMethod(ObjBoundMethod& bound, uint16_t argCount)
+    {
+        if (IS_FUNCTION(bound.method))
         {
-            Value *method = [&] () -> Value* {
-                switch (parent.asPrimitive().type)
-                {
-                    case PrimitiveType::FLOAT:
-                    {
-                        return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)]->methods[slot];
-                        break;
-                    }
-
-                    case PrimitiveType::INT:
-                    {
-                        return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->methods[slot];
-                        break;
-                    }
-
-                    case PrimitiveType::BOOL:
-                    {
-                        return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::BOOL)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::BOOL)]->methods[slot];
-                        break;
-                    }
-
-                    default:
-                        break;
-                }
-
-                return nullptr;
-            }();
-
-            assert(method != nullptr && (IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method)));
-            return static_cast<Obj*>(newBoundMethod(parent, method));
+            stackTop[-argCount - 1] = bound.receiver;
+            return call(AS_FUNCTION(*bound.method), argCount);
         }
 
-        assert(AS_CLASS(parent));
-
-        ObjClass* klass = AS_CLASS(parent);
-        assert(IS_FUNCTION(klass->methods[slot]));
-
-        return static_cast<Obj*>(AS_FUNCTION(klass->methods[slot]));
-    }
-
-    bool VirtualMachine::invoke(int argCount, uint16_t slot, bool native)
-    {
-        return callValue(Value(getMethod(argCount, slot, native)), argCount);
-    }
-
-    bool VirtualMachine::callValue(const Value& callee, int argCount)
-    {
-        if (!callee.isObj()) return false;
-
-        switch (OBJ_TYPE(callee))
-        {
-            case ObjType::OBJ_BOUND_METHOD:
+        Value result = [&] () {
+            if (bound.receiver.isPrimitive())
             {
-                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*bound.method);
+                assert(native);
 
-                if (IS_FUNCTION(*bound->method))
-                {
-                    stackTop[-argCount - 1] = bound->receiver;
-                    return call(AS_FUNCTION(*bound->method), argCount);
-                }
-
-                Value result = [&] () {
-                    if (bound->receiver.isPrimitive())
-                    {
-                        MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*bound->method);
-                        assert(native);
-
-                        return native(*this, argCount, &bound->receiver.asPrimitive(), stackTop - argCount);
-                    }
-
-                    MethodNativeFn native = AS_METHOD_NATIVE(*bound->method);
-                    assert(native);
-                    return native(*this, argCount, AS_INSTANCE(bound->receiver), stackTop - argCount);
-                }();
-
-                stackTop -= argCount + 1;
-                push(result);
-                
-                return true;
+                return native(*this, argCount, &bound.receiver.asPrimitive(), stackTop - argCount);
             }
 
-            case ObjType::OBJ_FUNCTION: 
-                return call(AS_FUNCTION(callee), argCount);
-            
-            case ObjType::OBJ_GLOBAL_NATIVE:
-            {
-                GlobalNativeFn& native = AS_GLOBAL_NATIVE(callee);
-                Value result = native(*this, argCount, stackTop - argCount);
-                
-                stackTop -= argCount + 1;
-                push(result);
+            MethodNativeFn native = AS_METHOD_NATIVE(*bound.method);
+            assert(native);
+            return native(*this, argCount, AS_INSTANCE(bound.receiver), stackTop - argCount);
+        }();
 
-                return true;
-            }
+        stackTop -= argCount + 1;
+        push(result);
 
-            default:
-                break;
-        }
-
-        return false;
+        return true;
     }
 
-    bool VirtualMachine::call(ObjFunction* function, int argCount)
+    bool VirtualMachine::call(ObjFunction* function, uint16_t argCount)
     {
         if (argCount != function->arity)
         {
             return false;
         }
 
+        #ifndef NDEBUG
         if (frameCount >= FRAMES_MAX)
         {
             assert(false);
-            abort();
         }
+        #endif
 
         CallFrame* frame = &frames[frameCount++];
 
@@ -1165,9 +1120,7 @@ namespace Pomme
             case AS_OPCODE(OpCode::OP_GET_PROPERTY):
                 return constantInstruction("OP_GET_PROPERTY", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_PROPERTY):
-                return constantInstruction("OP_SET_PROPERTY", chunk, offset);
-            case AS_OPCODE(OpCode::OP_GET_METHOD):
-                return constantInstruction("OP_GET_METHOD", chunk, offset);*/
+                return constantInstruction("OP_SET_PROPERTY", chunk, offset);*/
             default:
                 printf("Unknown opcode %d\n", instruction);
             return offset + 1;

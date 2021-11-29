@@ -44,8 +44,6 @@ namespace Pomme
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
-        std::cout << "ASTident visit : " << node->m_Identifier << " " << node->m_Attribute << " " << node->m_IndexAttribute << std::endl;
-
         if (node->m_Attribute)
         {
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
@@ -241,7 +239,7 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_INVOKE));
             emit16Bits(node->index);
             emitByte(node->native);
-            emitByte(0);
+            emit16Bits(0);
         }
         else if (node->testNull)
         {
@@ -401,7 +399,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeNew *node, void * data) 
     {
-        uint8_t argCount = 0;
+        uint16_t argCount = 0;
 
         std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
@@ -424,7 +422,8 @@ namespace Pomme
             exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
         }
 
-        emitBytes(AS_OPCODE(OpCode::OP_NEW), argCount);
+        emitByte(AS_OPCODE(OpCode::OP_NEW));
+        emit16Bits(argCount);
         emitByte(node->foundConstructor);
         emit16Bits(node->index);
     }
@@ -678,18 +677,18 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTaccessMethode *node, void * data)
     {
-        //If we don't have GET_PROPERTY before, we are accessing method of current class or global variable
+        //If we don't have GET_PROPERTY before, we are accessing method of global variable
         if (node->global)
         {
             namedVariable(node->name, false);
         }
-        //We are in class and calling a method of this class without the "this" prefix
+        //Or we are in class and calling a method of this class without the "this" prefix
         else if (node->methodCall)
         {
             namedVariable("this", false);
         }
 
-        uint8_t argCount = 0;
+        uint16_t argCount = 0;
 
         ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
 
@@ -705,7 +704,7 @@ namespace Pomme
                     emitByte(AS_OPCODE(OpCode::OP_INVOKE));
                     emit16Bits(exp->index);
                     emitByte(exp->native);
-                    emitByte(0);
+                    emit16Bits(0);
                 }
             }
 
@@ -717,17 +716,19 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_INVOKE));
             emit16Bits(node->index);
             emitByte(node->native);
-            emitByte(argCount);
+            emit16Bits(argCount);
             return;
         }
         
         if (node->global)
         {
-            emitBytes(AS_OPCODE(OpCode::OP_CALL), argCount);
+            emitByte(AS_OPCODE(OpCode::OP_CALL));
+            emit16Bits(argCount);
+            emitByte(node->native);
             return;
         }
 
-        *static_cast<int*>(data) = argCount;
+        *static_cast<uint16_t*>(data) = argCount;
     }
 
 	void CompilerVisitor::emitByte(uint8_t byte)
@@ -869,16 +870,14 @@ namespace Pomme
 
             assert(!assign);
 
-            std::cout << "emitMethod index : " << method->index << std::endl;
-
-            int argCount;
+            uint16_t argCount;
 
             method->jjtAccept(this, &argCount);
 
             emitByte(AS_OPCODE(OpCode::OP_INVOKE));
             emit16Bits(method->index);
             emitByte(method->native);
-            emitByte(argCount);
+            emit16Bits(argCount);
 
             return true;
         };
@@ -973,7 +972,7 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_INVOKE));
         emit16Bits(index);
         emitByte(native);
-        emitByte(0);
+        emit16Bits(0);
     }
 
     void CompilerVisitor::binaryOperator(SimpleNode* node, uint16_t index, bool native)
@@ -983,7 +982,7 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_INVOKE));
         emit16Bits(index);
         emitByte(native);
-        emitByte(1);
+        emit16Bits(1);
     }
 
     int CompilerVisitor::addLocal(const std::string& name)

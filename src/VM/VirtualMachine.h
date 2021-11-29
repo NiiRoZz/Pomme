@@ -56,7 +56,7 @@ namespace Pomme
 			return name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
 		}
 
-		void push(const Value& value);
+		void push(Value value);
 		Value pop();
 		Value& peek(int depth);
 
@@ -132,11 +132,10 @@ namespace Pomme
 
 		bool isFalsey(const Value& value);
 
-		Obj* getMethod(int peekDepth, uint16_t slot, bool native);
-
-		bool invoke(int argCount, uint16_t slot, bool native);
-		bool callValue(const Value& callee, int argCount);
-		bool call(ObjFunction* function, int argCount);
+		bool invoke(uint16_t argCount, uint16_t slot, bool native);
+		bool callValue(const Value& callee, uint16_t argCount, bool native);
+		bool callBoundMethod(ObjBoundMethod& bound, uint16_t argCount);
+		bool call(ObjFunction* function, uint16_t argCount);
 
 		void printObject(const Value& value);
 		void printFunction(ObjFunction* function);
