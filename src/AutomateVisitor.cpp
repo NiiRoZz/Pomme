@@ -3,11 +3,102 @@
 
 namespace Pomme
 {
+
+    bool AutomateVisitor::resolved(Node* node)
+    {
+        bool resolved = false;
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::vector<std::string> toDelete;
+        for(const auto& it : classToBeResolved)
+        {
+            for(const auto& ot : it.second)
+            {
+                if(ot == ident)
+                {
+                    addState(node);
+                    int stateNumber = dependanceGraph.getState(it.first);
+                    toDelete.push_back(dynamic_cast<ASTident*>(dependanceGraph.getState(stateNumber)->node->jjtGetChild(0))->m_Identifier);
+                    dependanceGraph.addTransition(stateNumber , nbState - 1);
+                    resolved = true;
+                }
+            }
+        }
+
+        if(resolved)
+        {
+            for(const auto& it : toDelete)
+            {
+                auto ut = classToBeResolved.find(it);
+                if(ut != classToBeResolved.end())
+                {
+                    ut->second.erase(ident);
+                    if(ut->second.empty())
+                    {
+                        classToBeResolved.erase(ut);
+                    }
+                }
+            }
+        }
+
+        return resolved;
+    }
+
+    void AutomateVisitor::addState(Node* node)
+    {
+        dependanceGraph.addState(nbState);
+        State* state = dependanceGraph.getState(nbState);
+        if(state != nullptr)
+        {
+            std::cout << "!nullptr" << std::endl;
+            state->node = node;
+            auto nType = dynamic_cast<ASTpommeClass*>(node);
+            if(nType == nullptr)
+            {
+                std::cout << "!nType" << std::endl;
+                auto nTypeModded = dynamic_cast<ASTpommeModdedClass*>(node);
+                if(nTypeModded != nullptr)
+                {
+                    std::cout << "!nTypeModded" << std::endl;
+                    state->modded = true;
+                } else
+                {
+                    state->extend = true;
+
+                    std::string dependingClassName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+                    int dependingStateNumber = dependanceGraph.getState(dependingClassName);
+                    std::cout << "dependingStateNumber ? " << dependingStateNumber << std::endl;
+                    if(dependingStateNumber != -1)
+                    {
+                        dependanceGraph.addTransition(nbState , dependingStateNumber);
+                    }else
+                    {
+                        std::string className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                        auto ut = classToBeResolved.find(className);
+                        if(ut != classToBeResolved.end())
+                        {
+                            ut->second.insert(dependingClassName);
+                        }else
+                        {
+                            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
+                        }
+                    }
+                }
+            }
+        }else
+        {
+            std::cout << "ERROR STATE NULL" << std::endl;
+            return;
+        }
+        nbState++;
+    }
+
     void AutomateVisitor::visit(SimpleNode *node, void * data)
     {
+        node->jjtChildrenAccept(this, data);
     }
     void AutomateVisitor::visit(ASTinput *node, void * data)
     {
+        node->jjtChildrenAccept(this, data);
     }
     void AutomateVisitor::visit(ASTident *node, void * data)
     {
@@ -26,6 +117,7 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTscopes *node, void * data)
     {
+        node->jjtChildrenAccept(this, data);
     }
     void AutomateVisitor::visit(ASTscinil *node, void * data)
     {
@@ -35,18 +127,76 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTpommeClass *node, void * data)
     {
+        if(!resolved(node))
+        {
+            addState(node);
+        }
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTpommeClassChild *node, void * data)
     {
+        if(!resolved(node))
+        {
+            addState(node);
+        }
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
+        if(!resolved(node))
+        {
+            addState(node);
+        }
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTdecls *node, void * data)
     {
+        node->jjtChildrenAccept(this, data);
     }
     void AutomateVisitor::visit(ASTpommeVariable *node, void * data)
     {
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::cout << ident << std::endl;
+
+        if(CommonVisitorFunction::isNativeType(ident))
+        {
+            std::cout << "NATIVE TYPE" << std::endl;
+        }else
+        {
+            std::string* className = static_cast<std::string*>(data);
+            bool depandanceNodeAlreadyDefined = false;
+            int numStateDepandance = -1;
+
+            for(int i = 0; i < nbState; i++)
+            {
+                State* state = dependanceGraph.getState(i);
+                if(dynamic_cast<ASTident*>(state->node->jjtGetChild(0))->m_Identifier == ident)
+                {
+                    depandanceNodeAlreadyDefined = true;
+                    numStateDepandance = i;
+                }
+            }
+            // if already defined
+            if(depandanceNodeAlreadyDefined)
+            {
+                std::cout << "Adding Transition between " << nbState - 1 << " -> "<<  numStateDepandance << std::endl;
+                dependanceGraph.addTransition(nbState - 1 , numStateDepandance);
+            }else
+            {
+                std::cout << "DEPENDANCE DETECTED WITH CLASS : " << ident << " FOR CLASS " << *className << std::endl;
+                auto it = classToBeResolved.find(*className);
+                if(it != classToBeResolved.end())
+                {
+                    it->second.insert(ident);
+                }else
+                {
+                    classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(*className,{ident}));
+                }
+            }
+        }
     }
     void AutomateVisitor::visit(ASTdnil *node, void * data)
     {
@@ -286,6 +436,23 @@ namespace Pomme
     {
     }
     void AutomateVisitor::visit(ASTaccessTab *node, void * data)
+    {
+    }
+
+    void AutomateVisitor::visit(ASTpommeConstructor *node, void *data)
+    {
+    }
+
+    void AutomateVisitor::visit(ASTpommeConstant *node, void *data)
+    {
+    }
+
+    void AutomateVisitor::visit(ASTvarDecls *node, void *data)
+    {
+        node->jjtChildrenAccept(this, data);
+    }
+
+    void AutomateVisitor::visit(ASTlistaccessP *node, void *data)
     {
     }
 }
