@@ -800,23 +800,20 @@ namespace Pomme
     {
         Value& parent = peek(argCount);
 
-        ObjBoundMethod bound = [&] () -> ObjBoundMethod {
+        ObjBoundMethod bound(parent, [&] () -> Value* {
             if (parent.isPrimitive())
-            {
-                Value *method = (native) ? &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->methods[slot];
+                return (native) ? &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->methods[slot];
 
-                assert(method != nullptr && (IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method)));
-                return ObjBoundMethod(parent, method);
+            if (IS_INSTANCE(parent))
+            {
+                ObjInstance* instance = AS_INSTANCE(parent);
+                return (native) ? &instance->nativeMethods[slot] : &instance->klass->methods[slot];
             }
 
-            assert(IS_INSTANCE(parent));
-
-            ObjInstance* instance = AS_INSTANCE(parent);
-            Value *method = (native) ? &instance->nativeMethods[slot] : &instance->klass->methods[slot];
-
-            assert(IS_FUNCTION(*method) || IS_METHOD_NATIVE(*method));
-            return ObjBoundMethod(parent, method);
-        }();
+            assert(IS_CLASS(parent));
+            ObjClass* klass = AS_CLASS(parent);
+            return (native) ? &klass->nativeMethods[slot] : &klass->methods[slot];
+        }());
 
         return callBoundMethod(bound, argCount);
     }
@@ -843,7 +840,7 @@ namespace Pomme
 
     bool VirtualMachine::callBoundMethod(ObjBoundMethod& bound, uint16_t argCount)
     {
-        if (IS_FUNCTION(bound.method))
+        if (IS_FUNCTION(*bound.method))
         {
             stackTop[-argCount - 1] = bound.receiver;
             return call(AS_FUNCTION(*bound.method), argCount);
