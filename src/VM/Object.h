@@ -19,7 +19,6 @@ namespace Pomme
 
     #define IS_BOUND_METHOD(value)              isObjType(value, ObjType::OBJ_BOUND_METHOD)
     #define IS_CLASS(value)                     isObjType(value, ObjType::OBJ_CLASS)
-    #define IS_PRIMITIVE(value)                 isObjType(value, ObjType::OBJ_PRIMITIVE)
     #define IS_FUNCTION(value)                  isObjType(value, ObjType::OBJ_FUNCTION)
     #define IS_INSTANCE(value)                  isObjType(value, ObjType::OBJ_INSTANCE)
     #define IS_GLOBAL_NATIVE(value)             isObjType(value, ObjType::OBJ_GLOBAL_NATIVE)
@@ -29,7 +28,6 @@ namespace Pomme
 
     #define AS_BOUND_METHOD(value) (static_cast<ObjBoundMethod*>(AS_OBJ(value)))
     #define AS_CLASS(value)        (static_cast<ObjClass*>(AS_OBJ(value)))
-    #define AS_PRIMITIVE(value)     (static_cast<ObjPrimitive*>(AS_OBJ(value)))
     #define AS_FUNCTION(value)     (static_cast<ObjFunction*>(AS_OBJ(value)))
     #define AS_INSTANCE(value)     (static_cast<ObjInstance*>(AS_OBJ(value)))
     #define AS_GLOBAL_NATIVE(value) \
@@ -45,7 +43,6 @@ namespace Pomme
     {
         OBJ_BOUND_METHOD,
         OBJ_CLASS,
-        OBJ_PRIMITIVE,
         OBJ_FUNCTION,
         OBJ_INSTANCE,
         OBJ_GLOBAL_NATIVE,
@@ -60,7 +57,6 @@ namespace Pomme
         {
             case ObjType::OBJ_BOUND_METHOD: return "OBJ_BOUND_METHOD";
             case ObjType::OBJ_CLASS: return "OBJ_CLASS";
-            case ObjType::OBJ_PRIMITIVE: return "OBJ_PRIMITIVE";
             case ObjType::OBJ_FUNCTION: return "OBJ_FUNCTION";
             case ObjType::OBJ_INSTANCE: return "OBJ_INSTANCE";
             case ObjType::OBJ_GLOBAL_NATIVE: return "OBJ_GLOBAL_NATIVE";
@@ -79,6 +75,7 @@ namespace Pomme
         FLOAT,
         BOOL,
         STRING,
+        COUNT,
     };
 
     struct Obj
@@ -86,6 +83,8 @@ namespace Pomme
         ObjType type;
         bool isMarked;
         Obj* next;
+
+        virtual ~Obj() = default;
     };
 
     struct ObjString: public Obj
@@ -101,11 +100,23 @@ namespace Pomme
     };
 
     struct ObjInstance;
-    struct ObjPrimitive;
+    
+    struct ObjPrimitiveType
+    {
+        virtual ~ObjPrimitiveType() = default;
+
+        PrimitiveType primitiveType;
+    };
+
+    template<typename T>
+    struct ObjPrimitive: public ObjPrimitiveType
+    {
+        T value;
+    };
 
     using GlobalNativeFn = std::function<Value(VirtualMachine&, int, Value*)>;
     using MethodNativeFn = std::function<Value(VirtualMachine&, int, ObjInstance*, Value*)>;
-    using MethodPrimitiveNativeFn = std::function<Value(VirtualMachine&, int, ObjPrimitive*, Value*)>;
+    using MethodPrimitiveNativeFn = std::function<Value(VirtualMachine&, int, ObjPrimitiveType*, Value*)>;
 
     struct ObjGlobalNative: public Obj
     {
@@ -161,13 +172,6 @@ namespace Pomme
         PommeString(VirtualMachine& vm, ObjInstance* instance);
 
         Value pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args);
-    };
-
-    struct ObjPrimitive: public Obj
-    {
-        ObjClass* klass;
-        PrimitiveType primitiveType;
-        std::variant<int64_t, double, bool, PommeString*> value;
     };
 
     struct ObjBoundMethod: public Obj

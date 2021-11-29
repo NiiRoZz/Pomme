@@ -96,9 +96,9 @@ namespace Pomme
 		ObjString* newString();
 		ObjString* copyString(const char* chars, int length);
 
-		ObjPrimitive* newInt(uint64_t value);
-		ObjPrimitive* newFloat(double value);
-		ObjPrimitive* newBool(bool value);
+		ObjPrimitive<int64_t>* newInt(uint64_t value);
+		ObjPrimitive<double>* newFloat(double value);
+		ObjPrimitive<bool>* newBool(bool value);
 
 		ObjInstance* newInstance(const std::string& className);
 		ObjInstance* newInstance(uint16_t slot);
@@ -153,10 +153,9 @@ namespace Pomme
 		ObjBoundMethod* newBoundMethod(const Value& receiver, Value* method);
 
 		template<typename T>
-		ObjPrimitive* newPrimitive(ObjClass* klass, PrimitiveType type, T value)
+		ObjPrimitive<T>* newPrimitive(PrimitiveType type, T value)
 		{
-			ObjPrimitive* primitive = allocateObject<ObjPrimitive>(ObjType::OBJ_PRIMITIVE);
-			primitive->klass = klass;
+			ObjPrimitive<T>* primitive = new ObjPrimitive<T>();
 			primitive->primitiveType = type;
 			primitive->value = value;
 
@@ -192,10 +191,7 @@ namespace Pomme
 
 		Obj* objects;
 
-		ObjClass* intClass;
-		ObjClass* floatClass;
-		ObjClass* boolClass;
-		ObjClass* stringClass;
+		ObjClass* primitives[static_cast<uint8_t>(PrimitiveType::COUNT)];
 
 		std::vector<Obj*> grayStack;
 

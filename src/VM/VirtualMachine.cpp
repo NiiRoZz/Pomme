@@ -14,14 +14,14 @@ namespace Pomme
     , frameCount(0)
     , globalsIndicesCount(0)
     , objects(nullptr)
-    , intClass(nullptr)
-    , floatClass(nullptr)
-    , boolClass(nullptr)
-    , stringClass(nullptr)
     , bytesAllocated(0)
     , nextGC(1024u * 1024u)
     {
         grayStack.reserve(GLOBALS_MAX + STACK_MAX);
+        for (uint8_t i = 0; i < static_cast<uint8_t>(PrimitiveType::COUNT); ++i)
+        {
+            primitives[i] = nullptr;
+        }
     }
 
     VirtualMachine::~VirtualMachine()
@@ -315,31 +315,25 @@ namespace Pomme
         return string;
     }
 
-    ObjPrimitive* VirtualMachine::newInt(uint64_t value)
+    ObjPrimitive<int64_t>* VirtualMachine::newInt(uint64_t value)
     {
-        if (intClass == nullptr) return nullptr;
+        if (primitives[static_cast<uint8_t>(PrimitiveType::INT)] == nullptr) return nullptr;
 
-        assert(IS_CLASS(OBJ_VAL(intClass)));
-
-        return newPrimitive(intClass, PrimitiveType::INT, static_cast<int64_t>(value));
+        return newPrimitive<int64_t>(PrimitiveType::INT, static_cast<int64_t>(value));
     }
 
-    ObjPrimitive* VirtualMachine::newFloat(double value)
+    ObjPrimitive<double>* VirtualMachine::newFloat(double value)
     {
-        if (floatClass == nullptr) return nullptr;
+        if (primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)] == nullptr) return nullptr;
 
-        assert(IS_CLASS(OBJ_VAL(floatClass)));
-
-        return newPrimitive(floatClass, PrimitiveType::FLOAT, value);
+        return newPrimitive<double>(PrimitiveType::FLOAT, value);
     }
 
-    ObjPrimitive* VirtualMachine::newBool(bool value)
+    ObjPrimitive<bool>* VirtualMachine::newBool(bool value)
     {
-        if (boolClass == nullptr) return nullptr;
+        if (primitives[static_cast<uint8_t>(PrimitiveType::BOOL)] == nullptr) return nullptr;
 
-        assert(IS_CLASS(OBJ_VAL(boolClass)));
-
-        return newPrimitive(boolClass, PrimitiveType::BOOL, value);
+        return newPrimitive<bool>(PrimitiveType::BOOL, value);
     }
 
     ObjInstance* VirtualMachine::newInstance(const std::string& className)
@@ -447,7 +441,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_TEST_NOT_NULL):
                 {
                     bool isNull = IS_NULL(peek(0));
-                    Value value = OBJ_VAL(newBool(!isNull));
+                    Value value = PrimitiveVal(newBool(!isNull));
 
                     pop(); //pop obj/null value
                     push(value);
@@ -459,20 +453,20 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_INT):
                 {
                     READ_64BITS(uint64_t, value);
-                    push(OBJ_VAL(newInt(value)));
+                    push(PrimitiveVal(newInt(value)));
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_FLOAT):
                 {
                     READ_64BITS(double, value);
-                    push(OBJ_VAL(newFloat(value)));
+                    push(PrimitiveVal(newFloat(value)));
                     break;
                 }
 
                 case AS_OPCODE(OpCode::OP_BOOL):
                 {
-                    push(OBJ_VAL(newBool(static_cast<bool>(READ_BYTE()))));
+                    push(PrimitiveVal(newBool(static_cast<bool>(READ_BYTE()))));
                     break;
                 }
 
@@ -698,7 +692,7 @@ namespace Pomme
                 case AS_OPCODE(OpCode::OP_NOT):
                 {
                     assert(IS_PRIMITIVE(peek(0)) && AS_PRIMITIVE(peek(0))->primitiveType == PrimitiveType::BOOL);
-                    push(OBJ_VAL(newBool(!(std::get<bool>(AS_PRIMITIVE(peek(0))->value)))));
+                    push(PrimitiveVal(newBool(!(static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(peek(0)))->value))));
                     break;
                 }
 
@@ -814,7 +808,7 @@ namespace Pomme
 
         assert(IS_PRIMITIVE(value) && AS_PRIMITIVE(value)->primitiveType == PrimitiveType::BOOL);
 
-        return !(std::get<bool>(AS_PRIMITIVE(value)->value));
+        return !(static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(value))->value);
     }
 
     Obj* VirtualMachine::getMethod(int peekDepth, uint16_t slot, bool native)
@@ -830,10 +824,30 @@ namespace Pomme
         
         if (IS_PRIMITIVE(peek(peekDepth)))
         {
-            ObjPrimitive* primitive = AS_PRIMITIVE(peek(peekDepth));
-            Value *method = (native) ? &primitive->klass->nativeMethods[slot] : &primitive->klass->methods[slot];
+            Value *method = [&] () {
+                switch (AS_PRIMITIVE(peek(peekDepth))->primitiveType)
+                {
+                    case PrimitiveType::FLOAT:
+                    {
+                        return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)]->methods[slot];
+                        break;
+                    }
 
-            assert(IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method));
+                    case PrimitiveType::INT:
+                    {
+                        return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->methods[slot];
+                        break;
+                    }
+
+                    case PrimitiveType::BOOL:
+                    {
+                        return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::BOOL)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::BOOL)]->methods[slot];
+                        break;
+                    }
+                }
+            }();
+
+            assert(method != nullptr && (IS_FUNCTION(*method) || IS_METHOD_PRIMITIVE_NATIVE(*method)));
             return static_cast<Obj*>(newBoundMethod(peek(peekDepth), method));
         }
 
@@ -906,9 +920,15 @@ namespace Pomme
 
     bool VirtualMachine::call(ObjFunction* function, int argCount)
     {
-        if (argCount != function->arity || frameCount == FRAMES_MAX)
+        if (argCount != function->arity)
         {
             return false;
+        }
+
+        if (frameCount >= FRAMES_MAX)
+        {
+            assert(false);
+            abort();
         }
 
         CallFrame* frame = &frames[frameCount++];
@@ -916,12 +936,6 @@ namespace Pomme
         frame->function = function;
         frame->ip = function->chunk.code.data();
         frame->slots = stackTop - argCount - 1;
-
-        if (frameCount >= FRAMES_MAX)
-        {
-            assert(false);
-            abort();
-        }
 
         return true;
     }
@@ -931,6 +945,44 @@ namespace Pomme
         if (value.type == ValueType::VAL_NULL)
         {
             std::cout << "null";
+            return;
+        }
+
+        if (value.type == ValueType::VAL_PRIMITIVE)
+        {
+            switch (AS_PRIMITIVE(value)->primitiveType)
+            {
+                case PrimitiveType::INT:
+                {
+                    ObjPrimitive<int64_t>* lhs = static_cast<ObjPrimitive<int64_t>*>(AS_PRIMITIVE(value));
+                    std::cout << lhs->value;
+                    break;
+                }
+
+                
+                case PrimitiveType::FLOAT:
+                {
+                    ObjPrimitive<double>* lhs = static_cast<ObjPrimitive<double>*>(AS_PRIMITIVE(value));
+                    std::cout << lhs->value;
+                    break;
+                }
+
+                
+                case PrimitiveType::BOOL:
+                {
+                    ObjPrimitive<bool>* lhs = static_cast<ObjPrimitive<bool>*>(AS_PRIMITIVE(value));
+                    std::cout << lhs->value;
+                    break;
+                }
+
+                /*
+                case PrimitiveType::STRING:
+                {
+                    std::cout << std::get<PommeString*>(AS_PRIMITIVE(value)->value)->value->chars;
+                    break;
+                }
+                */
+            }
             return;
         }
 
@@ -964,34 +1016,6 @@ namespace Pomme
                 break;
             case ObjType::OBJ_STRING:
                 std::cout << AS_CSTRING(value);
-                break;
-            case ObjType::OBJ_PRIMITIVE:
-                switch (AS_PRIMITIVE(value)->primitiveType)
-                {
-                    case PrimitiveType::INT:
-                    {
-                        std::cout << std::get<int64_t>(AS_PRIMITIVE(value)->value);
-                        break;
-                    }
-
-                    case PrimitiveType::FLOAT:
-                    {
-                        std::cout << std::get<double>(AS_PRIMITIVE(value)->value);
-                        break;
-                    }
-
-                    case PrimitiveType::BOOL:
-                    {
-                        std::cout << std::get<bool>(AS_PRIMITIVE(value)->value);
-                        break;
-                    }
-
-                    case PrimitiveType::STRING:
-                    {
-                        std::cout << std::get<PommeString*>(AS_PRIMITIVE(value)->value)->value->chars;
-                        break;
-                    }
-                }
                 break;
         }
     }
@@ -1061,19 +1085,19 @@ namespace Pomme
 
         if (name->chars == "int")
         {
-            intClass = klass;
+            primitives[static_cast<uint8_t>(PrimitiveType::INT)] = klass;
         }
         else if (name->chars == "float")
         {
-            floatClass = klass;
+            primitives[static_cast<uint8_t>(PrimitiveType::FLOAT)] = klass;
         }
         else if (name->chars == "bool")
         {
-            boolClass = klass;
+            primitives[static_cast<uint8_t>(PrimitiveType::BOOL)] = klass;
         }
         else if (name->chars == "string")
         {
-            stringClass = klass;
+            primitives[static_cast<uint8_t>(PrimitiveType::STRING)] = klass;
         }
 
         return klass;
@@ -1295,13 +1319,6 @@ namespace Pomme
                 markArray(klass->nativeMethods, METHODS_MAX);
                 markArray(klass->staticFields, FIELDS_MAX);
                 markArray(klass->defaultFields, FIELDS_MAX);
-                break;
-            }
-
-            case ObjType::OBJ_PRIMITIVE:
-            {
-                ObjPrimitive* primitive = static_cast<ObjPrimitive*>(object);
-                markObject(static_cast<Obj*>(primitive->klass));
                 break;
             }
             
