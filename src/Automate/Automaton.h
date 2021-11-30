@@ -36,6 +36,11 @@ namespace Pomme {
         bool hasTransition(int from, int to) const;
         std::size_t countTransitions() const;
 
+        bool hasLoop();
+        std::vector<int> topologicalSort();
+        bool processDFSTree(int state, std::vector<bool>* visited, std::vector<int>* stack);
+        void printCycle(int state, const std::vector<int>* stack);
+
         friend std::ostream & operator<<(std::ostream & str, const Automaton & klass)
         {
           for(const auto& it : klass.m_state)
