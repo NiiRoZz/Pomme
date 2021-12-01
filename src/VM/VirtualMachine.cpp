@@ -65,6 +65,7 @@ namespace Pomme
         ObjFunction callFunction;
         callFunction.name = nullptr;
         callFunction.arity = 0u;
+        callFunction.type = ObjType::OBJ_FUNCTION;
 
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_GET_GLOBAL), 0);
         callFunction.chunk.writeChunk(it->second, 0);
@@ -79,7 +80,6 @@ namespace Pomme
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL_GLOBAL), 1);
         callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
         callFunction.chunk.writeChunk(params.size() & 0xff, 1);
-        
 
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
         
@@ -108,6 +108,7 @@ namespace Pomme
         ObjFunction callFunction;
         callFunction.name = nullptr;
         callFunction.arity = 0u;
+        callFunction.type = ObjType::OBJ_FUNCTION;
 
         int id = callFunction.chunk.addConstant(Value(static_cast<Obj*>(instance)));
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
@@ -157,14 +158,13 @@ namespace Pomme
         }
 
         ObjFunction callFunction;
-
         callFunction.name = function->name;
         callFunction.arity = function->arity;
+        callFunction.type = ObjType::OBJ_FUNCTION;
 
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL_GLOBAL), 1);
         callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
         callFunction.chunk.writeChunk(params.size() & 0xff, 1);
-        callFunction.chunk.writeChunk(0u, 1);
 
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
 
@@ -206,9 +206,9 @@ namespace Pomme
         }
 
         ObjFunction callFunction;
-
         callFunction.name = function->name;
         callFunction.arity = function->arity;
+        callFunction.type = ObjType::OBJ_FUNCTION;
 
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
         callFunction.chunk.writeChunk((it->second >> 8) & 0xff, 1);
@@ -456,11 +456,18 @@ namespace Pomme
             &&OP_INT,
             &&OP_FLOAT,
             &&OP_BOOL,
-            &&OP_LT,
-            &&OP_MINUS_INT,
-            &&OP_MINUS_FLOAT,
-            &&OP_ADD_INT,
-            &&OP_ADD_FLOAT,
+            &&OP_LT_INT_INT,
+            &&OP_LT_INT_FLOAT,
+            &&OP_LT_FLOAT_FLOAT,
+            &&OP_LT_FLOAT_INT,
+            &&OP_MINUS_INT_INT,
+            &&OP_MINUS_INT_FLOAT,
+            &&OP_MINUS_FLOAT_FLOAT,
+            &&OP_MINUS_FLOAT_INT,
+            &&OP_ADD_INT_INT,
+            &&OP_ADD_INT_FLOAT,
+            &&OP_ADD_FLOAT_FLOAT,
+            &&OP_ADD_FLOAT_INT,
         };
         static_assert((sizeof(dispatch_table)/sizeof(dispatch_table[0])) == static_cast<uint8_t>(OpCode::COUNT));
         #endif
@@ -822,9 +829,9 @@ namespace Pomme
                     DISPATCH();
                 }
 
-                CASES(OP_LT)
+                CASES(OP_LT_INT_INT)
                 {
-                    Value value((double) (peek(1).asPrimitive().as.number) < (double) (peek(0).asPrimitive().as.number));
+                    Value value(peek(1).asPrimitive().as.number < peek(0).asPrimitive().as.number);
 
                     pop(2u);
 
@@ -833,9 +840,9 @@ namespace Pomme
                     DISPATCH();
                 }
 
-                CASES(OP_MINUS_INT)
+                CASES(OP_LT_INT_FLOAT)
                 {
-                    Value value((int64_t) ((double) (peek(1).asPrimitive().as.number) - (double) (peek(0).asPrimitive().as.number)));
+                    Value value((double) (peek(1).asPrimitive().as.number) < peek(0).asPrimitive().as.numberFloat);
 
                     pop(2u);
 
@@ -844,9 +851,9 @@ namespace Pomme
                     DISPATCH();
                 }
 
-                CASES(OP_MINUS_FLOAT)
+                CASES(OP_LT_FLOAT_FLOAT)
                 {
-                    Value value((double) (peek(1).asPrimitive().as.number) - (double) (peek(0).asPrimitive().as.number));
+                    Value value(peek(1).asPrimitive().as.numberFloat < peek(0).asPrimitive().as.numberFloat);
 
                     pop(2u);
 
@@ -855,11 +862,9 @@ namespace Pomme
                     DISPATCH();
                 }
 
-                CASES(OP_ADD_INT)
+                CASES(OP_LT_FLOAT_INT)
                 {
-                    assert(peek(0).isPrimitive() && peek(0).asPrimitive().isType(PrimitiveType::INT));
-                    assert(peek(1).isPrimitive() && peek(1).asPrimitive().isType(PrimitiveType::INT));
-                    Value value((int64_t) ((double) (peek(1).asPrimitive().as.number) + (double) (peek(0).asPrimitive().as.number)));
+                    Value value(peek(1).asPrimitive().as.numberFloat < (double) (peek(0).asPrimitive().as.number));
 
                     pop(2u);
 
@@ -868,9 +873,86 @@ namespace Pomme
                     DISPATCH();
                 }
 
-                CASES(OP_ADD_FLOAT)
+                CASES(OP_MINUS_INT_INT)
                 {
-                    Value value((double) (peek(1).asPrimitive().as.number) + (double) (peek(0).asPrimitive().as.number));
+                    Value value(peek(1).asPrimitive().as.number - peek(0).asPrimitive().as.number);
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_MINUS_INT_FLOAT)
+                {
+                    Value value((double) (peek(1).asPrimitive().as.number) - peek(0).asPrimitive().as.numberFloat);
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_MINUS_FLOAT_FLOAT)
+                {
+                    Value value(peek(1).asPrimitive().as.numberFloat - peek(0).asPrimitive().as.numberFloat);
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_MINUS_FLOAT_INT)
+                {
+                    Value value(peek(1).asPrimitive().as.numberFloat - (double) (peek(0).asPrimitive().as.number));
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_ADD_INT_INT)
+                {
+                    Value value(peek(1).asPrimitive().as.number + peek(0).asPrimitive().as.number);
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_ADD_INT_FLOAT)
+                {
+                    Value value((double) (peek(1).asPrimitive().as.number) + peek(0).asPrimitive().as.numberFloat);
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_ADD_FLOAT_FLOAT)
+                {
+                    Value value(peek(1).asPrimitive().as.numberFloat + peek(0).asPrimitive().as.numberFloat);
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_ADD_FLOAT_INT)
+                {
+                    Value value(peek(1).asPrimitive().as.numberFloat + (double) (peek(0).asPrimitive().as.number));
 
                     pop(2u);
 

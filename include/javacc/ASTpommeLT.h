@@ -21,6 +21,7 @@ public:
   uint16_t index;
   bool native;
   bool primitive = false;
+  OpCode opCode;
 };
 
 }

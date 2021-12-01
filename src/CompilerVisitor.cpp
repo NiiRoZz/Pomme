@@ -342,7 +342,7 @@ namespace Pomme
         if (node->primitive)
         {
             node->jjtChildrenAccept(this, nullptr);
-            emitByte(AS_OPCODE(OpCode::OP_LT));
+            emitByte(AS_OPCODE(node->opCode));
         }
         else
         {

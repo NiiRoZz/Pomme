@@ -1394,7 +1394,32 @@ namespace Pomme
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator<", static_cast<std::string*>(data), types);
 
-        node->primitive = ((types[0] == "int" || types[0] == "float") && (types[1] == "int" || types[1] == "float"));
+        if (types[0] == "int")
+        {
+            if (types[1] == "int")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_LT_INT_INT;
+            }
+            else if (types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_LT_INT_FLOAT;
+            }
+        }
+        else if (types[0] == "float")
+        {
+            if (types[1] == "int")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_LT_FLOAT_INT;
+            }
+            else if (types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_LT_FLOAT_FLOAT;
+            }
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTpommeLET *node, void * data)
@@ -1417,20 +1442,25 @@ namespace Pomme
             if (types[1] == "int")
             {
                 node->primitive = true;
-                node->opCode = OpCode::OP_ADD_INT;
+                node->opCode = OpCode::OP_ADD_INT_INT;
             }
             else if (types[1] == "float")
             {
                 node->primitive = true;
-                node->opCode = OpCode::OP_ADD_FLOAT;
+                node->opCode = OpCode::OP_ADD_INT_FLOAT;
             }
         }
         else if (types[0] == "float")
         {
-            if (types[1] == "int" || types[1] == "float")
+            if (types[1] == "int")
             {
                 node->primitive = true;
-                node->opCode = OpCode::OP_ADD_FLOAT;
+                node->opCode = OpCode::OP_ADD_FLOAT_INT;
+            }
+            else if (types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_ADD_FLOAT_FLOAT;
             }
         }
     }
@@ -1447,20 +1477,25 @@ namespace Pomme
             if (types[1] == "int")
             {
                 node->primitive = true;
-                node->opCode = OpCode::OP_MINUS_INT;
+                node->opCode = OpCode::OP_MINUS_INT_INT;
             }
             else if (types[1] == "float")
             {
                 node->primitive = true;
-                node->opCode = OpCode::OP_MINUS_FLOAT;
+                node->opCode = OpCode::OP_MINUS_INT_FLOAT;
             }
         }
         else if (types[0] == "float")
         {
-            if (types[1] == "int" || types[1] == "float")
+            if (types[1] == "int")
             {
                 node->primitive = true;
-                node->opCode = OpCode::OP_MINUS_FLOAT;
+                node->opCode = OpCode::OP_MINUS_FLOAT_INT;
+            }
+            else if (types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_MINUS_FLOAT_FLOAT;
             }
         }
     }
