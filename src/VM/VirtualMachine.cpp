@@ -327,7 +327,7 @@ namespace Pomme
   		return *stackTop;
     }
 
-    void VirtualMachine::pop(uint depth)
+    void VirtualMachine::pop(int depth)
     {
 		stackTop -= depth;
     }

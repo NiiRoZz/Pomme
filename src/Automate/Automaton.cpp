@@ -124,9 +124,7 @@ namespace Pomme {
             {
                 if(it->second.at(index).from == from && it->second.at(index).to == to)
                 {
-                    std::cout << "b " << it->second.size() << std::endl;
                     it->second.erase(it->second.begin() + index);
-                    std::cout << "a " << it->second.size() << std::endl;
                 }
             }
             return true;
@@ -193,6 +191,69 @@ namespace Pomme {
 
     std::vector<int> Automaton::topologicalSort()
     {
+        const int nbState = this->countStates() - 1;
+        std::vector<int> independant_state;
+        std::vector<int> order;
+        std::vector<Transition> toDelete;
+
+        for(int state = 0; state <= nbState ; state++)
+        {
+            independant_state.push_back(state);
+        }
+        for(int state = 0; state <= nbState ; state++)
+        {
+           auto it = this->m_transition.find(state);
+           if(it != this->m_transition.end())
+           {
+               for(auto ot : it->second)
+               {
+                   independant_state.erase(std::remove(independant_state.begin(), independant_state.end(), ot.to), independant_state.end());
+               }
+           }
+        }
+
+        while(!independant_state.empty())
+        {
+            int state = independant_state.at(0);
+            independant_state.erase(std::remove(independant_state.begin(), independant_state.end(), independant_state.at(0)), independant_state.end());
+            if(std::find(order.begin(), order.end(), state) == order.end())
+            {
+                order.push_back(state);
+            }
+            auto it = this->m_transition.find(state);
+            if(it != this->m_transition.end())
+            {
+                for(auto ut : it->second)
+                {
+                    toDelete.push_back(ut);
+                }
+            }
+
+            for(auto ot : toDelete)
+            {
+                this->removeTransition(ot.from, ot.to);
+                if(isStateIndependant(ot.to))
+                {
+                    independant_state.push_back(ot.to);
+                }
+            }
+            toDelete.clear();
+        }
+
+        return order;
+    }
+
+    bool Automaton::isStateIndependant(int state)
+    {
+        int nbState = this->countStates() - 1;
+        for(int stateIndex = 0; stateIndex <= nbState; stateIndex++)
+        {
+            if(this->hasTransition(stateIndex,state))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     bool Automaton::hasLoop()
@@ -208,10 +269,6 @@ namespace Pomme {
         for(int state = 0; state <= maxState; state++)
         {
             stack.clear();
-            for(auto i : stack)
-            {
-                std::cout << i << std::endl;
-            }
             stack.push_back(state);
             visited.at(state) = true;
             if(processDFSTree(state, &visited, &stack))

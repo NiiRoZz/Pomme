@@ -18,7 +18,7 @@ namespace Pomme
                     addState(node);
                     int stateNumber = dependanceGraph.getState(it.first);
                     toDelete.push_back(dynamic_cast<ASTident*>(dependanceGraph.getState(stateNumber)->node->jjtGetChild(0))->m_Identifier);
-                    dependanceGraph.addTransition(stateNumber , nbState - 1);
+                    dependanceGraph.addTransition(nbState - 1, stateNumber);
                     resolved = true;
                 }
             }
@@ -69,7 +69,7 @@ namespace Pomme
                     std::cout << "dependingStateNumber ? " << dependingStateNumber << std::endl;
                     if(dependingStateNumber != -1)
                     {
-                        dependanceGraph.addTransition(nbState , dependingStateNumber);
+                        dependanceGraph.addTransition(dependingStateNumber, nbState);
                     }else
                     {
                         std::string className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
@@ -183,7 +183,7 @@ namespace Pomme
             if(depandanceNodeAlreadyDefined)
             {
                 std::cout << "Adding Transition between " << nbState - 1 << " -> "<<  numStateDepandance << std::endl;
-                dependanceGraph.addTransition(nbState - 1 , numStateDepandance);
+                dependanceGraph.addTransition(numStateDepandance, nbState - 1);
             }else
             {
                 std::cout << "DEPENDANCE DETECTED WITH CLASS : " << ident << " FOR CLASS " << *className << std::endl;

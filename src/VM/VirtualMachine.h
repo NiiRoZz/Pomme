@@ -59,7 +59,7 @@ namespace Pomme
 		void push(const Value& value);
 		void push(Value&& value);
 		Value pop();
-		void pop(uint depth);
+		void pop(int depth);
 		Value& peek(int depth);
 
 		template<typename T>

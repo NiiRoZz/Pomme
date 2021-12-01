@@ -209,7 +209,7 @@ TEST(TEST_AUTOMATE, Graph_Attribute) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
 }
 
 TEST(TEST_AUTOMATE, Graph_SelfLoop) {
@@ -230,9 +230,9 @@ TEST(TEST_AUTOMATE, Graph_3Loop) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,3);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,2));
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,2));
 }
 
 TEST(TEST_AUTOMATE, Graph_DefinedAfter) {
@@ -243,7 +243,7 @@ TEST(TEST_AUTOMATE, Graph_DefinedAfter) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
 }
 
 TEST(TEST_AUTOMATE, Graph_ExtendsAfter) {
@@ -254,7 +254,7 @@ TEST(TEST_AUTOMATE, Graph_ExtendsAfter) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
 }
 
 TEST(TEST_AUTOMATE, Graph_Extends) {
@@ -265,7 +265,7 @@ TEST(TEST_AUTOMATE, Graph_Extends) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
 }
 
 TEST(TEST_AUTOMATE, Graph_Complex) {
@@ -279,10 +279,10 @@ TEST(TEST_AUTOMATE, Graph_Complex) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,4);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(3,0));
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,3));
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,3));
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(3,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,2));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,3));
 }
 
 TEST(TEST_AUTOMATE, Graph_Multiple) {
@@ -293,8 +293,8 @@ TEST(TEST_AUTOMATE, Graph_Multiple) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,0));
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,1));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,2));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,2));
 }
 
 TEST(TEST_AUTOMATE, Graph_MultipleAfter) {
@@ -305,8 +305,8 @@ TEST(TEST_AUTOMATE, Graph_MultipleAfter) {
     tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
-    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,2));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,0));
 
     for(auto it : visitor.classToBeResolved)
     {
@@ -388,3 +388,161 @@ TEST(TEST_AUTOMATE, Graph_Loop6) {
 
     EXPECT_EQ(dependanceGraph.hasLoop(), true);
 }
+
+
+TEST(TEST_AUTOMATE, Graph_Sort) {
+
+    TEST_AUTOMATE_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    auto it = visitor.dependanceGraph.topologicalSort();
+
+    int expect[] = {2, 1, 0};
+    int expect2[] = {1, 2, 0};
+
+    EXPECT_EQ(it.size(), 3);
+    for (int i = 0; i < it.size(); ++i)
+    {
+        std::cout << it.at(i) << std::endl;
+        EXPECT_TRUE( (it.at(i) == expect[i] || it.at(i) == expect2[i]));
+    }
+}
+
+TEST(TEST_AUTOMATE, Graph_Sort2) {
+
+    TEST_AUTOMATE_TEST("class test{ test2 x; }; class test2{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    auto it = visitor.dependanceGraph.topologicalSort();
+    int expect[] = {1,0};
+    EXPECT_EQ(it.size(), 2);
+    for (int i = 0; i < it.size(); ++i)
+    {
+        EXPECT_EQ(it.at(i), expect[i]) << "Vectors x and y differ at index " << i;
+    }
+
+}
+TEST(TEST_AUTOMATE, Graph_Sort3) {
+
+    TEST_AUTOMATE_TEST("class test5{}; " // 0
+                       "class test2{}; " // 1
+                       "class test extends test3 {}; " // 2
+                       "class test3 extends test5{ test2 x;};\n"); // 3
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    auto it = visitor.dependanceGraph.topologicalSort();
+    int expect[] = {0,1,3,2};
+    EXPECT_EQ(it.size(), 4);
+    for (int i = 0; i < it.size(); ++i)
+    {
+        EXPECT_EQ(it.at(i), expect[i]) << "Vectors x and y differ at index " << i;
+    }
+}
+
+TEST(TEST_AUTOMATE, Graph_Sort4) {
+
+    Automaton automate;
+
+    automate.addState(0);
+    automate.addState(1);
+    automate.addState(2);
+    automate.addState(3);
+    automate.addState(4);
+    automate.addState(5);
+    automate.addState(6);
+    automate.addState(7);
+
+    automate.addTransition(0,3);
+    automate.addTransition(1,3);
+    automate.addTransition(1,4);
+
+    automate.addTransition(2,4);
+    automate.addTransition(2,7);
+
+    automate.addTransition(3,5);
+    automate.addTransition(3,6);
+    automate.addTransition(3,7);
+
+    automate.addTransition(4,6);
+
+    std::cout << automate<< std::endl;
+
+    auto it = automate.topologicalSort();
+    int expect[] = {0,1,2,3,4,5,7,6}; // not deterministic
+    //  {0,1,2,3,4,5,6,7}; possible too
+
+    for(auto ot : it)
+    {
+        std::cout << ot << std::endl;
+    }
+    EXPECT_EQ(it.size(), 8);
+    for (int i = 0; i < it.size(); ++i)
+    {
+        EXPECT_EQ(it.at(i), expect[i]) << "Vectors x and y differ at index " << i;
+    }
+}
+
+TEST(TEST_AUTOMATE, Graph_Sort5) {
+
+    Automaton automate;
+
+    // https://medium.com/@bolerio/scheduling-tasks-and-drawing-graphs-the-coffman-graham-algorithm-3c85eb975ab
+    automate.addState(0);
+    automate.addState(1);
+    automate.addState(2);
+    automate.addState(3);
+    automate.addState(4);
+    automate.addState(5);
+    automate.addState(6);
+    automate.addState(7);
+    automate.addState(8);
+    automate.addState(9);
+    automate.addState(10);
+    automate.addState(11);
+    automate.addState(12);
+
+    automate.addTransition(0,3);
+    automate.addTransition(1,3);
+    automate.addTransition(1,4);
+    automate.addTransition(2,4);
+    automate.addTransition(2,5);
+    automate.addTransition(3,6);
+    automate.addTransition(3,7);
+    automate.addTransition(4,8);
+    automate.addTransition(5,8);
+    automate.addTransition(5,9);
+    automate.addTransition(9,12);
+    automate.addTransition(8,12);
+    automate.addTransition(8,7);
+    automate.addTransition(6,10);
+    automate.addTransition(7,10);
+    automate.addTransition(7,11);
+    
+    std::cout << automate<< std::endl;
+
+    auto it = automate.topologicalSort();
+    for(auto ot : it)
+    {
+        std::cout << ot << std::endl;
+    }
+    EXPECT_EQ(it.size(), 13);
+}
+
+

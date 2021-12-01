@@ -40,6 +40,7 @@ namespace Pomme {
         std::vector<int> topologicalSort();
         bool processDFSTree(int state, std::vector<bool>* visited, std::vector<int>* stack);
         void printCycle(int state, const std::vector<int>* stack);
+        bool isStateIndependant(int state);
 
         friend std::ostream & operator<<(std::ostream & str, const Automaton & klass)
         {
