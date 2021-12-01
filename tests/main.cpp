@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     //::testing::GTEST_FLAG(filter) = "TEST_TYPECHECKER.*";
     ::testing::GTEST_FLAG(filter) = "TEST_VM.bench*";
     //::testing::GTEST_FLAG(filter) = "TEST_AUTOMATE.*";
-    //::testing::GTEST_FLAG(filter) = "TEST_AUTOMATE.Graph*";
+    ::testing::GTEST_FLAG(filter) = "TEST_AUTOMATE.Graph*";
 
     return RUN_ALL_TESTS();
 }

@@ -318,3 +318,73 @@ TEST(TEST_AUTOMATE, Graph_MultipleAfter) {
         std::cout << std::endl;
     }
 }
+
+TEST(TEST_AUTOMATE, Graph_Loop1) {
+    TEST_AUTOMATE_TEST("class test2{}; class test extends test2 {};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.hasLoop(), false);
+}
+
+TEST(TEST_AUTOMATE, Graph_Loop2) {
+    TEST_AUTOMATE_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    EXPECT_EQ(visitor.dependanceGraph.hasLoop(), false);
+}
+
+TEST(TEST_AUTOMATE, Graph_Loop3) {
+    TEST_AUTOMATE_TEST("class test{ test2 x;}; class test2{ test x;};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    EXPECT_EQ(visitor.dependanceGraph.hasLoop(), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_Loop4) {
+    TEST_AUTOMATE_TEST("class test{ test2 x;}; class test2{ test3 x;}; class test3{ test x;};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    EXPECT_EQ(visitor.dependanceGraph.hasLoop(), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_Loop5) {
+
+    Automaton dependanceGraph;
+    dependanceGraph.addState(0);
+    dependanceGraph.addState(1);
+    dependanceGraph.addState(2);
+
+    dependanceGraph.addTransition(0,1);
+    dependanceGraph.addTransition(0,2);
+    dependanceGraph.addTransition(1,2);
+    dependanceGraph.addTransition(2,0);
+
+    EXPECT_EQ(dependanceGraph.hasLoop(), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_Loop6) {
+
+    Automaton dependanceGraph;
+    dependanceGraph.addState(0);
+    dependanceGraph.addState(1);
+    dependanceGraph.addState(2);
+    dependanceGraph.addState(3);
+    dependanceGraph.addState(4);
+
+    dependanceGraph.addTransition(0,1);
+    dependanceGraph.addTransition(1,2);
+    dependanceGraph.addTransition(2,3);
+    dependanceGraph.addTransition(3,4);
+    dependanceGraph.addTransition(4,0);
+
+    EXPECT_EQ(dependanceGraph.hasLoop(), true);
+}

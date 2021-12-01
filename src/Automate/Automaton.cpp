@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <queue>
 
 
 namespace Pomme {
@@ -27,7 +28,6 @@ namespace Pomme {
     
     bool Automaton::addState(int state)
     {
-        std::cout << "Addding state " << state << std::endl;
         if(state >= 0){
             auto it = this->m_state.find(state);
             if(it != this->m_state.end())
@@ -85,9 +85,8 @@ namespace Pomme {
         return false;
     }
     
-    bool Automaton::addTransition(int from, int to){
-
-        std::cout << "Adding transition from " << from << " to " << to << std::endl;
+    bool Automaton::addTransition(int from, int to)
+    {
         auto fromState = this->m_state.find(from);
         auto toState = this->m_state.find(to);
 
@@ -190,5 +189,72 @@ namespace Pomme {
             }
         }
         return -1;
+    }
+
+    std::vector<int> Automaton::topologicalSort()
+    {
+    }
+
+    bool Automaton::hasLoop()
+    {
+        std::vector<bool> visited;
+        int maxState = this->countStates() - 1;
+        for(int i = 0 ; i <= maxState; i++)
+        {
+            visited.push_back(false);
+        }
+
+        std::vector<int> stack;
+        for(int state = 0; state <= maxState; state++)
+        {
+            stack.clear();
+            for(auto i : stack)
+            {
+                std::cout << i << std::endl;
+            }
+            stack.push_back(state);
+            visited.at(state) = true;
+            if(processDFSTree(state, &visited, &stack))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool Automaton::processDFSTree(int state, std::vector<bool>* visited, std::vector<int>* stack)
+    {
+        auto it = this->m_transition.find(state);
+        if(it != this->m_transition.end())
+        {
+            for(auto ot : it->second)
+            {
+                if(std::find(stack->begin(), stack->end(), ot.to) != stack->end())
+                {
+                    printCycle(state, stack);
+                    return true;
+                }else
+                {
+                    stack->push_back(ot.to);
+                    visited->at(ot.to) = true;
+                    return processDFSTree(ot.to, visited, stack);
+                }
+            }
+        }
+        return false;
+    }
+
+    void Automaton::printCycle(int state, const std::vector<int>* stack)
+    {
+        std::cout << "PRINTING CYCLE" <<std::endl;
+        for(auto i : *stack)
+        {
+            std::cout << i << std::endl;
+            if(i == state)
+            {
+                std::cout << std::endl;
+                break;
+            }
+        }
     }
 }

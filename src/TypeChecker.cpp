@@ -4,6 +4,7 @@
 #include "VM/VirtualMachine.h"
 #include "CompilerVisitor.h"
 #include "TypeCheckerVisitor.h"
+#include "AutomateVisitor.h"
 
 namespace Pomme
 {
@@ -13,7 +14,10 @@ namespace Pomme
 
     TypeCheckerVisitor TypeChecker::typeCheck(SimpleNode* tree)
 	{
+        AutomateVisitor visitorAutomate;
+
 		TypeCheckerVisitor visitor;
+        tree->jjtAccept(&visitorAutomate, nullptr); // class/method definition
 		tree->jjtAccept(&visitor, nullptr); // class/method definition
         visitor.path_number++;
         tree->jjtAccept(&visitor, nullptr); // expression typing
