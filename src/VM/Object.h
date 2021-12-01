@@ -61,7 +61,7 @@ namespace Pomme
 
         virtual ~Obj() = default;
 
-        inline bool isType(ObjType objType) {return type == objType;}
+        bool isType(ObjType objType) {return type == objType;}
     };
 
     struct ObjString: public Obj
@@ -152,7 +152,7 @@ namespace Pomme
         Value* method;
     };
     
-    static inline bool isObjType(const Value& value, ObjType type)
+    static bool isObjType(const Value& value, ObjType type)
     {
         return value.isObj() && value.asObj()->isType(type);
     }

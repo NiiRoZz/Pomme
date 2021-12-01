@@ -56,8 +56,10 @@ namespace Pomme
 			return name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
 		}
 
-		void push(Value value);
+		void push(const Value& value);
+		void push(Value&& value);
 		Value pop();
+		void pop(uint depth);
 		Value& peek(int depth);
 
 		template<typename T>
@@ -133,7 +135,7 @@ namespace Pomme
 		bool isFalsey(const Value& value);
 
 		bool invoke(uint16_t argCount, uint16_t slot, bool native);
-		bool callValue(const Value& callee, uint16_t argCount, bool native);
+		bool callNative(GlobalNativeFn& nativeFn, uint16_t argCount);
 		bool callBoundMethod(ObjBoundMethod& bound, uint16_t argCount);
 		bool call(ObjFunction* function, uint16_t argCount);
 

@@ -205,7 +205,7 @@ namespace Pomme
         }
 
         template<typename T>
-        void visitBinaryOperator(T* node, const std::string& name, std::string* returnType)
+        void visitBinaryOperator(T* node, const std::string& name, std::string* returnType, std::array<std::string, 2>& array)
         {
             std::string leftType;
             node->jjtChildAccept(0, this, &leftType);
@@ -224,6 +224,9 @@ namespace Pomme
                 errors.push_back("Can't find variable type of right expression");
                 return;
             }
+
+            array[0] = leftType;
+            array[1] = rightType;
 
             auto itLeft = classMap.find(leftType);
             if (itLeft == classMap.end())

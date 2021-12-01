@@ -6,6 +6,8 @@
 
 #define GC_HEAP_GROW_FACTOR 2
 
+#define USE_COMPUTED_GOTO
+
 namespace Pomme
 {
     VirtualMachine::VirtualMachine()
@@ -60,27 +62,28 @@ namespace Pomme
             return InterpretResult::INTERPRET_RUNTIME_ERROR; 
         }
 
-        ObjFunction* callFunction = newFunction();
+        ObjFunction callFunction;
+        callFunction.name = nullptr;
+        callFunction.arity = 0u;
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_GET_GLOBAL), 0);
-        callFunction->chunk.writeChunk(it->second, 0);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_GET_GLOBAL), 0);
+        callFunction.chunk.writeChunk(it->second, 0);
 
         for (int i = 0; i < params.size(); ++i)
         {
-            int id = callFunction->chunk.addConstant(params[i]);
-            callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
-            callFunction->chunk.writeChunk(id, 1);
+            int id = callFunction.chunk.addConstant(params[i]);
+            callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
+            callFunction.chunk.writeChunk(id, 1);
         }
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
-        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
-        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
-        callFunction->chunk.writeChunk(0u, 1);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL_GLOBAL), 1);
+        callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction.chunk.writeChunk(params.size() & 0xff, 1);
         
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
         
-        return interpret(callFunction);
+        return interpret(&callFunction);
     }
 
     InterpretResult VirtualMachine::interpretMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params)
@@ -102,29 +105,31 @@ namespace Pomme
             return InterpretResult::INTERPRET_RUNTIME_ERROR; 
         }
 
-        ObjFunction* callFunction = newFunction();
+        ObjFunction callFunction;
+        callFunction.name = nullptr;
+        callFunction.arity = 0u;
 
-        int id = callFunction->chunk.addConstant(Value(static_cast<Obj*>(instance)));
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
-        callFunction->chunk.writeChunk(id, 1);
+        int id = callFunction.chunk.addConstant(Value(static_cast<Obj*>(instance)));
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
+        callFunction.chunk.writeChunk(id, 1);
 
         for (int i = 0; i < params.size(); ++i)
         {
-            id = callFunction->chunk.addConstant(params[i]);
-            callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
-            callFunction->chunk.writeChunk(id, 1);
+            id = callFunction.chunk.addConstant(params[i]);
+            callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
+            callFunction.chunk.writeChunk(id, 1);
         }
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
-        callFunction->chunk.writeChunk((it->second >> 8) & 0xff, 1);
-        callFunction->chunk.writeChunk(it->second & 0xff, 1);
-        callFunction->chunk.writeChunk(0u, 1);
-        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
-        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
+        callFunction.chunk.writeChunk((it->second >> 8) & 0xff, 1);
+        callFunction.chunk.writeChunk(it->second & 0xff, 1);
+        callFunction.chunk.writeChunk(0u, 1);
+        callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction.chunk.writeChunk(params.size() & 0xff, 1);
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
         
-        return interpret(callFunction);
+        return interpret(&callFunction);
     }
 
     std::optional<Value> VirtualMachine::callGlobalFunction(const std::string& name, const std::vector<Value>& params)
@@ -151,19 +156,19 @@ namespace Pomme
             push(params[i]);
         }
 
-        ObjFunction* callFunction = newFunction();
+        ObjFunction callFunction;
 
-        callFunction->name = function->name;
-        callFunction->arity = function->arity;
+        callFunction.name = function->name;
+        callFunction.arity = function->arity;
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL), 1);
-        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
-        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
-        callFunction->chunk.writeChunk(0u, 1);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL_GLOBAL), 1);
+        callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction.chunk.writeChunk(params.size() & 0xff, 1);
+        callFunction.chunk.writeChunk(0u, 1);
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
 
-        if (!call(callFunction, params.size()))
+        if (!call(&callFunction, params.size()))
         {
             return {};
         }
@@ -200,21 +205,21 @@ namespace Pomme
             push(params[i]);
         }
 
-        ObjFunction* callFunction = newFunction();
+        ObjFunction callFunction;
 
-        callFunction->name = function->name;
-        callFunction->arity = function->arity;
+        callFunction.name = function->name;
+        callFunction.arity = function->arity;
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
-        callFunction->chunk.writeChunk((it->second >> 8) & 0xff, 1);
-        callFunction->chunk.writeChunk(it->second & 0xff, 1);
-        callFunction->chunk.writeChunk(0u, 1);
-        callFunction->chunk.writeChunk((params.size() >> 8) & 0xff, 1);
-        callFunction->chunk.writeChunk(params.size() & 0xff, 1);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
+        callFunction.chunk.writeChunk((it->second >> 8) & 0xff, 1);
+        callFunction.chunk.writeChunk(it->second & 0xff, 1);
+        callFunction.chunk.writeChunk(0u, 1);
+        callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
+        callFunction.chunk.writeChunk(params.size() & 0xff, 1);
 
-        callFunction->chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
 
-        if (!call(callFunction, params.size()))
+        if (!call(&callFunction, params.size()))
         {
             return {};
         }
@@ -290,7 +295,20 @@ namespace Pomme
         return &klass->staticFields[ot->second];
     }
 
-    void VirtualMachine::push(Value value)
+    void VirtualMachine::push(const Value& value)
+    {
+    	*stackTop = value;
+        stackTop++;
+
+        #ifndef NDEBUG
+        if ((stackTop - stack) >= STACK_MAX)
+        {
+            assert(false);
+        }
+        #endif
+    }
+
+    void VirtualMachine::push(Value&& value)
     {
     	*stackTop = std::move(value);
         stackTop++;
@@ -307,6 +325,11 @@ namespace Pomme
     {
 		stackTop--;
   		return *stackTop;
+    }
+
+    void VirtualMachine::pop(uint depth)
+    {
+		stackTop -= depth;
     }
 
 	Value& VirtualMachine::peek(int depth)
@@ -402,6 +425,46 @@ namespace Pomme
     {
         CallFrame* frame = &frames[frameCount - 1];
 
+        #ifdef USE_COMPUTED_GOTO
+        static void* dispatch_table[] = {
+            &&OP_CONSTANT,
+            &&OP_NULL,
+            &&OP_TEST_NOT_NULL,
+            &&OP_POP,
+            &&OP_PRINT,
+            &&OP_GET_GLOBAL,
+            &&OP_SET_GLOBAL,
+            &&OP_GET_LOCAL,
+            &&OP_SET_LOCAL,
+            &&OP_GET_PROPERTY,
+            &&OP_SET_PROPERTY,
+            &&OP_INVOKE,
+            &&OP_JUMP,
+            &&OP_JUMP_IF_FALSE,
+            &&OP_LOOP,
+            &&OP_CALL_NATIVE,
+            &&OP_CALL_GLOBAL,
+            &&OP_RETURN,
+            &&OP_FINISH,
+            &&OP_INHERIT,
+            &&OP_METHOD,
+            &&OP_FIELD,
+            &&OP_GET_SUPER,
+            &&OP_NOT,
+            &&OP_CLASS,
+            &&OP_NEW,
+            &&OP_INT,
+            &&OP_FLOAT,
+            &&OP_BOOL,
+            &&OP_LT,
+            &&OP_MINUS_INT,
+            &&OP_MINUS_FLOAT,
+            &&OP_ADD_INT,
+            &&OP_ADD_FLOAT,
+        };
+        static_assert((sizeof(dispatch_table)/sizeof(dispatch_table[0])) == static_cast<uint8_t>(OpCode::COUNT));
+        #endif
+
         #define READ_BYTE() (*frame->ip++)
         #define READ_CONSTANT() (frame->function->chunk.constants[READ_BYTE()])
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
@@ -412,94 +475,100 @@ namespace Pomme
         
         #define AS_OPCODE(code) static_cast<uint8_t>(code)
 
-        for (;;)
+        #ifdef USE_COMPUTED_GOTO
+            #define DISPATCH() goto *dispatch_table[READ_BYTE()]
+            #define CASES(name) name:
+        #else
+            #define DISPATCH() break;
+            #define CASES(name) case AS_OPCODE(OpCode::name):
+        #endif
+
+        #ifndef USE_COMPUTED_GOTO
+        while (true)
         {
+        #else
+        DISPATCH();
+        #endif
             //printStack();
             //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
-
-            uint8_t instruction;
-
-            switch (instruction = READ_BYTE())
+            
+            #ifndef USE_COMPUTED_GOTO
+            switch (READ_BYTE())
             {
-                case AS_OPCODE(OpCode::OP_CONSTANT):
+            #endif
+
+                CASES(OP_CONSTANT)
                 {
                     Value constant = READ_CONSTANT();
 					push(constant);
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_NULL):        push(Value()); break;
+                CASES(OP_NULL)
+                {
+                    push(Value());
 
-                case AS_OPCODE(OpCode::OP_TEST_NOT_NULL):
+                    DISPATCH();
+                } 
+
+                CASES(OP_TEST_NOT_NULL)
                 {
                     bool isNull = peek(0).isNull();
                     Value value = Value(!isNull);
 
-                    pop(); //pop obj/null value
+                    pop(1u); //pop obj/null value
                     push(value);
-                    break;
+
+                    DISPATCH();
                 }
 
-				case AS_OPCODE(OpCode::OP_POP):         pop(); break;
-
-                case AS_OPCODE(OpCode::OP_INT):
+                CASES(OP_POP)
                 {
-                    READ_64BITS(uint64_t, value);
-                    push(static_cast<int64_t>(value));
-                    break;
+                    pop(1u);
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_FLOAT):
+                CASES(OP_PRINT)
                 {
-                    READ_64BITS(double, value);
-                    push(value);
-                    break;
-                }
-
-                case AS_OPCODE(OpCode::OP_BOOL):
-                {
-                    push(static_cast<bool>(READ_BYTE()));
-                    break;
-                }
-
-                case AS_OPCODE(OpCode::OP_PRINT):
-                {
-					printValue(pop());
+                    printValue(pop());
                     std::cout << "\n";
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_GET_GLOBAL):
+                CASES(OP_GET_GLOBAL)
                 {
-                    uint8_t slot = READ_BYTE();
-                    push(globals[slot]);
-                    break;
+                    push(globals[READ_BYTE()]);
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_SET_GLOBAL):
+                CASES(OP_SET_GLOBAL)
                 {
-					uint8_t slot = READ_BYTE();
-                    globals[slot] = peek(0);
-                    pop();
-                    break;
+                    globals[READ_BYTE()] = peek(0);
+                    pop(1u);
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_GET_LOCAL):
+                CASES(OP_GET_LOCAL)
                 {
-					uint8_t slot = READ_BYTE();
-                    push(frame->slots[slot]);
-                    break;
+                    push(frame->slots[READ_BYTE()]);
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_SET_LOCAL):
+                CASES(OP_SET_LOCAL)
                 {
-					uint8_t slot = READ_BYTE();
-                    frame->slots[slot] = peek(0);
-                    pop();
-                    break;
+                    frame->slots[READ_BYTE()] = peek(0);
+                    pop(1u);
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_GET_PROPERTY):
+                CASES(OP_GET_PROPERTY)
                 {
                     assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
 
@@ -518,13 +587,13 @@ namespace Pomme
                         value = &klass->staticFields[slot];
                     }
 
-                    pop(); // Instance or Class.
+                    pop(1u); // Instance or Class.
                     push(*value);
 
-                    break;
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_SET_PROPERTY):
+                CASES(OP_SET_PROPERTY)
                 {
                     assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
 
@@ -541,12 +610,12 @@ namespace Pomme
                         klass->staticFields[slot] = peek(1);
                     }
 
-                    pop(); // Instance or Class.
-                    pop(); // Value
-                    break;
+                    pop(2u); // Instance or Class. and Value
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_INVOKE):
+                CASES(OP_INVOKE)
                 {
                     uint16_t slot = READ_UINT16();
                     bool native = READ_BYTE();
@@ -558,51 +627,68 @@ namespace Pomme
                     }
 
                     frame = &frames[frameCount - 1];
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_JUMP):
+                CASES(OP_JUMP)
                 {
-					uint16_t offset = READ_UINT16();
+                    uint16_t offset = READ_UINT16();
                     frame->ip += offset;
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_JUMP_IF_FALSE):
+                CASES(OP_JUMP_IF_FALSE)
                 {
-					uint16_t offset = READ_UINT16();
+                    uint16_t offset = READ_UINT16();
                     if (isFalsey(peek(0))) frame->ip += offset;
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_LOOP):
+                CASES(OP_LOOP)
                 {
-					uint16_t offset = READ_UINT16();
+                    uint16_t offset = READ_UINT16();
                     frame->ip -= offset;
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_CALL):
+                CASES(OP_CALL_NATIVE)
                 {
-					uint16_t argCount = READ_UINT16();
-                    bool native = READ_BYTE();
-                    if (!callValue(peek(argCount), argCount, native))
+                    uint16_t argCount = READ_UINT16();
+                    if (!callNative(AS_GLOBAL_NATIVE(peek(argCount)), argCount))
                     {
                         return InterpretResult::INTERPRET_RUNTIME_ERROR;
                     }
 
                     frame = &frames[frameCount - 1];
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_RETURN):
+                CASES(OP_CALL_GLOBAL)
+                {
+                    uint16_t argCount = READ_UINT16();
+                    if (!call(AS_FUNCTION(peek(argCount)), argCount))
+                    {
+                        return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    frame = &frames[frameCount - 1];
+
+                    DISPATCH();
+                }
+
+                CASES(OP_RETURN)
                 {
                     Value result = pop();
                     frameCount--;
 
                     if (frameCount == 0)
                     {
-                        pop();
+                        pop(1u);
                         return InterpretResult::INTERPRET_OK;
                     }
 
@@ -610,15 +696,16 @@ namespace Pomme
                     push(result);
 
                     frame = &frames[frameCount - 1];
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_FINISH):
+                CASES(OP_FINISH)
                 {
                     Value result = pop();
                     frameCount--;
 
-                    pop();
+                    pop(1u);
 
                     if (frameCount > 0)
                     {
@@ -628,58 +715,64 @@ namespace Pomme
                     return InterpretResult::INTERPRET_OK; 
                 }
 
-                case AS_OPCODE(OpCode::OP_INHERIT):
+                CASES(OP_INHERIT)
                 {
                     //Value superclass = peek(1);
                     //ObjClass* subclass = AS_CLASS(peek(0));
 
                     //TODO: add all methods from superclass into subclass
 
-                    pop(); // Subclass.
-                    break;
+                    pop(1u); // Subclass.
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_METHOD):
+                CASES(OP_METHOD)
                 {
                     uint16_t slot = READ_UINT16();
                     ObjString* name = READ_STRING();
                     bool native = READ_BYTE();
 
                     defineMethod(slot, name, native);
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_FIELD):
+                CASES(OP_FIELD)
                 {
                     uint16_t slot = READ_UINT16();
                     ObjString* name = READ_STRING();
                     bool isStatic = READ_BYTE();
 
                     defineField(slot, name, isStatic);
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_GET_SUPER):
+                CASES(OP_GET_SUPER)
                 {
                     ObjString* name = READ_STRING();
                     ObjClass* superclass = AS_CLASS(pop());
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_NOT):
+                CASES(OP_NOT)
                 {
                     assert(peek(0).isPrimitive() && peek(0).asPrimitive().isType(PrimitiveType::BOOL));
                     push(!peek(0).asPrimitive().as.boolean);
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_CLASS):
+                CASES(OP_CLASS)
                 {
                     push(Value(static_cast<Obj*>(newClass(READ_STRING()))));
-                    break;
+
+                    DISPATCH();
                 }
 
-                case AS_OPCODE(OpCode::OP_NEW):
+                CASES(OP_NEW)
                 {
                     uint16_t argCount = READ_UINT16();
                     bool foundConstructor = READ_BYTE();
@@ -702,15 +795,100 @@ namespace Pomme
 
                         frame = &frames[frameCount - 1];
                     }
-                    break;
+
+                    DISPATCH();
                 }
+
+                CASES(OP_INT)
+                {
+                    READ_64BITS(uint64_t, value);
+                    push(static_cast<int64_t>(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_FLOAT)
+                {
+                    READ_64BITS(double, value);
+                    push(value);
+
+                    DISPATCH();
+                }
+
+                CASES(OP_BOOL)
+                {
+                    push(static_cast<bool>(READ_BYTE()));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_LT)
+                {
+                    Value value((double) (peek(1).asPrimitive().as.number) < (double) (peek(0).asPrimitive().as.number));
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_MINUS_INT)
+                {
+                    Value value((int64_t) ((double) (peek(1).asPrimitive().as.number) - (double) (peek(0).asPrimitive().as.number)));
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_MINUS_FLOAT)
+                {
+                    Value value((double) (peek(1).asPrimitive().as.number) - (double) (peek(0).asPrimitive().as.number));
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_ADD_INT)
+                {
+                    assert(peek(0).isPrimitive() && peek(0).asPrimitive().isType(PrimitiveType::INT));
+                    assert(peek(1).isPrimitive() && peek(1).asPrimitive().isType(PrimitiveType::INT));
+                    Value value((int64_t) ((double) (peek(1).asPrimitive().as.number) + (double) (peek(0).asPrimitive().as.number)));
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+
+                CASES(OP_ADD_FLOAT)
+                {
+                    Value value((double) (peek(1).asPrimitive().as.number) + (double) (peek(0).asPrimitive().as.number));
+
+                    pop(2u);
+
+                    push(std::move(value));
+
+                    DISPATCH();
+                }
+            #ifndef USE_COMPUTED_GOTO
             }
         }
+        #endif
 
         #undef READ_BYTE
         #undef READ_CONSTANT
 		#undef READ_STRING
         #undef READ_SHORT
+        #undef CASES
+        #undef DISPATCH
     }
 
     void VirtualMachine::freeObject(Obj* object)
@@ -818,18 +996,8 @@ namespace Pomme
         return callBoundMethod(bound, argCount);
     }
 
-    bool VirtualMachine::callValue(const Value& callee, uint16_t argCount, bool native)
+    bool VirtualMachine::callNative(GlobalNativeFn& nativeFn, uint16_t argCount)
     {
-        if (!native)
-        {
-            assert(AS_FUNCTION(callee));
-
-            return call(AS_FUNCTION(callee), argCount);
-        }
-
-        assert(IS_GLOBAL_NATIVE(callee));
-
-        GlobalNativeFn& nativeFn = AS_GLOBAL_NATIVE(callee);
         Value result = nativeFn(*this, argCount, stackTop - argCount);
         
         stackTop -= argCount + 1;
@@ -1085,8 +1253,6 @@ namespace Pomme
                 return simpleInstruction("OP_RETURN", offset);
             case AS_OPCODE(OpCode::OP_NOT):
                 return simpleInstruction("OP_NOT", offset);
-            case AS_OPCODE(OpCode::OP_NEGATE):
-                return simpleInstruction("OP_NEGATE", offset);
             case AS_OPCODE(OpCode::OP_NULL):
                 return simpleInstruction("OP_NULL", offset);
             case AS_OPCODE(OpCode::OP_TEST_NOT_NULL):
@@ -1110,8 +1276,10 @@ namespace Pomme
                 return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
             case AS_OPCODE(OpCode::OP_LOOP):
                 return jumpInstruction("OP_LOOP", -1, chunk, offset);
-            case AS_OPCODE(OpCode::OP_CALL):
-                return byteInstruction("OP_CALL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_CALL_GLOBAL):
+                return byteInstruction("OP_CALL_GLOBAL", chunk, offset);
+            case AS_OPCODE(OpCode::OP_CALL_NATIVE):
+                return byteInstruction("OP_CALL_NATIVE", chunk, offset);
             /*case AS_OPCODE(OpCode::OP_CLASS):
                 return constantInstruction("OP_CLASS", chunk, offset);
             case AS_OPCODE(OpCode::OP_GET_PROPERTY):
@@ -1206,7 +1374,7 @@ namespace Pomme
 
         #ifdef DEBUG_LOG_GC
         std::cout << object << " mark ";
-        printValue(ObjVal(object));
+        printObject(object);
         std::cout << std::endl;
         #endif
 
@@ -1239,7 +1407,7 @@ namespace Pomme
     {
         #ifdef DEBUG_LOG_GC
         std::cout << object << " blacken ";
-        printValue(ObjVal(object));
+        printObject(object);
         std::cout << std::endl;
         #endif
 

@@ -4,6 +4,7 @@
 #define ASTpommeAdd_H_
 
 #include "PommeNode.h"
+#include "VM/Chunk.h"
 
 namespace Pomme {
 class PommeLexer;
@@ -19,6 +20,8 @@ public:
 
   uint16_t index;
   bool native;
+  bool primitive = false;
+  OpCode opCode;
 };
 
 }

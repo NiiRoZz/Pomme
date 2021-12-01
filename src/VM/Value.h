@@ -48,12 +48,12 @@ namespace Pomme
         Value(double val);
         Value(bool val);
 
-        inline bool isNull() const {return type == ValueType::VAL_NULL;}
-        inline bool isObj() const {return type == ValueType::VAL_OBJ;}
-        inline bool isPrimitive() const {return type == ValueType::VAL_PRIMITIVE;}
+        bool isNull() const {return type == ValueType::VAL_NULL;}
+        bool isObj() const {return type == ValueType::VAL_OBJ;}
+        bool isPrimitive() const {return type == ValueType::VAL_PRIMITIVE;}
 
-        inline ObjPrimitive& asPrimitive() {return as.primitive;}
-        inline const ObjPrimitive& asPrimitive() const {return as.primitive;}
+        ObjPrimitive& asPrimitive() {return as.primitive;}
+        const ObjPrimitive& asPrimitive() const {return as.primitive;}
         Obj* asObj() const {return as.obj;}
 
     private:

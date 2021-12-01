@@ -1139,42 +1139,50 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTaddeq *node, void * data)
     {
-        visitBinaryOperator(node, "operator+=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator+=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTminuseq *node, void * data)
     {
-        visitBinaryOperator(node, "operator-=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator-=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTdiveq *node, void * data)
     {
-        visitBinaryOperator(node, "operator/=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator/=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTmulteq *node, void * data)
     {
-        visitBinaryOperator(node, "operator*=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator*=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASToreq *node, void * data)
     {
-        visitBinaryOperator(node, "operator|=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator|=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTandeq *node, void * data)
     {
-        visitBinaryOperator(node, "operator&=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator&=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTshiftleq *node, void * data)
     {
-        visitBinaryOperator(node, "operator<<=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator<<=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTshiftreq *node, void * data)
     {
-        visitBinaryOperator(node, "operator>>=", nullptr);
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator>>=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTincrementPost *node, void * data)
@@ -1351,91 +1359,150 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator==", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator==", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeNEQ *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator!=", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator!=", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeGT *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator>", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator>", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeGET *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator>=", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator>=", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeLT *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator<", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator<", static_cast<std::string*>(data), types);
+
+        node->primitive = ((types[0] == "int" || types[0] == "float") && (types[1] == "int" || types[1] == "float"));
     }
 
     void TypeCheckerVisitor::visit(ASTpommeLET *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator<=", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator<=", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeAdd *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator+", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator+", static_cast<std::string*>(data), types);
+
+        if (types[0] == "int")
+        {
+            if (types[1] == "int")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_ADD_INT;
+            }
+            else if (types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_ADD_FLOAT;
+            }
+        }
+        else if (types[0] == "float")
+        {
+            if (types[1] == "int" || types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_ADD_FLOAT;
+            }
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTpommeMinus *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator-", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator-", static_cast<std::string*>(data), types);
+
+        if (types[0] == "int")
+        {
+            if (types[1] == "int")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_MINUS_INT;
+            }
+            else if (types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_MINUS_FLOAT;
+            }
+        }
+        else if (types[0] == "float")
+        {
+            if (types[1] == "int" || types[1] == "float")
+            {
+                node->primitive = true;
+                node->opCode = OpCode::OP_MINUS_FLOAT;
+            }
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTpommeShiftR *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator>>", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator>>", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeShiftL *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator<<", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator<<", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeMult *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator*", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator*", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeDiv *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator/", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator/", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeModulo *node, void * data)
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator%", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator%", static_cast<std::string*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeUnary *node, void * data)
@@ -1557,7 +1624,8 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        visitBinaryOperator(node, "operator[]", static_cast<std::string*>(data));
+        std::array<std::string, 2> types;
+        visitBinaryOperator(node, "operator[]", static_cast<std::string*>(data), types);
 
         node->jjtChildAccept(2, this, data);
     }
