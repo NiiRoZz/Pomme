@@ -41,6 +41,7 @@ namespace Pomme {
         bool processDFSTree(int state, std::vector<bool>* visited, std::vector<int>* stack);
         void printCycle(int state, const std::vector<int>* stack);
         bool isStateIndependant(int state);
+        std::vector<Node *> getClassNode(const std::vector<int>* class_order);
 
         friend std::ostream & operator<<(std::ostream & str, const Automaton & klass)
         {

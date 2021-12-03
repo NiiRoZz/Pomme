@@ -314,4 +314,14 @@ namespace Pomme {
             }
         }
     }
+
+    std::vector<Node *> Automaton::getClassNode(const std::vector<int>* class_order)
+    {
+        std::vector<Node *> classNode_list;
+        for(auto it : *class_order)
+        {
+            classNode_list.push_back(this->getState(it)->node);
+        }
+        return classNode_list;
+    }
 }

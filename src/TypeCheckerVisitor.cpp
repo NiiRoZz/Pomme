@@ -11,13 +11,6 @@
 namespace Pomme
 {
 
-    /*
-     *
-     * todo
-     *
-     *
-     * instrs : definition + expression*/
-
     TypeCheckerVisitor::TypeCheckerVisitor()
 	{
 	}
@@ -25,7 +18,6 @@ namespace Pomme
     void TypeCheckerVisitor::visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords)
     {
         const std::string &context = class_name;
-
         bool isStatic = keywords.count("static");
 
         /*if(child_context)
@@ -126,9 +118,6 @@ namespace Pomme
             {
                 errors.push_back("Global function "+functionName+" already defined");
 
-            }else if(access->second.returnType != functionType)
-            {
-                errors.push_back("Global function "+functionName+" already defined with a different type. Expected "+access->second.returnType +" but got " + functionType);
             }
         }else
         {
@@ -252,7 +241,7 @@ namespace Pomme
             auto access = nativeMethods.find(functionName);
             if (access != nativeMethods.end())
             {
-                typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
+                typeCheckerVisitor->errors.push_back("addFunction nativeMethods ERROR : " + functionName + " already defined");
                 std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
             }
 
@@ -431,6 +420,7 @@ namespace Pomme
     {
         switch (path_number)
         {
+            case 0u:
             case 1u:
             {
                 break;
@@ -591,14 +581,14 @@ namespace Pomme
 
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 addClass(context);
                 node->jjtChildAccept(1, this, data);
                 break;
             }
 
-            case 2u:
+            case 1u:
             {
                 node->jjtChildAccept(1, this, data);
                 break;
@@ -610,38 +600,39 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
-        /*if(path_number != 2){ // todo
-            return;
-        }*/
-        /*std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        std::string extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
-        if(classMap.count(context)){
-            errors.push_back("ERROR DETECTED while adding class "+ context +" : Class already defined");
-            std::cout << "ERROR DETECTED while adding class " << context << " : Class already defined" <<  std::endl;
-        }
-
-
-        auto it = classMap.find(extendedClass);
-        if(it != classMap.end()){
-            ClassClass& classClass = classMap.find(extendedClass)->second;
-            classClass.parent = extendedClass;
-            classMap.emplace(context, classClass);
-
-            classMap.find(context)->second.keywords.emplace("extends");
-        }
-        if(it == classMap.end())
+        switch (path_number)
         {
-            errors.push_back(context + " is extending a non existing class " + extendedClass);
-        }
+            case 0u:
+            {
+                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                std::string extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
-        class_context = true;
-        class_name = context;
-        child_context = true;
-        node->jjtGetChild(2)->jjtAccept(this, data);
-        child_context = false;
-        class_context = false;
-        */
+                class_context = true;
+                class_name = context;
+
+                auto it = classMap.find(extendedClass);
+                if(it != classMap.end())
+                {
+                    ClassClass& classClass = classMap.find(extendedClass)->second;
+                    classClass.parent = extendedClass;
+                    classMap.emplace(context, classClass);
+                    classMap.find(context)->second.keywords.emplace("extends");
+                }else
+                {
+                    errors.push_back(context + " is extending a non existing class " + extendedClass);
+                }
+
+                node->jjtChildAccept(2, this, data);
+                break;
+            }
+
+            case 1u:
+            {
+                node->jjtChildAccept(2, this, data);
+                break;
+            }
+        }
     }
     void TypeCheckerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
@@ -657,7 +648,7 @@ namespace Pomme
     {
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
                 visiteVariable(node->jjtGetChild(1), dynamic_cast<ASTpommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
@@ -669,12 +660,13 @@ namespace Pomme
     {
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 visiteVariable(node, false, {});
                 break;
             }
 
+            case 1u:
             case 2u:
             {
                 visiteVariable(node, false, {});
@@ -716,7 +708,7 @@ namespace Pomme
     {
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
                 auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(1));
@@ -782,7 +774,7 @@ namespace Pomme
                 break;
             }
 
-            case 2u:
+            case 1u:
             {
                 node->jjtChildAccept(3, this, data); // headers
                 node->jjtChildAccept(4, this, data); // instrs
@@ -795,7 +787,7 @@ namespace Pomme
     {
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 std::unordered_set<std::string> keywords;
 
@@ -905,6 +897,7 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeOverride *node, void * data)
     {
+        static_cast<std::unordered_set<std::string>*>(data)->insert("override"); // check if correct todo
     }
 
     void TypeCheckerVisitor::visit(ASTonil *node, void * data)
@@ -1135,6 +1128,7 @@ namespace Pomme
             errors.push_back("Can't assign class " + rightType + " to class " + leftType);
             return;
         }
+
     }
 
     void TypeCheckerVisitor::visit(ASTaddeq *node, void * data)
@@ -1224,13 +1218,13 @@ namespace Pomme
     {
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 visiteVariable(node, true, {});
                 break;
             }
 
-            case 2u:
+            case 1u:
             {
                 visiteVariable(node, false, {});
 
@@ -1304,7 +1298,7 @@ namespace Pomme
     {
         switch (path_number)
         {
-            case 1u:
+            case 0u:
             {
                 std::string functionType = "void";
                 auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
@@ -1333,7 +1327,7 @@ namespace Pomme
                 break;
             }
 
-            case 2u:
+            case 1u:
             {
                 node->jjtChildAccept(1, this, data); // headers
                 node->jjtChildAccept(2, this, data); // instrs

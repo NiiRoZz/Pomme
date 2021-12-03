@@ -168,7 +168,7 @@ namespace Pomme
         std::string child_name;
 
         bool instrs_context = false;
-        uint8_t path_number = 1;
+        uint8_t path_number = 0;
         int current_scopes = 0;
 
         template<typename T>

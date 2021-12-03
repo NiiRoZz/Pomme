@@ -150,6 +150,21 @@ TEST(TEST_TYPECHECKER, GlobalFunctionRedefinition)
         std::cout << error << std::endl;
     }
 }
+TEST(TEST_TYPECHECKER, GlobalFunctionRedefinitionWithDifferentType)
+{
+    TEST_TYPECHECKER_TEST("void meth(){}; int meth(){};\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
 
 TEST(TEST_TYPECHECKER, CompleteClass)
 {
@@ -307,7 +322,7 @@ TEST(TEST_TYPECHECKER, StaticVisibilityMethod)
     EXPECT_TRUE(visitor.classMap.find("test")->second.methods.find("test!")->second.keywords.count("static"));
     EXPECT_TRUE(visitor.classMap.find("test")->second.methods.find("test!")->second.keywords.count("public"));
 }
-/*
+
 TEST(TEST_TYPECHECKER, ExtendedClass) {
     TEST_TYPECHECKER_TEST("class test { int t; void t2(){}; }; class test2 extends test {}; \n");
 
@@ -382,7 +397,7 @@ TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) {
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.find("test::a")->second.variableType == "int");
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test2::b"));
 }
-*/
+
 TEST(TEST_TYPECHECKER, AccessToNonExistingMethod) {
     TEST_TYPECHECKER_TEST("class test{ void x(){ op(10); }; };\n");
 
@@ -504,6 +519,34 @@ TEST(TEST_TYPECHECKER, NotDefinedVariableInFunction) {
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(visitor.errors.size(), 2);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, RedefinitionOfLocalInGlobal) {
+    TEST_TYPECHECKER_TEST("void meth(){ int x; int x; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, RedefinitionOfLocalInFunction) {
+    TEST_TYPECHECKER_TEST("class x{ void meth(){ int x; int x; }; };\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
@@ -719,4 +762,96 @@ TEST(TEST_TYPECHECKER, TestOperatorPlus)
         std::cout << error << std::endl;
     }
 }
+
+TEST(TEST_TYPECHECKER, ClassDefineAutomate)
+{
+    TEST_TYPECHECKER_TEST("class test extends test2{}; class test2{}; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    auto it = visitor.classMap.find("test");
+    auto ot = visitor.classMap.find("test2");
+    EXPECT_NE(it, visitor.classMap.end());
+    EXPECT_NE(ot, visitor.classMap.end());
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, ClassDefineAutomate2)
+{
+    TEST_TYPECHECKER_TEST("class test{ test2 x; }; class test2{}; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    auto it = visitor.classMap.find("test");
+    auto ot = visitor.classMap.find("test2");
+    EXPECT_NE(it, visitor.classMap.end());
+    EXPECT_NE(ot, visitor.classMap.end());
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, ClassDefineAutomate3)
+{
+    TEST_TYPECHECKER_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    auto it = visitor.classMap.find("test");
+    auto ot = visitor.classMap.find("test2");
+    auto ut = visitor.classMap.find("test3");
+    EXPECT_NE(it, visitor.classMap.end());
+    EXPECT_NE(ot, visitor.classMap.end());
+    EXPECT_NE(ut, visitor.classMap.end());
+
+    for(const auto& error : visitor.errors ){
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, ClassDefineAutomate4)
+{
+    TEST_TYPECHECKER_TEST("class test1{}; " // 0
+                          "class test2{}; " // 1
+                          "class test extends test3 {}; " // 2
+                          "class test3 extends test1{ test2 x;};\n"); // 3
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    auto ut = visitor.classMap.find("test");
+    auto it = visitor.classMap.find("test1");
+    auto ot = visitor.classMap.find("test2");
+    auto yt = visitor.classMap.find("test3");
+    EXPECT_NE(it, visitor.classMap.end());
+    EXPECT_NE(ot, visitor.classMap.end());
+    EXPECT_NE(ut, visitor.classMap.end());
+    EXPECT_NE(yt, visitor.classMap.end());
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}
+
 
