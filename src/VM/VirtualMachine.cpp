@@ -1118,12 +1118,12 @@ namespace Pomme
 
     bool VirtualMachine::call(ObjFunction* function, uint16_t argCount)
     {
+        #ifndef NDEBUG
         if (argCount != function->arity)
         {
             return false;
         }
 
-        #ifndef NDEBUG
         if (frameCount >= FRAMES_MAX)
         {
             assert(false);
