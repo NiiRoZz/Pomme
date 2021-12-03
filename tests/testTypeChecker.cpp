@@ -379,7 +379,7 @@ TEST(TEST_TYPECHECKER, OverridingWithoutDefinitionInParent) {
         std::cout << error << std::endl;
     }
 }
-TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) {
+TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) { // todo
     TEST_TYPECHECKER_TEST("class test{ int a; }; class test2 extends test { bool a;  bool b; };\n");
 
     std::cout << text << std::endl;

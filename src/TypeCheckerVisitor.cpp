@@ -422,10 +422,6 @@ namespace Pomme
         {
             case 0u:
             case 1u:
-            {
-                break;
-            }
-
             case 2u:
             {
                 auto* variableType = static_cast<std::string*>(data);
