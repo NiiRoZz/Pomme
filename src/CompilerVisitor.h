@@ -5,6 +5,8 @@
 #include "VM/Object.h"
 #include "VM/Common.h"
 
+#include <array>
+
 namespace Pomme
 {
 	class VirtualMachine;

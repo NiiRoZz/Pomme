@@ -10,7 +10,9 @@ project (${APP}
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+if(JAVACC_GENERATE MATCHES ON)
 find_package(Java COMPONENTS Runtime REQUIRED)
+endif()
 
 option(JAVACC_GENERATE "Generate JAVACC files" OFF)
 
