@@ -11,6 +11,10 @@
 namespace Pomme
 {
 
+    /*
+     * todo : modded + enum
+     * */
+
     TypeCheckerVisitor::TypeCheckerVisitor()
 	{
 	}
@@ -117,16 +121,31 @@ namespace Pomme
             if(access->second.functionIdent == functionIdent)
             {
                 errors.push_back("Global function "+functionName+" already defined");
-
             }
         }else
         {
             FunctionClass function(functionType, functionName, functionIdent, std::move(parameters),
-                                   std::unordered_set<std::string>(),globalFunctionsMap.size(), native);
+                                   std::unordered_set<std::string>(), globalFunctionsMap.size(), native);
             globalFunctionsMap.emplace(functionIdent, function);
         }
     }
 
+    void TypeCheckerVisitor::addEnum(const std::string& enumName)
+    {
+        std::cout << "Adding enum " << enumName << std::endl;
+
+        auto access = enumMap.find(enumName);
+        if(access != enumMap.end())
+        {
+            errors.push_back("Adding enum "+ enumName +" : Enum already defined");
+            std::cout << "Adding enum " << enumName << " : Enum already defined" <<  std::endl;
+        }else
+        {
+            EnumClass enumClass;
+            enumMap.emplace(enumName,enumClass);
+            std::cout << "inserted " << enumName << std::endl;
+        }
+    }
     void TypeCheckerVisitor::addClass(const std::string& className)
     {
 
@@ -284,7 +303,6 @@ namespace Pomme
     bool TypeCheckerVisitor::getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className)
     {
         auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
-    
         std::string typeExp = "";
         return getExpType(functionParameters, node, variableType, functionIdent, typeExp, className);
     }
@@ -519,6 +537,17 @@ namespace Pomme
                     return;
                 }
 
+                auto ut = enumMap.find(node->m_Identifier);
+                if (ot != classMap.end())
+                {
+                    std::cout << "ENTERNTE" << std::endl;
+                    if (variableType != nullptr)
+                    {
+                        *variableType = node->m_Identifier;
+                    }
+                    return;
+                }
+                std::cout << "not found in either attribute of class nor locals variables" << std::endl;
                 errors.push_back("Variable "+ node->m_Identifier + " not found in either attribute of class nor locals variables ");
                 break;
             }
@@ -902,14 +931,56 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeEnum *node, void * data)
     {
+        switch (path_number)
+        {
+            case 0u: {
+                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                addEnum(context);
+                std::cout << "ASTpommeEnum " << std::endl;
+                node->jjtChildAccept(1,this,data);
+            }
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTpommeExtendsEnum *node, void * data)
     {
+        switch (path_number)
+        {
+            case 0u: {
+                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                std::string extendedEnum = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+                addEnum(context);
+                std::cout << "ASTpommeExtendsEnum " << std::endl;
+
+                auto it = enumMap.find(extendedEnum);
+                if(it != enumMap.end())
+                {
+                    EnumClass& enumClass = enumMap.find(extendedEnum)->second;
+                    enumClass.parent = extendedEnum;
+                    enumMap.emplace(context, enumClass);
+                    enumMap.find(context)->second.keywords.emplace("extends");
+                }else
+                {
+                    errors.push_back(context + " is extending a non existing enum : " + extendedEnum);
+                }
+
+                node->jjtChildAccept(2,this,data);
+            }
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTpommeModdedEnum *node, void * data)
     {
+        switch (path_number)
+        {
+            case 0u: {
+                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                addEnum(context);
+                std::cout << "ASTpommeModdedEnum " << std::endl;
+                node->jjtChildAccept(1,this,data);
+            }
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTdeclenums *node, void * data)
@@ -961,6 +1032,7 @@ namespace Pomme
                     false,
                     parameters
                 );
+                std::cout << " xd man you shti " << std::endl;
                 break;
             }
 

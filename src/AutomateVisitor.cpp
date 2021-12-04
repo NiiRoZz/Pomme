@@ -4,7 +4,7 @@
 namespace Pomme
 {
 
-    bool AutomateVisitor::resolved(Node* node)
+    bool AutomateVisitor::resolved(Node* node, bool isClass)
     {
         bool resolved = false;
         std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
@@ -15,13 +15,21 @@ namespace Pomme
             {
                 if(ot == ident)
                 {
-                    addState(node);
+                    if(isClass)
+                    {
+                        addState(node);
+                    }else
+                    {
+                        addEnum(node);
+                    }
+
                     int stateNumber = dependanceGraph.getState(it.first);
                     toDelete.push_back(dynamic_cast<ASTident*>(dependanceGraph.getState(stateNumber)->node->jjtGetChild(0))->m_Identifier);
                     dependanceGraph.addTransition(nbState - 1, stateNumber);
                     resolved = true;
                 }
             }
+
         }
 
         if(resolved)
@@ -41,6 +49,29 @@ namespace Pomme
         }
 
         return resolved;
+    }
+
+    void AutomateVisitor::findDependingObject(Node* node)
+    {
+        std::string dependingClassName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        int dependingStateNumber = dependanceGraph.getState(dependingClassName);
+        std::cout << "dependingStateNumber ? " << dependingStateNumber << std::endl;
+        if(dependingStateNumber != -1)
+        {
+            dependanceGraph.addTransition(dependingStateNumber, nbState);
+        }else
+        {
+            std::string className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+            auto ut = classToBeResolved.find(className);
+            if(ut != classToBeResolved.end())
+            {
+                ut->second.insert(dependingClassName);
+            }else
+            {
+                classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
+            }
+        }
+
     }
 
     void AutomateVisitor::addState(Node* node)
@@ -63,31 +94,39 @@ namespace Pomme
                 } else
                 {
                     state->extend = true;
-
-                    std::string dependingClassName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
-                    int dependingStateNumber = dependanceGraph.getState(dependingClassName);
-                    std::cout << "dependingStateNumber ? " << dependingStateNumber << std::endl;
-                    if(dependingStateNumber != -1)
-                    {
-                        dependanceGraph.addTransition(dependingStateNumber, nbState);
-                    }else
-                    {
-                        std::string className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-                        auto ut = classToBeResolved.find(className);
-                        if(ut != classToBeResolved.end())
-                        {
-                            ut->second.insert(dependingClassName);
-                        }else
-                        {
-                            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
-                        }
-                    }
+                    findDependingObject(node);
                 }
             }
-        }else
+        }
+        nbState++;
+    }
+    void AutomateVisitor::addEnum(Node* node)
+    {
+        dependanceGraph.addState(nbState);
+        State* state = dependanceGraph.getState(nbState);
+
+        std::string currentEnumNameeee = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::cout << "currentEnumNameeee------- ? " << currentEnumNameeee << std::endl;
+        if(state != nullptr)
         {
-            std::cout << "ERROR STATE NULL" << std::endl;
-            return;
+            std::cout << "!nullptr" << std::endl;
+            state->node = node;
+            auto nType = dynamic_cast<ASTpommeEnum*>(node);
+            if(nType == nullptr)
+            {
+                std::cout << "!nType" << std::endl;
+                auto nTypeModded = dynamic_cast<ASTpommeModdedEnum*>(node);
+                if(nTypeModded != nullptr)
+                {
+                    std::cout << "nTypeModded" << std::endl;
+                    state->modded = true;
+                } else
+                {
+                    std::cout << "nTypeExtends" << std::endl;
+                    state->extend = true;
+                    findDependingObject(node);
+                }
+            }
         }
         nbState++;
     }
@@ -127,7 +166,7 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTpommeClass *node, void * data)
     {
-        if(!resolved(node))
+        if(!resolved(node, true))
         {
             addState(node);
         }
@@ -136,7 +175,7 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTpommeClassChild *node, void * data)
     {
-        if(!resolved(node))
+        if(!resolved(node, true))
         {
             addState(node);
         }
@@ -145,7 +184,7 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
-        if(!resolved(node))
+        if(!resolved(node, true))
         {
             addState(node);
         }
@@ -166,7 +205,7 @@ namespace Pomme
             std::cout << "NATIVE TYPE" << std::endl;
         }else
         {
-            std::string* className = static_cast<std::string*>(data);
+            auto* className = static_cast<std::string*>(data);
             bool depandanceNodeAlreadyDefined = false;
             int numStateDepandance = -1;
 
@@ -236,12 +275,33 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTpommeEnum *node, void * data)
     {
+        if(!resolved(node, false))
+        {
+            addEnum(node);
+        }
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::cout << "ASTpommeEnum " << ident << std::endl;
+        node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTpommeExtendsEnum *node, void * data)
     {
+        if(!resolved(node, false))
+        {
+            addEnum(node);
+        }
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::cout << "ASTpommeExtendsEnum " << ident << std::endl;
+        node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTpommeModdedEnum *node, void * data)
     {
+        if(!resolved(node, false))
+        {
+            addEnum(node);
+        }
+        std::string ident = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::cout << "ASTpommeModdedEnum " << ident << std::endl;
+        node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTdeclenums *node, void * data)
     {

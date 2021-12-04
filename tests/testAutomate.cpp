@@ -546,3 +546,76 @@ TEST(TEST_AUTOMATE, Graph_Sort5) {
 }
 
 
+TEST(TEST_AUTOMATE, Graph_Enum) {
+    TEST_AUTOMATE_TEST("enum test{}; enum test1{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 0);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+}
+
+TEST(TEST_AUTOMATE, Graph_Enum2) {
+    TEST_AUTOMATE_TEST("enum test{}; enum test1 extends test{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+}
+
+TEST(TEST_AUTOMATE, Graph_Enum3) {
+    TEST_AUTOMATE_TEST("enum test extends test3{}; enum test1 extends test{};  enum test3{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+}
+TEST(TEST_AUTOMATE, Graph_ClassEnum) {
+    TEST_AUTOMATE_TEST("enum test{}; class depend{ test x;};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
+}
+
+TEST(TEST_AUTOMATE, Graph_ClassEnum2) {
+    TEST_AUTOMATE_TEST("enum test extends test2{}; enum test2{}; class depend{ test x;};  class depend2 extends depend{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,2));
+    EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,3));
+}
+
+TEST(TEST_AUTOMATE, Graph_LoopEnum) {
+    TEST_AUTOMATE_TEST("enum test extends test2{}; enum test2 extends test{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.hasLoop(), true);
+}
+
+

@@ -31,7 +31,6 @@ using namespace Pomme;
 TEST(TEST_TYPECHECKER, ClassComplete)
 {
     TEST_TYPECHECKER_TEST("class test { int a = 8;  boolean b = 8; void meth(){ int b = 7; }; }; \n");
-
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
@@ -379,7 +378,7 @@ TEST(TEST_TYPECHECKER, OverridingWithoutDefinitionInParent) {
         std::cout << error << std::endl;
     }
 }
-TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) { // todo
+TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) { // todo check variable redefinition
     TEST_TYPECHECKER_TEST("class test{ int a; }; class test2 extends test { bool a;  bool b; };\n");
 
     std::cout << text << std::endl;
@@ -387,10 +386,10 @@ TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) { // todo
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 1);
 
     EXPECT_TRUE(visitor.classMap.find("test")->second.attributes.count("test::a"));
     EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test::a"));
@@ -406,10 +405,10 @@ TEST(TEST_TYPECHECKER, AccessToNonExistingMethod) {
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, AccessToExistingMethod) {
@@ -462,10 +461,10 @@ TEST(TEST_TYPECHECKER, CallingFunctionOnInstanceReturnNotExisting) {
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, MultipleAccessProperty) {
@@ -518,10 +517,10 @@ TEST(TEST_TYPECHECKER, NotDefinedVariableInFunction) {
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 2);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 2);
 }
 
 TEST(TEST_TYPECHECKER, RedefinitionOfLocalInGlobal) {
@@ -546,10 +545,10 @@ TEST(TEST_TYPECHECKER, RedefinitionOfLocalInFunction) {
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, DefinedVariableInLocals) {
@@ -709,10 +708,10 @@ TEST(TEST_TYPECHECKER, TestAssignNotCorrectClass)
 
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, TestCreateCorrectClass)
@@ -741,10 +740,10 @@ TEST(TEST_TYPECHECKER, TestCreateNotCorrectClass)
 
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 TEST(TEST_TYPECHECKER, TestOperatorPlus)
@@ -813,7 +812,6 @@ TEST(TEST_TYPECHECKER, ClassDefineAutomate3)
 
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 0);
     auto it = visitor.classMap.find("test");
     auto ot = visitor.classMap.find("test2");
     auto ut = visitor.classMap.find("test3");
@@ -824,6 +822,7 @@ TEST(TEST_TYPECHECKER, ClassDefineAutomate3)
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 0);
 }
 
 TEST(TEST_TYPECHECKER, ClassDefineAutomate4)
@@ -838,7 +837,6 @@ TEST(TEST_TYPECHECKER, ClassDefineAutomate4)
 
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 0);
     auto ut = visitor.classMap.find("test");
     auto it = visitor.classMap.find("test1");
     auto ot = visitor.classMap.find("test2");
@@ -852,6 +850,103 @@ TEST(TEST_TYPECHECKER, ClassDefineAutomate4)
     {
         std::cout << error << std::endl;
     }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, CheckOrderDefinition)
+{
+    TEST_TYPECHECKER_TEST("class test{ int x; void methode(){ meth(); }; }; void meth(){};\n"); // todo definition of glabale before class instr visit
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, EnumAsAttribute)
+{
+    TEST_TYPECHECKER_TEST("enum test{}; class test2{ test x; };\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, EnumRedefinition)
+{
+    TEST_TYPECHECKER_TEST("enum test{}; enum test{};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 1);
+}
+
+TEST(TEST_TYPECHECKER, EnumExtends)
+{
+    TEST_TYPECHECKER_TEST("enum test extends test1{}; enum test1{};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, ExtendingNonExistingEnum)
+{
+    TEST_TYPECHECKER_TEST("enum test extends testX{};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 1);
+}
+
+TEST(TEST_TYPECHECKER, Loop)
+{
+    TEST_TYPECHECKER_TEST("class test extends test2{}; class test2 extends test{};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 1);
 }
 
 

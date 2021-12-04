@@ -306,6 +306,10 @@ namespace Pomme {
         std::cout << "PRINTING CYCLE" <<std::endl;
         for(auto i : *stack)
         {
+            if(getState(i)->node != nullptr)
+            {
+                this->loop += static_cast<ASTident*>(getState(i)->node->jjtGetChild(0))->m_Identifier+ " ";
+            }
             std::cout << i << std::endl;
             if(i == state)
             {

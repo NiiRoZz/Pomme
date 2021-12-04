@@ -18,8 +18,9 @@ namespace Pomme {
     private :
         std::map<int, State> m_state;
         std::map<int, std::vector<Transition>> m_transition;
-    
+
     public:
+        std::string loop;
         bool addState(int state);
         bool removeState(int state);
         bool hasState(int state) const ;

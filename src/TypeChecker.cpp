@@ -18,21 +18,35 @@ namespace Pomme
 		TypeCheckerVisitor visitor;
 
         tree->jjtAccept(&visitorAutomate, nullptr); // class/method definition
-        std::vector<int> state_order = visitorAutomate.dependanceGraph.topologicalSort();
-        std::vector<Node*> class_to_define = visitorAutomate.dependanceGraph.getClassNode(&state_order);
 
-        for(auto it : class_to_define)
+        if(!visitorAutomate.dependanceGraph.hasLoop())
         {
-            std::cout << " Defining class : "<< dynamic_cast<ASTident*>(it->jjtGetChild(0))->m_Identifier << std::endl;
-            it->jjtAccept(&visitor,nullptr);
+            std::vector<int> state_order = visitorAutomate.dependanceGraph.topologicalSort();
+            std::vector<Node*> class_to_define = visitorAutomate.dependanceGraph.getClassNode(&state_order);
+
+            for(auto it : class_to_define)
+            {
+                std::cout << " Defining class : "<< dynamic_cast<ASTident*>(it->jjtGetChild(0))->m_Identifier << std::endl;
+                it->jjtAccept(&visitor,nullptr);
+            }
+
+            // todo define globals headers
+            // todo define functions headers
+
+            //----
+            // todo define globals instrs
+            // todo define functions instrs
+
+            visitor.path_number++;
+            tree->jjtAccept(&visitor, nullptr);
+            visitor.path_number++;
+            tree->jjtAccept(&visitor, nullptr);
+
+            std::cout << visitor << std::endl;
+        }else
+        {
+            visitor.errors.emplace_back("File has circular dependance "+ visitorAutomate.dependanceGraph.loop);
         }
-
-        visitor.path_number++;
-		tree->jjtAccept(&visitor, nullptr); // method definition
-        visitor.path_number++;
-        tree->jjtAccept(&visitor, nullptr); // expression typing
-
-        std::cout << visitor << std::endl;
 
         return visitor;
 	}

@@ -19,6 +19,18 @@ namespace Pomme
 	{
 
     public:
+
+        class EnumClass
+        {
+        public:
+            std::unordered_set<std::string> keywords;
+            std::string parent;
+
+            friend std::ostream & operator<<(std::ostream & str, const EnumClass & klass)
+            {
+                return str;
+            }
+        };
         class FunctionClass
         {
         public:
@@ -158,6 +170,7 @@ namespace Pomme
         TypeCheckerVisitor();
         std::unordered_map<std::string, FunctionClass> globalFunctionsMap;
         std::unordered_map<std::string, ClassClass> classMap;
+        std::unordered_map<std::string, EnumClass> enumMap;
         std::vector<std::string> errors;
 
         std::unordered_map<int, std::vector<VariableClass>> locals;
@@ -260,6 +273,7 @@ namespace Pomme
         void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent, bool native,
                                std::unordered_set<std::string> parameters);
         void addClass(const std::string& className);
+        void addEnum(const std::string& EnumName);
         std::unordered_set<std::string> buildSignature(ASTheaders *headers);
         bool getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className);
         bool getExpType(ASTlistexp* node, ASTaccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className);
@@ -272,6 +286,12 @@ namespace Pomme
             str << "------------------------" << std::endl;
             str << "----------END----------" << std::endl;
             str << "------------------------" << std::endl;
+
+            str << "--------ENUM-----------" << std::endl;
+            for(const auto& it : klass.enumMap)
+            {
+                str << "enum "<< it.second << std::endl;
+            }
 
             str << "--------GLOBAL-----------" << std::endl;
             for(const auto& it : klass.globalFunctionsMap)

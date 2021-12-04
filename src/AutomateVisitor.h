@@ -15,7 +15,9 @@ namespace Pomme
         std::unordered_map<std::string,std::unordered_set<std::string>> classToBeResolved;
 
         void addState(Node* node);
-        bool resolved(Node* node);
+        void addEnum(Node* node);
+        void findDependingObject(Node* node);
+        bool resolved(Node* node, bool isClass);
         void visit(SimpleNode *node, void * data);
         void visit(ASTinput *node, void * data);
         void visit(ASTident *node, void * data);
