@@ -6,7 +6,7 @@
 
 #define GC_HEAP_GROW_FACTOR 2
 
-#define USE_COMPUTED_GOTO
+//#define USE_COMPUTED_GOTO
 
 namespace Pomme
 {
@@ -488,484 +488,484 @@ namespace Pomme
             #define DISPATCH() goto *dispatch_table[READ_BYTE()]
             #define CASES(name) name:
         #else
-            #define DISPATCH() break;
+            #define DISPATCH() goto POMME_vm_main_loop
             #define CASES(name) case AS_OPCODE(OpCode::name):
         #endif
 
         #ifndef USE_COMPUTED_GOTO
-        while (true)
-        {
+        POMME_vm_main_loop:
         #else
         DISPATCH();
         #endif
-            //printStack();
-            //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
-            
-            #ifndef USE_COMPUTED_GOTO
-            switch (READ_BYTE())
+
+        //printStack();
+        //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
+        
+        #ifndef USE_COMPUTED_GOTO
+        switch (READ_BYTE())
+        {
+        #endif
+
+            CASES(OP_CONSTANT)
             {
-            #endif
+                Value constant = READ_CONSTANT();
+                push(constant);
 
-                CASES(OP_CONSTANT)
-                {
-                    Value constant = READ_CONSTANT();
-					push(constant);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_NULL)
-                {
-                    push(NULL_VAL);
-
-                    DISPATCH();
-                } 
-
-                CASES(OP_TEST_NOT_NULL)
-                {
-                    bool isNull = IS_NULL(peek(0));
-                    Value value = BOOL_VAL(!isNull);
-
-                    pop(1u); //pop obj/null value
-                    push(value);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_POP)
-                {
-                    pop(1u);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_PRINT)
-                {
-                    printValue(pop());
-                    std::cout << "\n";
-
-                    DISPATCH();
-                }
-
-                CASES(OP_GET_GLOBAL)
-                {
-                    push(globals[READ_BYTE()]);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_SET_GLOBAL)
-                {
-                    globals[READ_BYTE()] = peek(0);
-                    pop(1u);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_GET_LOCAL)
-                {
-                    push(frame->slots[READ_BYTE()]);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_SET_LOCAL)
-                {
-                    frame->slots[READ_BYTE()] = peek(0);
-                    pop(1u);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_GET_PROPERTY)
-                {
-                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
-
-                    uint16_t slot = READ_UINT16();
-
-                    Value* value = nullptr;
-
-                    if (IS_INSTANCE(peek(0)))
-                    {
-                        ObjInstance* instance = AS_INSTANCE(peek(0));
-                        value = &instance->fields[slot];
-                    }
-                    else
-                    {
-                        ObjClass* klass = AS_CLASS(peek(0));
-                        value = &klass->staticFields[slot];
-                    }
-
-                    pop(1u); // Instance or Class.
-                    push(*value);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_SET_PROPERTY)
-                {
-                    assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
-
-                    uint16_t slot = READ_UINT16();
-
-                    if (IS_INSTANCE(peek(0)))
-                    {
-                        ObjInstance* instance = AS_INSTANCE(peek(0));
-                        instance->fields[slot] = peek(1);
-                    }
-                    else
-                    {
-                        ObjClass* klass = AS_CLASS(peek(0));
-                        klass->staticFields[slot] = peek(1);
-                    }
-
-                    pop(2u); // Instance or Class. and Value
-
-                    DISPATCH();
-                }
-
-                CASES(OP_INVOKE)
-                {
-                    uint16_t slot = READ_UINT16();
-                    bool native = READ_BYTE();
-                    uint16_t argCount = READ_UINT16();
-                    
-                    if (!invoke(argCount, slot, native))
-                    {
-                        return InterpretResult::INTERPRET_RUNTIME_ERROR;
-                    }
-
-                    frame = &frames[frameCount - 1];
-
-                    DISPATCH();
-                }
-
-                CASES(OP_JUMP)
-                {
-                    uint16_t offset = READ_UINT16();
-                    frame->ip += offset;
-
-                    DISPATCH();
-                }
-
-                CASES(OP_JUMP_IF_FALSE)
-                {
-                    uint16_t offset = READ_UINT16();
-                    if (isFalsey(peek(0))) frame->ip += offset;
-
-                    DISPATCH();
-                }
-
-                CASES(OP_LOOP)
-                {
-                    uint16_t offset = READ_UINT16();
-                    frame->ip -= offset;
-
-                    DISPATCH();
-                }
-
-                CASES(OP_CALL_NATIVE)
-                {
-                    uint16_t argCount = READ_UINT16();
-                    if (!callNative(AS_GLOBAL_NATIVE(peek(argCount)), argCount))
-                    {
-                        return InterpretResult::INTERPRET_RUNTIME_ERROR;
-                    }
-
-                    frame = &frames[frameCount - 1];
-
-                    DISPATCH();
-                }
-
-                CASES(OP_CALL_GLOBAL)
-                {
-                    uint16_t argCount = READ_UINT16();
-                    if (!call(AS_FUNCTION(peek(argCount)), argCount))
-                    {
-                        return InterpretResult::INTERPRET_RUNTIME_ERROR;
-                    }
-
-                    frame = &frames[frameCount - 1];
-
-                    DISPATCH();
-                }
-
-                CASES(OP_RETURN)
-                {
-                    Value result = pop();
-                    frameCount--;
-
-                    if (frameCount == 0)
-                    {
-                        pop(1u);
-                        return InterpretResult::INTERPRET_OK;
-                    }
-
-                    stackTop = frame->slots;
-                    push(result);
-
-                    frame = &frames[frameCount - 1];
-
-                    DISPATCH();
-                }
-
-                CASES(OP_FINISH)
-                {
-                    Value result = pop();
-                    frameCount--;
-
-                    pop(1u);
-
-                    if (frameCount > 0)
-                    {
-                        push(result);
-                    }
-
-                    return InterpretResult::INTERPRET_OK; 
-                }
-
-                CASES(OP_INHERIT)
-                {
-                    //Value superclass = peek(1);
-                    //ObjClass* subclass = AS_CLASS(peek(0));
-
-                    //TODO: add all methods from superclass into subclass
-
-                    pop(1u); // Subclass.
-
-                    DISPATCH();
-                }
-
-                CASES(OP_METHOD)
-                {
-                    uint16_t slot = READ_UINT16();
-                    ObjString* name = READ_STRING();
-                    bool native = READ_BYTE();
-
-                    defineMethod(slot, name, native);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_FIELD)
-                {
-                    uint16_t slot = READ_UINT16();
-                    ObjString* name = READ_STRING();
-                    bool isStatic = READ_BYTE();
-
-                    defineField(slot, name, isStatic);
-
-                    DISPATCH();
-                }
-
-                CASES(OP_GET_SUPER)
-                {
-                    ObjString* name = READ_STRING();
-                    ObjClass* superclass = AS_CLASS(pop());
-
-                    DISPATCH();
-                }
-
-                CASES(OP_NOT)
-                {
-                    assert(IS_BOOL(peek(0)));
-                    push(!AS_BOOL(peek(0)));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_CLASS)
-                {
-                    push(OBJ_VAL(static_cast<Obj*>(newClass(READ_STRING()))));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_NEW)
-                {
-                    uint16_t argCount = READ_UINT16();
-                    bool foundConstructor = READ_BYTE();
-                    uint16_t slot = READ_UINT16();
-
-                    assert(IS_CLASS(peek(argCount)));
-
-                    ObjClass* klass = AS_CLASS(peek(argCount));
-                    stackTop[-argCount - 1] = OBJ_VAL(static_cast<Obj*>(newInstance(klass)));
-
-                    if (foundConstructor)
-                    {
-                        assert(slot >= 0u && slot < METHODS_MAX);
-                        assert(IS_FUNCTION(klass->methods[slot]));
-
-                        if (!call(AS_FUNCTION(klass->methods[slot]), argCount))
-                        {
-                            return InterpretResult::INTERPRET_RUNTIME_ERROR;
-                        }
-
-                        frame = &frames[frameCount - 1];
-                    }
-
-                    DISPATCH();
-                }
-
-                CASES(OP_INT)
-                {
-                    READ_32BITS(uint32_t, value);
-                    push(INT_VAL(static_cast<int32_t>(value)));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_FLOAT)
-                {
-                    READ_64BITS(double, value);
-                    push(FLOAT_VAL(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_BOOL)
-                {
-                    push(BOOL_VAL(static_cast<bool>(READ_BYTE())));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_LT_INT_INT)
-                {
-                    Value value = BOOL_VAL(AS_INT(peek(1)) < AS_INT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_LT_INT_FLOAT)
-                {
-                    Value value = BOOL_VAL((double) AS_INT(peek(1)) < AS_FLOAT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_LT_FLOAT_FLOAT)
-                {
-                    Value value = BOOL_VAL(AS_FLOAT(peek(1)) < AS_FLOAT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_LT_FLOAT_INT)
-                {
-                    Value value = BOOL_VAL(AS_FLOAT(peek(1)) < (double) AS_INT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_MINUS_INT_INT)
-                {
-                    Value value = INT_VAL(AS_INT(peek(1)) - AS_INT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_MINUS_INT_FLOAT)
-                {
-                    Value value = FLOAT_VAL((double) AS_INT(peek(1)) - AS_FLOAT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_MINUS_FLOAT_FLOAT)
-                {
-                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - AS_FLOAT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_MINUS_FLOAT_INT)
-                {
-                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - (double) AS_INT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_ADD_INT_INT)
-                {
-                    Value value = INT_VAL(AS_INT(peek(1)) + AS_INT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_ADD_INT_FLOAT)
-                {
-                    Value value = FLOAT_VAL((double) AS_INT(peek(1)) + AS_FLOAT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_ADD_FLOAT_FLOAT)
-                {
-                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + AS_FLOAT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-
-                CASES(OP_ADD_FLOAT_INT)
-                {
-                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + (double) AS_INT(peek(0)));
-
-                    pop(2u);
-
-                    push(std::move(value));
-
-                    DISPATCH();
-                }
-            #ifndef USE_COMPUTED_GOTO
+                DISPATCH();
             }
+
+            CASES(OP_NULL)
+            {
+                push(NULL_VAL);
+
+                DISPATCH();
+            } 
+
+            CASES(OP_TEST_NOT_NULL)
+            {
+                bool isNull = IS_NULL(peek(0));
+                Value value = BOOL_VAL(!isNull);
+
+                pop(1u); //pop obj/null value
+                push(value);
+
+                DISPATCH();
+            }
+
+            CASES(OP_POP)
+            {
+                pop(1u);
+
+                DISPATCH();
+            }
+
+            CASES(OP_PRINT)
+            {
+                printValue(pop());
+                std::cout << "\n";
+
+                DISPATCH();
+            }
+
+            CASES(OP_GET_GLOBAL)
+            {
+                push(globals[READ_BYTE()]);
+
+                DISPATCH();
+            }
+
+            CASES(OP_SET_GLOBAL)
+            {
+                globals[READ_BYTE()] = peek(0);
+                pop(1u);
+
+                DISPATCH();
+            }
+
+            CASES(OP_GET_LOCAL)
+            {
+                push(frame->slots[READ_BYTE()]);
+
+                DISPATCH();
+            }
+
+            CASES(OP_SET_LOCAL)
+            {
+                frame->slots[READ_BYTE()] = peek(0);
+                pop(1u);
+
+                DISPATCH();
+            }
+
+            CASES(OP_GET_PROPERTY)
+            {
+                assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
+
+                uint16_t slot = READ_UINT16();
+
+                Value* value = nullptr;
+
+                if (IS_INSTANCE(peek(0)))
+                {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    value = &instance->fields[slot];
+                }
+                else
+                {
+                    ObjClass* klass = AS_CLASS(peek(0));
+                    value = &klass->staticFields[slot];
+                }
+
+                pop(1u); // Instance or Class.
+                push(*value);
+
+                DISPATCH();
+            }
+
+            CASES(OP_SET_PROPERTY)
+            {
+                assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
+
+                uint16_t slot = READ_UINT16();
+
+                if (IS_INSTANCE(peek(0)))
+                {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    instance->fields[slot] = peek(1);
+                }
+                else
+                {
+                    ObjClass* klass = AS_CLASS(peek(0));
+                    klass->staticFields[slot] = peek(1);
+                }
+
+                pop(2u); // Instance or Class. and Value
+
+                DISPATCH();
+            }
+
+            CASES(OP_INVOKE)
+            {
+                uint16_t slot = READ_UINT16();
+                bool native = READ_BYTE();
+                uint16_t argCount = READ_UINT16();
+                
+                if (!invoke(argCount, slot, native))
+                {
+                    return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                }
+
+                frame = &frames[frameCount - 1];
+
+                DISPATCH();
+            }
+
+            CASES(OP_JUMP)
+            {
+                uint16_t offset = READ_UINT16();
+                frame->ip += offset;
+
+                DISPATCH();
+            }
+
+            CASES(OP_JUMP_IF_FALSE)
+            {
+                uint16_t offset = READ_UINT16();
+                if (isFalsey(peek(0))) frame->ip += offset;
+
+                DISPATCH();
+            }
+
+            CASES(OP_LOOP)
+            {
+                uint16_t offset = READ_UINT16();
+                frame->ip -= offset;
+
+                DISPATCH();
+            }
+
+            CASES(OP_CALL_NATIVE)
+            {
+                uint16_t argCount = READ_UINT16();
+                if (!callNative(AS_GLOBAL_NATIVE(peek(argCount)), argCount))
+                {
+                    return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                }
+
+                frame = &frames[frameCount - 1];
+
+                DISPATCH();
+            }
+
+            CASES(OP_CALL_GLOBAL)
+            {
+                uint16_t argCount = READ_UINT16();
+                if (!call(AS_FUNCTION(peek(argCount)), argCount))
+                {
+                    return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                }
+
+                frame = &frames[frameCount - 1];
+
+                DISPATCH();
+            }
+
+            CASES(OP_RETURN)
+            {
+                Value result = pop();
+                frameCount--;
+
+                if (frameCount == 0)
+                {
+                    pop(1u);
+                    return InterpretResult::INTERPRET_OK;
+                }
+
+                stackTop = frame->slots;
+                push(result);
+
+                frame = &frames[frameCount - 1];
+
+                DISPATCH();
+            }
+
+            CASES(OP_FINISH)
+            {
+                Value result = pop();
+                frameCount--;
+
+                pop(1u);
+
+                if (frameCount > 0)
+                {
+                    push(result);
+                }
+
+                return InterpretResult::INTERPRET_OK; 
+            }
+
+            CASES(OP_INHERIT)
+            {
+                //Value superclass = peek(1);
+                //ObjClass* subclass = AS_CLASS(peek(0));
+
+                //TODO: add all methods from superclass into subclass
+
+                pop(1u); // Subclass.
+
+                DISPATCH();
+            }
+
+            CASES(OP_METHOD)
+            {
+                uint16_t slot = READ_UINT16();
+                ObjString* name = READ_STRING();
+                bool native = READ_BYTE();
+
+                defineMethod(slot, name, native);
+
+                DISPATCH();
+            }
+
+            CASES(OP_FIELD)
+            {
+                uint16_t slot = READ_UINT16();
+                ObjString* name = READ_STRING();
+                bool isStatic = READ_BYTE();
+
+                defineField(slot, name, isStatic);
+
+                DISPATCH();
+            }
+
+            CASES(OP_GET_SUPER)
+            {
+                ObjString* name = READ_STRING();
+                ObjClass* superclass = AS_CLASS(pop());
+
+                DISPATCH();
+            }
+
+            CASES(OP_NOT)
+            {
+                assert(IS_BOOL(peek(0)));
+                push(!AS_BOOL(peek(0)));
+
+                DISPATCH();
+            }
+
+            CASES(OP_CLASS)
+            {
+                push(OBJ_VAL(static_cast<Obj*>(newClass(READ_STRING()))));
+
+                DISPATCH();
+            }
+
+            CASES(OP_NEW)
+            {
+                uint16_t argCount = READ_UINT16();
+                bool foundConstructor = READ_BYTE();
+                uint16_t slot = READ_UINT16();
+
+                assert(IS_CLASS(peek(argCount)));
+
+                ObjClass* klass = AS_CLASS(peek(argCount));
+                stackTop[-argCount - 1] = OBJ_VAL(static_cast<Obj*>(newInstance(klass)));
+
+                if (foundConstructor)
+                {
+                    assert(slot >= 0u && slot < METHODS_MAX);
+                    assert(IS_FUNCTION(klass->methods[slot]));
+
+                    if (!call(AS_FUNCTION(klass->methods[slot]), argCount))
+                    {
+                        return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    frame = &frames[frameCount - 1];
+                }
+
+                DISPATCH();
+            }
+
+            CASES(OP_INT)
+            {
+                READ_32BITS(uint32_t, value);
+                push(INT_VAL(static_cast<int32_t>(value)));
+
+                DISPATCH();
+            }
+
+            CASES(OP_FLOAT)
+            {
+                READ_64BITS(double, value);
+                push(FLOAT_VAL(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_BOOL)
+            {
+                push(BOOL_VAL(static_cast<bool>(READ_BYTE())));
+
+                DISPATCH();
+            }
+
+            CASES(OP_LT_INT_INT)
+            {
+                Value value = BOOL_VAL(AS_INT(peek(1)) < AS_INT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_LT_INT_FLOAT)
+            {
+                Value value = BOOL_VAL((double) AS_INT(peek(1)) < AS_FLOAT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_LT_FLOAT_FLOAT)
+            {
+                Value value = BOOL_VAL(AS_FLOAT(peek(1)) < AS_FLOAT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_LT_FLOAT_INT)
+            {
+                Value value = BOOL_VAL(AS_FLOAT(peek(1)) < (double) AS_INT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_MINUS_INT_INT)
+            {
+                Value value = INT_VAL(AS_INT(peek(1)) - AS_INT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_MINUS_INT_FLOAT)
+            {
+                Value value = FLOAT_VAL((double) AS_INT(peek(1)) - AS_FLOAT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_MINUS_FLOAT_FLOAT)
+            {
+                Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - AS_FLOAT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_MINUS_FLOAT_INT)
+            {
+                Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - (double) AS_INT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_ADD_INT_INT)
+            {
+                Value value = INT_VAL(AS_INT(peek(1)) + AS_INT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_ADD_INT_FLOAT)
+            {
+                Value value = FLOAT_VAL((double) AS_INT(peek(1)) + AS_FLOAT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_ADD_FLOAT_FLOAT)
+            {
+                Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + AS_FLOAT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+
+            CASES(OP_ADD_FLOAT_INT)
+            {
+                Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + (double) AS_INT(peek(0)));
+
+                pop(2u);
+
+                push(std::move(value));
+
+                DISPATCH();
+            }
+        #ifndef USE_COMPUTED_GOTO
         }
         #endif
+        
 
         #undef READ_BYTE
         #undef READ_CONSTANT
@@ -1064,7 +1064,7 @@ namespace Pomme
 
         ObjBoundMethod bound(parent, [&] () -> Value* {
             if (!IS_OBJ(parent))
-                return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->methods[slot];
+                return (native) ? &primitives[static_cast<uint8_t>(getPrimitiveTypeFromValue(parent))]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(getPrimitiveTypeFromValue(parent))]->methods[slot];
 
             if (IS_INSTANCE(parent))
             {
