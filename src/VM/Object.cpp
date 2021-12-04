@@ -53,19 +53,4 @@ namespace Pomme
 
         return true;
     }
-
-    PommeString::PommeString(VirtualMachine& vm, ObjInstance* instance)
-    {
-        instance->linkMethodNative(vm.getFunctionName("operator+", "int"), [&] (VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args) {
-            return pommeOperatorPlus(vm, argcount, instance, args);
-        });
-    }
-
-    Value PommeString::pommeOperatorPlus(VirtualMachine& vm, int argcount, ObjInstance* instance, Value* args)
-    {
-        assert(argcount == 1);
-        //assert(IS_INSTANCE(args[0]) && AS_INSTANCE(args[0])->klass-> == ClassType::STRING);
-
-        return Value(instance);
-    }
 }

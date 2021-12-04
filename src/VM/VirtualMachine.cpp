@@ -39,7 +39,7 @@ namespace Pomme
 
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
     {
-        push(Value(static_cast<Obj*>(function)));
+        push(OBJ_VAL(static_cast<Obj*>(function)));
         call(function, 0);
 
         return run();
@@ -110,7 +110,7 @@ namespace Pomme
         callFunction.arity = 0u;
         callFunction.type = ObjType::OBJ_FUNCTION;
 
-        int id = callFunction.chunk.addConstant(Value(static_cast<Obj*>(instance)));
+        int id = callFunction.chunk.addConstant(OBJ_VAL(static_cast<Obj*>(instance)));
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
         callFunction.chunk.writeChunk(id, 1);
 
@@ -198,7 +198,7 @@ namespace Pomme
             return {};
         }
 
-        push(Value(static_cast<Obj*>(instance)));
+        push(OBJ_VAL(static_cast<Obj*>(instance)));
 
         for (int i = 0; i < params.size(); ++i)
         {
@@ -477,6 +477,8 @@ namespace Pomme
 		#define READ_STRING() AS_STRING(READ_CONSTANT())
         #define READ_UINT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+        #define READ_32BITS(type, name) \
+            frame->ip += 4; type name; std::memcpy(&name, &(frame->ip[-4]), sizeof(type));
         #define READ_64BITS(type, name) \
             frame->ip += 8; type name; std::memcpy(&name, &(frame->ip[-8]), sizeof(type));
         
@@ -514,15 +516,15 @@ namespace Pomme
 
                 CASES(OP_NULL)
                 {
-                    push(Value());
+                    push(NULL_VAL);
 
                     DISPATCH();
                 } 
 
                 CASES(OP_TEST_NOT_NULL)
                 {
-                    bool isNull = peek(0).isNull();
-                    Value value = Value(!isNull);
+                    bool isNull = IS_NULL(peek(0));
+                    Value value = BOOL_VAL(!isNull);
 
                     pop(1u); //pop obj/null value
                     push(value);
@@ -766,15 +768,15 @@ namespace Pomme
 
                 CASES(OP_NOT)
                 {
-                    assert(peek(0).isPrimitive() && peek(0).asPrimitive().isType(PrimitiveType::BOOL));
-                    push(!peek(0).asPrimitive().as.boolean);
+                    assert(IS_BOOL(peek(0)));
+                    push(!AS_BOOL(peek(0)));
 
                     DISPATCH();
                 }
 
                 CASES(OP_CLASS)
                 {
-                    push(Value(static_cast<Obj*>(newClass(READ_STRING()))));
+                    push(OBJ_VAL(static_cast<Obj*>(newClass(READ_STRING()))));
 
                     DISPATCH();
                 }
@@ -788,7 +790,7 @@ namespace Pomme
                     assert(IS_CLASS(peek(argCount)));
 
                     ObjClass* klass = AS_CLASS(peek(argCount));
-                    stackTop[-argCount - 1] = Value(static_cast<Obj*>(newInstance(klass)));
+                    stackTop[-argCount - 1] = OBJ_VAL(static_cast<Obj*>(newInstance(klass)));
 
                     if (foundConstructor)
                     {
@@ -808,8 +810,8 @@ namespace Pomme
 
                 CASES(OP_INT)
                 {
-                    READ_64BITS(uint64_t, value);
-                    push(static_cast<int64_t>(value));
+                    READ_32BITS(uint32_t, value);
+                    push(INT_VAL(static_cast<int32_t>(value)));
 
                     DISPATCH();
                 }
@@ -817,21 +819,21 @@ namespace Pomme
                 CASES(OP_FLOAT)
                 {
                     READ_64BITS(double, value);
-                    push(value);
+                    push(FLOAT_VAL(value));
 
                     DISPATCH();
                 }
 
                 CASES(OP_BOOL)
                 {
-                    push(static_cast<bool>(READ_BYTE()));
+                    push(BOOL_VAL(static_cast<bool>(READ_BYTE())));
 
                     DISPATCH();
                 }
 
                 CASES(OP_LT_INT_INT)
                 {
-                    Value value(peek(1).asPrimitive().as.number < peek(0).asPrimitive().as.number);
+                    Value value = BOOL_VAL(AS_INT(peek(1)) < AS_INT(peek(0)));
 
                     pop(2u);
 
@@ -842,7 +844,7 @@ namespace Pomme
 
                 CASES(OP_LT_INT_FLOAT)
                 {
-                    Value value((double) (peek(1).asPrimitive().as.number) < peek(0).asPrimitive().as.numberFloat);
+                    Value value = BOOL_VAL((double) AS_INT(peek(1)) < AS_FLOAT(peek(0)));
 
                     pop(2u);
 
@@ -853,7 +855,7 @@ namespace Pomme
 
                 CASES(OP_LT_FLOAT_FLOAT)
                 {
-                    Value value(peek(1).asPrimitive().as.numberFloat < peek(0).asPrimitive().as.numberFloat);
+                    Value value = BOOL_VAL(AS_FLOAT(peek(1)) < AS_FLOAT(peek(0)));
 
                     pop(2u);
 
@@ -864,7 +866,7 @@ namespace Pomme
 
                 CASES(OP_LT_FLOAT_INT)
                 {
-                    Value value(peek(1).asPrimitive().as.numberFloat < (double) (peek(0).asPrimitive().as.number));
+                    Value value = BOOL_VAL(AS_FLOAT(peek(1)) < (double) AS_INT(peek(0)));
 
                     pop(2u);
 
@@ -875,7 +877,7 @@ namespace Pomme
 
                 CASES(OP_MINUS_INT_INT)
                 {
-                    Value value(peek(1).asPrimitive().as.number - peek(0).asPrimitive().as.number);
+                    Value value = INT_VAL(AS_INT(peek(1)) - AS_INT(peek(0)));
 
                     pop(2u);
 
@@ -886,7 +888,7 @@ namespace Pomme
 
                 CASES(OP_MINUS_INT_FLOAT)
                 {
-                    Value value((double) (peek(1).asPrimitive().as.number) - peek(0).asPrimitive().as.numberFloat);
+                    Value value = FLOAT_VAL((double) AS_INT(peek(1)) - AS_FLOAT(peek(0)));
 
                     pop(2u);
 
@@ -897,7 +899,7 @@ namespace Pomme
 
                 CASES(OP_MINUS_FLOAT_FLOAT)
                 {
-                    Value value(peek(1).asPrimitive().as.numberFloat - peek(0).asPrimitive().as.numberFloat);
+                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - AS_FLOAT(peek(0)));
 
                     pop(2u);
 
@@ -908,7 +910,7 @@ namespace Pomme
 
                 CASES(OP_MINUS_FLOAT_INT)
                 {
-                    Value value(peek(1).asPrimitive().as.numberFloat - (double) (peek(0).asPrimitive().as.number));
+                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - (double) AS_INT(peek(0)));
 
                     pop(2u);
 
@@ -919,7 +921,7 @@ namespace Pomme
 
                 CASES(OP_ADD_INT_INT)
                 {
-                    Value value(peek(1).asPrimitive().as.number + peek(0).asPrimitive().as.number);
+                    Value value = INT_VAL(AS_INT(peek(1)) + AS_INT(peek(0)));
 
                     pop(2u);
 
@@ -930,7 +932,7 @@ namespace Pomme
 
                 CASES(OP_ADD_INT_FLOAT)
                 {
-                    Value value((double) (peek(1).asPrimitive().as.number) + peek(0).asPrimitive().as.numberFloat);
+                    Value value = FLOAT_VAL((double) AS_INT(peek(1)) + AS_FLOAT(peek(0)));
 
                     pop(2u);
 
@@ -941,7 +943,7 @@ namespace Pomme
 
                 CASES(OP_ADD_FLOAT_FLOAT)
                 {
-                    Value value(peek(1).asPrimitive().as.numberFloat + peek(0).asPrimitive().as.numberFloat);
+                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + AS_FLOAT(peek(0)));
 
                     pop(2u);
 
@@ -952,7 +954,7 @@ namespace Pomme
 
                 CASES(OP_ADD_FLOAT_INT)
                 {
-                    Value value(peek(1).asPrimitive().as.numberFloat + (double) (peek(0).asPrimitive().as.number));
+                    Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + (double) AS_INT(peek(0)));
 
                     pop(2u);
 
@@ -1049,11 +1051,11 @@ namespace Pomme
 
     bool VirtualMachine::isFalsey(const Value& value)
     {
-        if (value.isNull()) return true;
+        if (IS_NULL(value)) return true;
 
-        assert(value.isPrimitive() && value.asPrimitive().isType(PrimitiveType::BOOL));
+        assert(IS_BOOL(value));
 
-        return !(value.asPrimitive().as.boolean);
+        return !AS_BOOL(value);
     }
 
     bool VirtualMachine::invoke(uint16_t argCount, uint16_t slot, bool native)
@@ -1061,8 +1063,8 @@ namespace Pomme
         Value& parent = peek(argCount);
 
         ObjBoundMethod bound(parent, [&] () -> Value* {
-            if (parent.isPrimitive())
-                return (native) ? &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(parent.asPrimitive().type)]->methods[slot];
+            if (!IS_OBJ(parent))
+                return (native) ? &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(PrimitiveType::INT)]->methods[slot];
 
             if (IS_INSTANCE(parent))
             {
@@ -1097,12 +1099,12 @@ namespace Pomme
         }
 
         Value result = [&] () {
-            if (bound.receiver.isPrimitive())
+            if (!IS_OBJ(bound.receiver))
             {
                 MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*bound.method);
                 assert(native);
 
-                return native(*this, argCount, &bound.receiver.asPrimitive(), stackTop - argCount);
+                return native(*this, argCount, &bound.receiver, stackTop - argCount);
             }
 
             MethodNativeFn native = AS_METHOD_NATIVE(*bound.method);
@@ -1141,6 +1143,31 @@ namespace Pomme
 
     void VirtualMachine::printValue(const Value& value)
     {
+        #ifdef NAN_BOXING
+
+        if (IS_BOOL(value))
+        {
+            std::cout << AS_BOOL(value);
+        }
+        else if (IS_NULL(value))
+        {
+            std::cout << "null";
+        }
+        else if (IS_INT(value))
+        {
+            std::cout << AS_INT(value);
+        }
+        else if (IS_FLOAT(value))
+        {
+            std::cout << AS_FLOAT(value);
+        }
+        else if (IS_OBJ(value))
+        {
+            printObject(value);
+        }
+
+        #else
+
         if (value.isNull())
         {
             std::cout << "null";
@@ -1171,16 +1198,13 @@ namespace Pomme
                     std::cout << primitive.as.boolean;
                     break;
                 }
-
-                case PrimitiveType::STRING:
-                {
-                    break;
-                }
             }
             return;
         }
 
         printObject(value);
+
+        #endif
     }
 
     void VirtualMachine::printObject(const Value& value)
@@ -1288,10 +1312,6 @@ namespace Pomme
         else if (name->chars == "bool")
         {
             primitives[static_cast<uint8_t>(PrimitiveType::BOOL)] = klass;
-        }
-        else if (name->chars == "string")
-        {
-            primitives[static_cast<uint8_t>(PrimitiveType::STRING)] = klass;
         }
 
         return klass;
@@ -1447,7 +1467,7 @@ namespace Pomme
 
     void VirtualMachine::markValue(Value& value)
     {
-        if (value.isObj()) markObject(value.asObj());
+        if (IS_OBJ(value)) markObject(AS_OBJ(value));
     }
 
     void VirtualMachine::markObject(Obj* object)

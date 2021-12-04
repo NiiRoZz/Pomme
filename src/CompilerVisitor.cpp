@@ -75,7 +75,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeString *node, void * data) 
     {
-        emitConstant(Value(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
+        emitConstant(OBJ_VAL(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
     }
 
     void CompilerVisitor::visit(ASTscopes *node, void * data) 
@@ -475,7 +475,7 @@ namespace Pomme
     {
         const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
-        uint8_t nameConstant = makeConstant(Value(m_Vm.copyString(name.c_str(), name.length())));
+        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
         uint8_t global = m_Vm.addGlobal(name);
 
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
@@ -518,15 +518,15 @@ namespace Pomme
         //1: name
         std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
 
-        uint8_t identConstant = makeConstant(Value(m_Vm.copyString(identMethod.c_str(), identMethod.length())));
+        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(identMethod.c_str(), identMethod.length())));
 
         if (m_InNativeClass)
         {
-            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(Value(m_Vm.newMethodPrimitiveNative())));
+            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodPrimitiveNative())));
         }
         else
         {
-            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(Value(m_Vm.newMethodNative())));
+            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodNative())));
         }
         
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
@@ -598,7 +598,7 @@ namespace Pomme
         ObjFunction* compiledFunction = function;
         function = currentFunction;
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(Value(compiledFunction)));
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
@@ -610,7 +610,7 @@ namespace Pomme
 
         uint8_t global = m_Vm.addGlobal(nameFunc);
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(Value(m_Vm.newGlobalNative())));
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newGlobalNative())));
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
@@ -649,7 +649,7 @@ namespace Pomme
         {
             emitByte(AS_OPCODE(OpCode::OP_FIELD));
             emit16Bits(node->index);
-            emitByte(makeConstant(Value(m_Vm.copyString(name.c_str(), name.length()))));
+            emitByte(makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length()))));
             emitByte(node->isStatic);
         }
     }
@@ -771,6 +771,14 @@ namespace Pomme
         emitByte(val & 0xff);
     }
 
+    void CompilerVisitor::emit32Bits(uint8_t* val)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            emitByte(val[i]);
+        }
+    }
+
     void CompilerVisitor::emit64Bits(uint8_t* val)
     {
         for (int i = 0; i < 8; ++i)
@@ -782,7 +790,7 @@ namespace Pomme
     void CompilerVisitor::emitInt(uint64_t val)
     {
         emitByte(AS_OPCODE(OpCode::OP_INT));
-        emit64Bits(reinterpret_cast<uint8_t*>(&val));
+        emit32Bits(reinterpret_cast<uint8_t*>(&val));
     }
 
     void CompilerVisitor::emitFloat(double val)
@@ -941,7 +949,7 @@ namespace Pomme
 
     void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor)
     {
-        uint8_t identConstant = makeConstant(Value(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())));
+        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())));
 
         m_InMethod = true;
 
@@ -975,7 +983,7 @@ namespace Pomme
         ObjFunction* compiledFunction = function;
         function = currentFunction;
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(Value(compiledFunction)));
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
 
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
         emit16Bits(index);

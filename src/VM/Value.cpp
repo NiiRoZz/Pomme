@@ -3,6 +3,7 @@
 
 namespace Pomme
 {
+    #ifndef NAN_BOXING
     Value::Value()
     : Value(ValueType::VAL_NULL)
     {
@@ -19,7 +20,7 @@ namespace Pomme
         as.obj = val;
     }
 
-    Value::Value(int64_t val)
+    Value::Value(int32_t val)
     : Value(ValueType::VAL_PRIMITIVE)
     {
         as.primitive.type = PrimitiveType::INT;
@@ -39,4 +40,5 @@ namespace Pomme
         as.primitive.type = PrimitiveType::BOOL;
         as.primitive.as.boolean = val;
     }
+    #endif
 }

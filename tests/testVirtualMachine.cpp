@@ -25,85 +25,28 @@ using namespace Pomme;
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);\
 	defineStdNative(vm);\
 
-
 void defineStdNative(VirtualMachine& vm)
 {
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::INT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
-
-		return Value(primitive->as.number + args[0].asPrimitive().as.number);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::INT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
-
-		return Value(primitive->as.number - args[0].asPrimitive().as.number);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator<", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::INT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
-
-		return Value(primitive->as.number < args[0].asPrimitive().as.number);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
 		assert(argCount == 0);
-        assert(primitive->isType(PrimitiveType::INT));
+        assert(IS_INT(*primitive));
 
-		return Value(-primitive->as.number);
+		return INT_VAL(-AS_INT(*primitive));
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::INT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
-
-		return Value((double)(primitive->as.number) + args[0].asPrimitive().as.numberFloat);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::INT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
-
-		return Value((double)(primitive->as.number) - args[0].asPrimitive().as.numberFloat);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
 		assert(argCount == 0);
-        assert(primitive->isType(PrimitiveType::INT));
+        assert(IS_INT(*primitive));
 
-		return Value(static_cast<bool>(primitive->as.number));
+		return BOOL_VAL(static_cast<bool>(AS_INT(*primitive)));
 	}));
 
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator==", "int"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator==", "int"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
 		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::INT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+        assert(IS_INT(*primitive));
+		assert(IS_INT(args[0]));
 
-		return Value(primitive->as.number == args[0].asPrimitive().as.number);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator+", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::FLOAT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
-
-		return Value(primitive->as.numberFloat + args[0].asPrimitive().as.numberFloat);
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("float", vm.getFunctionName("operator-", "float"), [] (VirtualMachine& vm, int argCount, ObjPrimitive* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(primitive->isType(PrimitiveType::FLOAT));
-		assert(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
-
-		return Value(primitive->as.numberFloat - args[0].asPrimitive().as.numberFloat);
+		return BOOL_VAL(AS_INT(*primitive) == AS_INT(args[0]));
 	}));
 }
 
@@ -133,7 +76,7 @@ TEST(TEST_VM, ScopeTest)
 {
 	TEST_VM_TEST("void f(float b) { float c = 0.0; c = 1.0; c = 2.0; print(b); print(c); };};\n");
  
-	result = vm.interpretGlobalFunction(vm.getFunctionName("f", "float"), {Value(100.0)});
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f", "float"), {FLOAT_VAL(100.0)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -146,11 +89,11 @@ TEST(TEST_VM, IfTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.number, 10);
+		EXPECT_EQ(AS_INT(args[0]), 10);
 
-		return Value();
+		return NULL_VAL;
 	}));
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -165,11 +108,11 @@ TEST(TEST_VM, IfClassConditionTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.number, 10);
+		EXPECT_EQ(AS_INT(args[0]), 10);
 
-		return Value();
+		return NULL_VAL;
 	}));
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -184,11 +127,11 @@ TEST(TEST_VM, IfNullConditionTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.number, 20);
+		EXPECT_EQ(AS_INT(args[0]), 20);
 
-		return Value();
+		return NULL_VAL;
 	}));
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -210,7 +153,7 @@ TEST(TEST_VM, GlobalNativeTest)
 			std::cout << std::endl;
 		}
 	
-		return Value(500.5);
+		return FLOAT_VAL(500.5);
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -311,13 +254,13 @@ TEST(TEST_VM, ClassNativeMethodTest)
 
 		Value* y = instance->getStaticField("y");
 		EXPECT_TRUE(y != nullptr);
-		EXPECT_TRUE((*y).isPrimitive() && (*y).asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(*y));
 
-		EXPECT_EQ((*y).asPrimitive().as.number, 23);
+		EXPECT_EQ(AS_INT(*y), 23);
 
-		*vm.getStaticField("Other", "t") = Value(static_cast<int64_t>(123));
+		*vm.getStaticField("Other", "t") = INT_VAL(123);
 		
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -377,7 +320,7 @@ TEST(TEST_VM, ClassCallMethodFromCPPTest)
 
 	EXPECT_TRUE(instance != nullptr);
 
-	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {Value(625.5)});
+	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {FLOAT_VAL(625.5)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -396,14 +339,14 @@ TEST(TEST_VM, ClassLinkMethodInstanceTest)
 		std::cout << "parameter : ";
 		vm.printValue(args[0]);
 		std::cout << std::endl;
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
+		EXPECT_TRUE(IS_FLOAT(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.numberFloat, 510.23);
+		EXPECT_EQ(AS_FLOAT(args[0]), 510.23);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
-	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {Value(510.23)});
+	result = vm.interpretMethodFunction(instance, vm.getFunctionName("update", "float"), {FLOAT_VAL(510.23)});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
@@ -415,13 +358,13 @@ TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 2);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
-		EXPECT_TRUE(args[1].isPrimitive() && args[1].asPrimitive().isType(PrimitiveType::FLOAT));
+		EXPECT_TRUE(IS_FLOAT(args[0]));
+		EXPECT_TRUE(IS_FLOAT(args[1]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.numberFloat, 50.5);
-		EXPECT_EQ(args[1].asPrimitive().as.numberFloat, -30.5);
+		EXPECT_EQ(AS_FLOAT(args[0]), 50.5);
+		EXPECT_EQ(AS_FLOAT(args[1]), -30.5);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -436,11 +379,11 @@ TEST(TEST_VM, CustomOperatorPlusTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::FLOAT));
+		EXPECT_TRUE(IS_FLOAT(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.numberFloat, 30.0);
+		EXPECT_EQ(AS_FLOAT(args[0]), 30.0);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -455,11 +398,11 @@ TEST(TEST_VM, boolTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
+		EXPECT_TRUE(IS_BOOL(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.boolean, true);
+		EXPECT_EQ(AS_BOOL(args[0]), true);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -474,22 +417,22 @@ TEST(TEST_VM, operatorBoolTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 2);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
-		EXPECT_TRUE(args[1].isPrimitive() && args[1].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_BOOL(args[0]));
+		EXPECT_TRUE(IS_INT(args[1]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.boolean, true);
-		EXPECT_EQ(args[1].asPrimitive().as.number, 10);
+		EXPECT_EQ(AS_BOOL(args[0]), true);
+		EXPECT_EQ(AS_INT(args[1]), 10);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
+		EXPECT_TRUE(IS_BOOL(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.boolean, false);
+		EXPECT_EQ(AS_BOOL(args[0]), false);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -504,11 +447,11 @@ TEST(TEST_VM, operatorBoolIfTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 
-		EXPECT_EQ(args[0].asPrimitive().as.number, 20);
+		EXPECT_EQ(AS_INT(args[0]), 20);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -523,11 +466,11 @@ TEST(TEST_VM, operatorBoolCustomTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::BOOL));
+		EXPECT_TRUE(IS_BOOL(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.boolean, true);
+		EXPECT_EQ(AS_BOOL(args[0]), true);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -542,11 +485,11 @@ TEST(TEST_VM, unaryOperatorTest)
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.number, -10);
+		EXPECT_EQ(AS_INT(args[0]), -10);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -561,11 +504,11 @@ TEST(TEST_VM, methodCallInClassTest)
 
 	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.number, 10);
+		EXPECT_EQ(AS_INT(args[0]), 10);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -574,17 +517,18 @@ TEST(TEST_VM, methodCallInClassTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.number, 6765);
+		EXPECT_EQ(AS_INT(args[0]), 6765);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
@@ -595,14 +539,14 @@ TEST(TEST_VM, fibTest)
 
 static void fibNativeBench(benchmark::State& state)
 {
-	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(35)); };\n");
+	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(42)); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("fib", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 
-		const auto fib = [](int64_t n) -> int64_t {
-			const auto fib_impl = [](int64_t n, const auto& impl) -> int64_t
+		const auto fib = [](int32_t n) -> int32_t {
+			const auto fib_impl = [](int32_t n, const auto& impl) -> int32_t
 			{
 				if (n < 2)
 				{
@@ -616,16 +560,16 @@ static void fibNativeBench(benchmark::State& state)
 			return fib_impl(n, fib_impl);
 		};
 
-		return Value(fib(args[0].asPrimitive().as.number));
+		return INT_VAL(fib(AS_INT(args[0])));
 	}));
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.number, 9227465);
+		EXPECT_EQ(AS_INT(args[0]), 267914296);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	for (auto _ : state)
@@ -641,15 +585,15 @@ BENCHMARK(fibNativeBench)->Unit(benchmark::kSecond);
 
 static void fibNoNativeBench(benchmark::State& state)
 {
-	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(35)); };\n");
+	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(42)); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
-		EXPECT_TRUE(args[0].isPrimitive() && args[0].asPrimitive().isType(PrimitiveType::INT));
+		EXPECT_TRUE(IS_INT(args[0]));
 	
-		EXPECT_EQ(args[0].asPrimitive().as.number, 9227465);
+		EXPECT_EQ(AS_INT(args[0]), 267914296);
 
-		return Value();
+		return NULL_VAL;
 	}));
 
 	for (auto _ : state)
@@ -662,9 +606,8 @@ BENCHMARK(fibNoNativeBench)->Unit(benchmark::kSecond);
 
 TEST(TEST_VM, benchmarkTest)
 {
-	//::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
+	::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
 	::benchmark::RunSpecifiedBenchmarks("fibNoNativeBench");
 }
-
 
 #undef TEST_VM_TEST
