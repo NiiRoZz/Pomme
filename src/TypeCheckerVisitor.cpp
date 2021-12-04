@@ -141,7 +141,7 @@ namespace Pomme
             std::cout << "Adding enum " << enumName << " : Enum already defined" <<  std::endl;
         }else
         {
-            EnumClass enumClass;
+            EnumClass enumClass(enumName,{},"");
             enumMap.emplace(enumName,enumClass);
             std::cout << "inserted " << enumName << std::endl;
         }
@@ -937,6 +937,7 @@ namespace Pomme
                 std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
                 addEnum(context);
                 std::cout << "ASTpommeEnum " << std::endl;
+                class_name = context;
                 node->jjtChildAccept(1,this,data);
             }
         }
@@ -965,6 +966,7 @@ namespace Pomme
                     errors.push_back(context + " is extending a non existing enum : " + extendedEnum);
                 }
 
+                class_name = context;
                 node->jjtChildAccept(2,this,data);
             }
         }
@@ -978,6 +980,7 @@ namespace Pomme
                 std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
                 addEnum(context);
                 std::cout << "ASTpommeModdedEnum " << std::endl;
+                class_name = context;
                 node->jjtChildAccept(1,this,data);
             }
         }
@@ -985,18 +988,39 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTdeclenums *node, void * data)
     {
+        node->jjtChildrenAccept(this,data);
     }
 
     void TypeCheckerVisitor::visit(ASTennil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTenumassign *node, void * data)
+    void TypeCheckerVisitor::checkNewMember(std::basic_string<char> enumName, std::basic_string<char> memberName)
     {
+        auto currentEnum = this->enumMap.find(enumName);
+        if(currentEnum != this->enumMap.end()) {
+            if (std::find(currentEnum->second.members.begin(), currentEnum->second.members.end(), memberName) !=
+                currentEnum->second.members.end())
+            {
+                this->errors.push_back("Member : " + memberName + " already defined in enum " + enumName);
+            } else
+            {
+                currentEnum->second.members.push_back(memberName);
+            }
+        }
+    }
+    void TypeCheckerVisitor::visit(ASTenumassign *node, void * data) {
+
+        std::cout << " CLASS NAME = " << class_name << std::endl;
+        std::string memberName = static_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        checkNewMember(class_name, memberName);
     }
 
     void TypeCheckerVisitor::visit(ASTenumdefault *node, void * data)
     {
+        std::cout << " CLASS NAME = "<< class_name <<std::endl;
+        std::string memberName = static_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        checkNewMember(class_name, memberName);
     }
 
     void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)

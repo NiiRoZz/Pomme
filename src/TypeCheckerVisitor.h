@@ -23,11 +23,29 @@ namespace Pomme
         class EnumClass
         {
         public:
+            std::string enumName;
             std::unordered_set<std::string> keywords;
             std::string parent;
+            std::vector<std::string> members;
+
+            EnumClass(std::string enumName, std::unordered_set<std::string> keywords, std::string parent)
+            : enumName(enumName),
+            keywords(std::move(keywords)),
+            parent(parent)
+            {
+
+            }
 
             friend std::ostream & operator<<(std::ostream & str, const EnumClass & klass)
             {
+                str << "Enum " << klass.enumName << " {" << std::endl;
+                for(int index = 0; index < klass.members.size(); index++)
+                {
+                    str << "\t" << klass.members.at(index) << "," << std::endl;
+                }
+                str << "\b \b"; // remove last ,
+
+                str << "}";
                 return str;
             }
         };
@@ -278,6 +296,7 @@ namespace Pomme
         bool getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className);
         bool getExpType(ASTlistexp* node, ASTaccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className);
         std::unordered_set<std::string> buildKeyword(ASTidentFuncs *node);
+        void checkNewMember(std::basic_string<char> enumName, std::basic_string<char> memberName);
 
         bool checkAccessMethod(ASTaccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
 

@@ -949,4 +949,59 @@ TEST(TEST_TYPECHECKER, Loop)
     EXPECT_EQ(visitor.errors.size(), 1);
 }
 
+TEST(TEST_TYPECHECKER, EnumMemberRedefinition) {
+    TEST_TYPECHECKER_TEST("enum test{ a, a};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 1);
+}
+
+TEST(TEST_TYPECHECKER, EnumDefault) {
+    TEST_TYPECHECKER_TEST("enum test{ a, b, c};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, EnumAssign) {
+    TEST_TYPECHECKER_TEST("enum test{ a, b, c = 20};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, EnumAssignDefault) {
+    TEST_TYPECHECKER_TEST("enum test{ a, b, c = 20, d};\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
 
