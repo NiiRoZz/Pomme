@@ -126,7 +126,7 @@ namespace Pomme
             std::unordered_map<std::string, FunctionClass> nativeMethods;
             std::unordered_set<std::string> keywords;
             std::unordered_set<std::string> children;
-            std::string parent;
+            std::string parent = "";
 
             FunctionClass* getMethod(const std::string& methodName);
 

@@ -159,7 +159,7 @@ namespace Pomme
         }else
         {
             ClassClass classClass;
-            classMap.emplace(className,classClass);
+            classMap.emplace(className, classClass);
             std::cout << "inserted " << className << std::endl;
         }
     }
@@ -489,40 +489,67 @@ namespace Pomme
 
                         return;
                     }
+
+                    //check super variable
+                    if (class_context && node->m_Identifier == "super")
+                    {
+                        auto it = classMap.find(currentClassName);
+                        if (it->second.parent != "")
+                        {
+                            if (variableType != nullptr)
+                            {
+                                *variableType = it->second.parent;
+                            }
+
+                            return;
+                        }
+                    }
                 }
 
-                //attributes and class
-                auto it = classMap.find(currentClassName);
-                if(it != classMap.end())
+                //attributes and class through parent class
+                std::string currClass = currentClassName;
+                while (currClass != "")
                 {
-                    //non static attributes
-                    auto ot = it->second.attributes.find(currentClassName + "::" + node->m_Identifier);
-                    if(ot != it->second.attributes.end())
+                    auto it = classMap.find(currClass);
+                    if(it != classMap.end())
                     {
-                        std::cout << "index of ident " << node->m_Identifier << " in class " << currentClassName << " = " << ot->second.index << std::endl;
-                        node->m_IndexAttribute = ot->second.index;
-                        node->m_Attribute = true;
-
-                        if (variableType != nullptr)
+                        //non static attributes
+                        auto ot = it->second.attributes.find(currClass + "::" + node->m_Identifier);
+                        if(ot != it->second.attributes.end())
                         {
-                            *variableType = ot->second.variableType;
+                            std::cout << "index of ident " << node->m_Identifier << " in class " << currClass << " = " << ot->second.index << std::endl;
+                            node->m_IndexAttribute = ot->second.index;
+                            node->m_Attribute = true;
+
+                            if (variableType != nullptr)
+                            {
+                                *variableType = ot->second.variableType;
+                            }
+
+                            return;
                         }
-                        return;
+
+                        //static attributes
+                        auto pt = it->second.staticAttributes.find(currClass + "::" + node->m_Identifier);
+                        if(pt != it->second.staticAttributes.end())
+                        {
+                            std::cout << "index of static ident " << node->m_Identifier << " in class " << currClass << " = " << pt->second.index << std::endl;
+                            node->m_IndexAttribute = pt->second.index;
+                            node->m_Attribute = true;
+                            
+                            if (variableType != nullptr)
+                            {
+                                *variableType = pt->second.variableType;
+                            }
+
+                            return;
+                        }
+
+                        currClass = it->second.parent;
                     }
-
-                    //static attributes
-                    auto pt = it->second.staticAttributes.find(currentClassName + "::" + node->m_Identifier);
-                    if(pt != it->second.staticAttributes.end())
+                    else
                     {
-                        std::cout << "index of static ident " << node->m_Identifier << " in class " << currentClassName << " = " << pt->second.index << std::endl;
-                        node->m_IndexAttribute = pt->second.index;
-                        node->m_Attribute = true;
-                        
-                        if (variableType != nullptr)
-                        {
-                            *variableType = pt->second.variableType;
-                        }
-                        return;
+                        currClass = "";
                     }
                 }
 
@@ -538,13 +565,14 @@ namespace Pomme
                 }
 
                 auto ut = enumMap.find(node->m_Identifier);
-                if (ot != classMap.end())
+                if (ut != enumMap.end())
                 {
                     std::cout << "ENTERNTE" << std::endl;
                     if (variableType != nullptr)
                     {
                         *variableType = node->m_Identifier;
                     }
+
                     return;
                 }
                 std::cout << "not found in either attribute of class nor locals variables" << std::endl;
@@ -639,11 +667,12 @@ namespace Pomme
                 auto it = classMap.find(extendedClass);
                 if(it != classMap.end())
                 {
-                    ClassClass& classClass = classMap.find(extendedClass)->second;
+                    addClass(context);
+                    ClassClass& classClass = classMap.find(context)->second;
                     classClass.parent = extendedClass;
-                    classMap.emplace(context, classClass);
-                    classMap.find(context)->second.keywords.emplace("extends");
-                }else
+                    classClass.keywords.emplace("extends");
+                }
+                else
                 {
                     errors.push_back(context + " is extending a non existing class " + extendedClass);
                 }
@@ -1027,6 +1056,12 @@ namespace Pomme
     {
         switch (path_number)
         {
+            case 0u:
+            {
+                std::cout << "ASTpommeGlobalFunction path 0" << std::endl;
+                break;
+            }
+
             case 1u:
             {
                 ASTident* functionIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(1));
