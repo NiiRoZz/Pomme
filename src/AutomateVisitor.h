@@ -13,9 +13,13 @@ namespace Pomme
         Automaton dependanceGraph;
         int nbState = 0;
         std::unordered_map<std::string,std::unordered_set<std::string>> classToBeResolved;
+        std::string currentClassName;
 
         void addState(Node* node);
         void addEnum(Node* node);
+        void addGlobal(Node* node);
+
+        void checkTypeDependance(Node* node);
         void findDependingObject(Node* node);
         bool resolved(Node* node, bool isClass);
         void visit(SimpleNode *node, void * data);

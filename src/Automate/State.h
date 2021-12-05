@@ -20,6 +20,7 @@ namespace Pomme {
 
         bool modded;
         bool extend;
+        bool global;
 
         State(int name):
         name(name),

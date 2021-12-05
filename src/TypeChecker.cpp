@@ -28,18 +28,19 @@ namespace Pomme
         std::vector<int> state_order = visitorAutomate.dependanceGraph.topologicalSort();
         std::vector<Node*> class_to_define = visitorAutomate.dependanceGraph.getClassNode(&state_order);
 
+        /*for(int path_number= 0; path_number < 3; path_number++)
+        {
+            for(auto it : class_to_define)
+            {
+                it->jjtAccept(&visitor,nullptr);
+            }
+            visitor.path_number++;
+        }*/
+
         for(auto it : class_to_define)
         {
-            std::cout << " Defining class : "<< dynamic_cast<ASTident*>(it->jjtGetChild(0))->m_Identifier << std::endl;
             it->jjtAccept(&visitor,nullptr);
         }
-
-        // todo define globals headers
-        // todo define functions headers
-
-        //----
-        // todo define globals instrs
-        // todo define functions instrs
 
         visitor.path_number++;
         tree->jjtAccept(&visitor, nullptr);

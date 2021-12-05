@@ -28,6 +28,7 @@ namespace Pomme {
     
     bool Automaton::addState(int state)
     {
+        std::cout << "Adding state "<< state << std::endl;
         if(state >= 0){
             auto it = this->m_state.find(state);
             if(it != this->m_state.end())
@@ -179,12 +180,20 @@ namespace Pomme {
     {
         for(auto it : this->m_state)
         {
-            std::cout << dynamic_cast<ASTident*>(it.second.node->jjtGetChild(0))->m_Identifier << std::endl;
-
-            if( dynamic_cast<ASTident*>(it.second.node->jjtGetChild(0))->m_Identifier == name)
+            if(it.second.global)
             {
-                return it.second.name;
+                if( dynamic_cast<ASTident*>(it.second.node->jjtGetChild(1))->m_Identifier == name)
+                {
+                    return it.second.name;
+                }
+            }else
+            {
+                if( dynamic_cast<ASTident*>(it.second.node->jjtGetChild(0))->m_Identifier == name)
+                {
+                    return it.second.name;
+                }
             }
+
         }
         return -1;
     }

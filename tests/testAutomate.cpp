@@ -619,3 +619,85 @@ TEST(TEST_AUTOMATE, Graph_LoopEnum) {
 }
 
 
+TEST(TEST_AUTOMATE, Graph_EnumClass) {
+    TEST_AUTOMATE_TEST("enum testEnum{ a }; class test{ testEnum x; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_EnumExtendsClass) {
+    TEST_AUTOMATE_TEST("enum testEnum extends testEnum2{ a }; class test{ testEnum x; }; enum testEnum2{ a };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,0), true);
+}
+
+
+TEST(TEST_AUTOMATE, Graph_Assignement) {
+    TEST_AUTOMATE_TEST("class test{ int x = 8; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 0);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 1);
+}
+
+TEST(TEST_AUTOMATE, Graph_GlobalReturnTypeIsClass) {
+    TEST_AUTOMATE_TEST(" class c2{}; c1 test2(int x, int k){};  class c1 extends c2{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_GlobalParamTypeIsClass) {
+    TEST_AUTOMATE_TEST("c1 test2(c2 x, int k){};  class c2{}; class c1{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,0), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_DoubleDependance) {
+    TEST_AUTOMATE_TEST("class c2{}; class c1{ c2 x; c2 y;};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+}
+
+
