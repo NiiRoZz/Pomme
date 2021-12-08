@@ -301,7 +301,7 @@ namespace Pomme
 
     bool TypeCheckerVisitor::getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className)
     {
-        auto *functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+        auto* functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
         std::string typeExp = "";
         return getExpType(functionParameters, node, variableType, functionIdent, typeExp, className);
     }
@@ -439,7 +439,6 @@ namespace Pomme
         {
             case 0u:
             case 1u:
-            case 2u:
             {
                 auto* variableType = static_cast<std::string*>(data);
                 std::string currentClassName = [&] () {
@@ -649,7 +648,6 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
-
         switch (path_number)
         {
             case 0u:
@@ -1095,11 +1093,7 @@ namespace Pomme
                     false,
                     parameters
                 );
-                break;
-            }
 
-            case 2u:
-            {
                 node->jjtChildAccept(2, this, data); // headers
                 node->jjtChildAccept(3, this, data); // instrs
                 break;

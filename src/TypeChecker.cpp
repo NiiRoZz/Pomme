@@ -44,8 +44,6 @@ namespace Pomme
 
         visitor.path_number++;
         tree->jjtAccept(&visitor, nullptr);
-        visitor.path_number++;
-        tree->jjtAccept(&visitor, nullptr);
 
         std::cout << visitor << std::endl;
 
