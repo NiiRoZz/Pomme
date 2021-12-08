@@ -391,10 +391,10 @@ TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) { // todo check variabl
     }
     EXPECT_EQ(visitor.errors.size(), 1);
 
-    EXPECT_TRUE(visitor.classMap.find("test")->second.attributes.count("test::a"));
-    EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test::a"));
-    EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.find("test::a")->second.variableType == "int");
-    EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("test2::b"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.attributes.count("a"));
+    EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("a"));
+    EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.find("a")->second.variableType == "int");
+    EXPECT_TRUE(visitor.classMap.find("test2")->second.attributes.count("b"));
 }
 
 TEST(TEST_TYPECHECKER, AccessToNonExistingMethod) {
@@ -663,7 +663,7 @@ TEST(TEST_TYPECHECKER, StaticAttribute)
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
-    EXPECT_TRUE(visitor.classMap.find("test")->second.staticAttributes.count("test::test"));
+    EXPECT_TRUE(visitor.classMap.find("test")->second.staticAttributes.count("test"));
 }
 
 TEST(TEST_TYPECHECKER, StaticAttributeAlreadyDefined)

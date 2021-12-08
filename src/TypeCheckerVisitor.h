@@ -125,29 +125,14 @@ namespace Pomme
             std::unordered_map<std::string, FunctionClass> methods;
             std::unordered_map<std::string, FunctionClass> nativeMethods;
             std::unordered_set<std::string> keywords;
-            std::unordered_set<std::string> children;
             std::string parent = "";
 
             FunctionClass* getMethod(const std::string& methodName);
+            VariableClass* getAttribute(const std::string& attributeName);
 
             void addAttribute(std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
                               TypeCheckerVisitor *typeCheckerVisitor);
             void addFunction(const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, TypeCheckerVisitor* typeCheckerVisitor);
-
-            ClassClass& operator=(const ClassClass& other)
-            {
-                std::cout << " = operator ClassClass "<< std::endl;
-                if (this != &other)
-                {
-                    this->attributes = other.attributes;
-                    this->staticAttributes = other.staticAttributes;
-                    this->methods = other.methods;
-                    this->nativeMethods = other.nativeMethods;
-                    this->keywords = other.keywords;
-                    this->children = other.children;
-                }
-                return *this;
-            }
 
             friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass)
             {
@@ -197,6 +182,7 @@ namespace Pomme
         std::string class_name;
         bool child_context = false;
         std::string child_name;
+        bool child_extend_context = false;
 
         bool instrs_context = false;
         uint8_t path_number = 0;
