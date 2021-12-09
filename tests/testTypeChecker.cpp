@@ -297,7 +297,7 @@ TEST(TEST_TYPECHECKER, OverrideMethod)
 
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
+    EXPECT_TRUE(visitor.errors.size() > 1);
     for(const auto& error : visitor.errors ){
         std::cout << error << std::endl;
     }
@@ -360,7 +360,7 @@ TEST(TEST_TYPECHECKER, OverridingWithoutExtends) {
     TypeChecker typeChecker;
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
-    EXPECT_EQ(visitor.errors.size(), 1);
+    EXPECT_TRUE(visitor.errors.size() > 1);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
@@ -374,6 +374,19 @@ TEST(TEST_TYPECHECKER, OverridingWithoutDefinitionInParent) {
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
 
     EXPECT_EQ(visitor.errors.size(), 1);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+TEST(TEST_TYPECHECKER, OverridingAMethod) {
+    TEST_TYPECHECKER_TEST("class test {  void a(){}; }; class test2 extends test{ override void a() {}; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
@@ -1004,4 +1017,29 @@ TEST(TEST_TYPECHECKER, EnumAssignDefault) {
     }
     EXPECT_EQ(visitor.errors.size(), 0);
 }
+TEST(TEST_TYPECHECKER, SuperCallTest) {
+    TEST_TYPECHECKER_TEST("class test {  void a(){}; }; class test2 extends test{ void b() { super.a(); }; }; \n");
 
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
+TEST(TEST_TYPECHECKER, SuperCallOnOverrideTest) {
+    TEST_TYPECHECKER_TEST("class test {  void a(){}; }; class test2 extends test{ override void a() { super.a(); }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}

@@ -44,6 +44,8 @@ namespace Pomme
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
+        if (node->m_Super) return;
+
         if (node->m_Attribute)
         {
             OpCode code = assign ? OpCode::OP_SET_PROPERTY : OpCode::OP_GET_PROPERTY;
@@ -51,12 +53,11 @@ namespace Pomme
             namedVariable("this", false);
             emitByte(AS_OPCODE(code));
             emit16Bits(node->m_IndexAttribute);
+            return;
         }
-        else
-        {
-            //Second, check if it's not a local var
-            namedVariable(node->m_Identifier, assign);
-        }
+
+        //Second, check if it's not a local var
+        namedVariable(node->m_Identifier, assign);
     }
 
     void CompilerVisitor::visit(ASTidentOp *node, void * data) 
@@ -494,6 +495,32 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
+        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& parentName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+        m_SuperClass = parentName;
+
+        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
+        std::optional<std::size_t> parentClass = m_Vm.getGlobal(parentName);
+        assert(parentClass.has_value());
+
+        uint8_t global = m_Vm.addGlobal(name);
+
+        emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
+        emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
+
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *parentClass);
+        emitByte(AS_OPCODE(OpCode::OP_INHERIT));
+
+        m_InClass = true;
+        m_InNativeClass = CommonVisitorFunction::isNativeType(name);
+
+        node->jjtChildAccept(2, this, nullptr);
+
+        m_InNativeClass = m_InClass = false;
+
+        emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
     void CompilerVisitor::visit(ASTpommeModdedClass *node, void * data)
@@ -707,7 +734,7 @@ namespace Pomme
             namedVariable(node->name, false);
         }
         //Or we are in class and calling a method of this class without the "this" prefix
-        else if (node->methodCall)
+        else if (node->methodCall || node->superCall)
         {
             namedVariable("this", false);
         }
@@ -733,6 +760,14 @@ namespace Pomme
             }
 
             exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
+        }
+
+        if (node->superCall)
+        {
+            std::optional<std::size_t> superIndex = m_Vm.getGlobal(m_SuperClass);
+            assert(superIndex.has_value());
+            emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *superIndex);
+            return;
         }
 
         if (node->methodCall)
@@ -905,7 +940,7 @@ namespace Pomme
 
             method->jjtAccept(this, &argCount);
 
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(method->superCall ? OpCode::OP_INVOKE_SUPER : OpCode::OP_INVOKE));
             emit16Bits(method->index);
             emitByte(method->native);
             emit16Bits(argCount);

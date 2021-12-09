@@ -27,8 +27,9 @@ namespace Pomme {
         finalState(false),
         initialState(false),
         node(nullptr),
+        modded(false),
         extend(false),
-        modded(false)
+        global(false)
         {
 
         }

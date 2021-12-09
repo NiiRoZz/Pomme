@@ -132,7 +132,54 @@ namespace Pomme
 
             void addAttribute(std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
                               TypeCheckerVisitor *typeCheckerVisitor);
-            void addFunction(const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, TypeCheckerVisitor* typeCheckerVisitor);
+            template<typename T>
+            void addFunction(T* node, const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, bool overriding, TypeCheckerVisitor* typeCheckerVisitor)
+            {
+                auto addMethod = [&] (std::unordered_map<std::string, FunctionClass>& methods) {
+                    auto access = methods.find(functionName);
+                    if(access == methods.end())
+                    {
+                        FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
+                                        std::move(keywords), methods.size(), isNative);
+                        methods.emplace(functionName, function);
+                        std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
+                        node->index = function.index;
+                    }
+                    else if (overriding)
+                    {
+                        access->second.keywords.emplace("override");
+                        node->index = access->second.index;
+                    }
+                    else
+                    {
+                        typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
+                        std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+                    }
+                };
+
+                if (isNative)
+                {
+                    auto access = methods.find(functionName);
+                    if (access != methods.end())
+                    {
+                        typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
+                        std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+                    }
+
+                    addMethod(nativeMethods);
+                }
+                else
+                {
+                    auto access = nativeMethods.find(functionName);
+                    if (access != nativeMethods.end())
+                    {
+                        typeCheckerVisitor->errors.push_back("addFunction nativeMethods ERROR : " + functionName + " already defined");
+                        std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+                    }
+
+                    addMethod(methods);
+                }
+            }
 
             friend std::ostream & operator<<(std::ostream & str, const ClassClass & klass)
             {
@@ -181,12 +228,13 @@ namespace Pomme
         bool class_context = false;
         std::string class_name;
         bool child_context = false;
-        std::string child_name;
+        std::string parent_name;
         bool child_extend_context = false;
 
         bool instrs_context = false;
         uint8_t path_number = 0;
         int current_scopes = 0;
+        bool super_call = false;
 
         template<typename T>
         void visitUnaryOperator(T* node, const std::string& name, std::string* returnType)

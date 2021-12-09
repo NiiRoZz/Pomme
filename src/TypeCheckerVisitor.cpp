@@ -223,50 +223,6 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::ClassClass::addFunction(const std::string &functionType, const std::string &functionName,
-                                                     std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords,
-                                                     bool isNative, TypeCheckerVisitor *typeCheckerVisitor)
-    {
-
-        auto addMethod = [&] (std::unordered_map<std::string, FunctionClass>& methods) {
-            auto access = methods.find(functionName);
-            if(access == methods.end())
-            {
-                FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
-                                   std::move(keywords), methods.size(), isNative);
-                methods.emplace(functionName, function);
-                std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
-            }else
-            {
-                typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
-                std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
-            }
-        };
-
-        if (isNative)
-        {
-            auto access = methods.find(functionName);
-            if (access != methods.end())
-            {
-                typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
-                std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
-            }
-
-            addMethod(nativeMethods);
-        }
-        else
-        {
-            auto access = nativeMethods.find(functionName);
-            if (access != nativeMethods.end())
-            {
-                typeCheckerVisitor->errors.push_back("addFunction nativeMethods ERROR : " + functionName + " already defined");
-                std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
-            }
-
-            addMethod(methods);
-        }
-    }
-
     std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTheaders *headers) {
         std::unordered_set<std::string> parameters;
         ASTheader* header;
@@ -339,6 +295,7 @@ namespace Pomme
                         accessNode->native = function->native;
                         accessNode->index = function->index;
                         accessNode->methodCall = variableType == nullptr || *variableType == "";
+                        accessNode->superCall = super_call;
                         if (variableType != nullptr) *variableType = function->returnType;
                         return true;
                     }
@@ -496,6 +453,8 @@ namespace Pomme
                             auto it = classMap.find(currentClassName);
                             if (it->second.parent != "")
                             {
+                                node->m_Super = true;
+                                super_call = true;
                                 if (variableType != nullptr)
                                 {
                                     *variableType = it->second.parent;
@@ -648,16 +607,23 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
+        const std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+
+        class_context = true;
+        class_name = context;
+        child_context = true;
+        parent_name = extendedClass;
+
         switch (path_number)
         {
             case 0u:
             {
-                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-                std::string extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
-
-                class_context = true;
-                child_context = true;
-                class_name = context;
+                if (CommonVisitorFunction::isNativeType(extendedClass))
+                {
+                    errors.push_back("Can't extend from native type");
+                    return;
+                }
 
                 auto it = classMap.find(extendedClass);
                 if(it != classMap.end())
@@ -782,41 +748,51 @@ namespace Pomme
 
                 const std::string& functionName = (name != nullptr) ? name->m_Identifier : nameOp->m_Identifier;
                 std::string functionIdent = functionName + NAME_FUNC_SEPARATOR;
-                const std::string &context = class_name;
 
-                auto it = classMap.find(context);
+                auto it = classMap.find(class_name);
                 if(it == classMap.end())
                 {
-                    errors.push_back("class" + context + "not defined");
+                    errors.push_back("class" + class_name + "not defined");
                 }
 
-                if (functionName == context && !keywords.count("static"))
+                if (functionName == class_name && !keywords.count("static"))
                 {
                     errors.push_back("can't define a method with the same name of the class");
-                }
-
-                if(keywords.count("override"))
-                {
-                    if(!it->second.keywords.count("extends") && !it->second.keywords.count("modded")){
-                        errors.push_back("Overriding method " + functionName + " while your class don't extends/mod any other class");
-                    }
-                    auto parent = classMap.find(it->second.parent);
-                    if(parent != classMap.end()){
-                        auto function = parent->second.methods.find(functionName);
-                        if(function == parent->second.methods.end())
-                        {
-                            errors.push_back("Overriding method " + functionName + " while your parent class don't have this method defined");
-                        }
-                    }
                 }
 
                 auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
                 std::unordered_set<std::string> parameters = buildSignature(headers);
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 functionIdent += signatureParameter;
+                bool overriding = false;
 
-                it->second.addFunction(functionType, functionIdent, parameters, keywords, false, this);
-                node->index = it->second.methods.size() - 1;
+                if(keywords.count("override"))
+                {
+                    if(!it->second.keywords.count("extends") && !it->second.keywords.count("modded"))
+                    {
+                        errors.push_back("Overriding method " + functionName + " while your class don't extends/mod any other class");
+                    }
+
+                    auto parent = classMap.find(it->second.parent);
+                    if(parent != classMap.end())
+                    {
+                        auto* function = parent->second.getMethod(functionIdent);
+                        if(function == nullptr)
+                        {
+                            errors.push_back("Overriding method " + functionName + " while your parent class don't have this method defined");
+                        }
+                        else
+                        {
+                            overriding = true;
+                        }
+                    }
+                    else
+                    {
+                        errors.push_back("Can't find parent class with name : " + it->second.parent);
+                    }
+                }
+
+                it->second.addFunction(node, functionType, functionIdent, parameters, keywords, false, overriding, this);
 
                 if (name != nullptr)
                 {
@@ -903,8 +879,7 @@ namespace Pomme
                     }
                 }
 
-                it->second.addFunction(functionType, functionIdent, parameters, keywords, true, this);
-                node->index = it->second.nativeMethods.size() - 1;
+                it->second.addFunction(node, functionType, functionIdent, parameters, keywords, true, false, this);
 
                 if (name != nullptr)
                 {
@@ -1445,8 +1420,7 @@ namespace Pomme
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
-                it->second.addFunction(functionType, functionIdent, parameters, {}, false, this);
-                node->index = it->second.methods.size() - 1;
+                it->second.addFunction(node, functionType, functionIdent, parameters, {}, false, false, this);
                 name->m_MethodIdentifier = functionIdent;
                 break;
             }
@@ -1727,11 +1701,20 @@ namespace Pomme
         if (data == nullptr)
         {
             std::string type = "";
-            node->jjtChildrenAccept(this, &type);
+
+            node->jjtChildAccept(0, this, &type);
+            node->jjtChildAccept(1, this, &type);
+            super_call = false;
+
+            node->jjtChildAccept(2, this, &type);
         }
         else
         {
-            node->jjtChildrenAccept(this, data);
+            node->jjtChildAccept(0, this, data);
+            node->jjtChildAccept(1, this, data);
+            super_call = false;
+
+            node->jjtChildAccept(2, this, data);
         }
     }
 

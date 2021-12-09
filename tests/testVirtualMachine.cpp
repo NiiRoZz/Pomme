@@ -517,6 +517,71 @@ TEST(TEST_VM, methodCallInClassTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, inheritTest)
+{
+	TEST_VM_TEST("native void t(int a); native void r(int a); class TestClass { int meth() { return 10; }; }; class Jui extends TestClass { int mass() { return 20; }; }; void f() { Jui oui = new Jui(); t(oui.meth()); r(oui.mass()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("r", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 20);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, inheritOverrideTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { int meth() { return 10; }; }; class Jui extends TestClass { override int meth() { return 20; }; }; void f() { Jui oui = new Jui(); t(oui.meth()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 20);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, superCallTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { int a() { return 10; }; }; class Jui extends TestClass { override int a() { return super.a(); }; }; void f() { Jui oui = new Jui(); t(oui.a()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
 
 TEST(TEST_VM, fibTest)
 {

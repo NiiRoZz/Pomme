@@ -21,6 +21,7 @@ public:
   std::string m_MethodIdentifier;
   uint16_t m_IndexAttribute = 0;
   bool m_Attribute = false;
+  bool m_Super = false;
 };
 
 }

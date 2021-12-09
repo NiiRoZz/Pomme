@@ -20,6 +20,7 @@ public:
   bool global = false;
   bool native = false;
   bool methodCall = false;
+  bool superCall = false;
   std::string name;
 };
 

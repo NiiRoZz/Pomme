@@ -36,7 +36,7 @@ namespace Pomme
         OP_INHERIT,
         OP_METHOD,
         OP_FIELD,
-        OP_GET_SUPER,
+        OP_INVOKE_SUPER,
         OP_NOT,
         OP_CLASS,
         OP_NEW,

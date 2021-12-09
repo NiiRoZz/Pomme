@@ -449,7 +449,7 @@ namespace Pomme
             &&OP_INHERIT,
             &&OP_METHOD,
             &&OP_FIELD,
-            &&OP_GET_SUPER,
+            &&OP_INVOKE_SUPER,
             &&OP_NOT,
             &&OP_CLASS,
             &&OP_NEW,
@@ -726,12 +726,18 @@ namespace Pomme
 
             CASES(OP_INHERIT)
             {
-                //Value superclass = peek(1);
-                //ObjClass* subclass = AS_CLASS(peek(0));
+                assert(IS_CLASS(peek(1)) && IS_CLASS(peek(0)));
 
-                //TODO: add all methods from superclass into subclass
+                ObjClass* klass = AS_CLASS(peek(1));
+                ObjClass* superclass = AS_CLASS(peek(0));
 
-                pop(1u); // Subclass.
+                std::memcpy(klass->nativeMethods, superclass->nativeMethods, sizeof(klass->nativeMethods));
+                klass->nativeMethodsIndices = superclass->nativeMethodsIndices;
+
+                std::memcpy(klass->methods, superclass->methods, sizeof(klass->methods));
+                klass->methodsIndices = superclass->methodsIndices;
+
+                pop(1u); // superclass.
 
                 DISPATCH();
             }
@@ -758,10 +764,22 @@ namespace Pomme
                 DISPATCH();
             }
 
-            CASES(OP_GET_SUPER)
+            CASES(OP_INVOKE_SUPER)
             {
-                ObjString* name = READ_STRING();
+                uint16_t slot = READ_UINT16();
+                bool native = READ_BYTE();
+                assert(!native); //Temp
+                uint16_t argCount = READ_UINT16();
+
+                assert(IS_CLASS(peek(0)));
                 ObjClass* superclass = AS_CLASS(pop());
+                
+                if (!call(AS_FUNCTION(superclass->methods[slot]), argCount))
+                {
+                    return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                }
+
+                frame = &frames[frameCount - 1];
 
                 DISPATCH();
             }
@@ -1365,9 +1383,10 @@ namespace Pomme
                 return simpleInstruction("OP_POP", offset);
             /*case AS_OPCODE(OpCode::OP_GET_GLOBAL):
                 return constantInstruction("OP_GET_GLOBAL", chunk, offset);
-            */
+            
             case AS_OPCODE(OpCode::OP_SET_GLOBAL):
                 return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+            */
             case AS_OPCODE(OpCode::OP_GET_LOCAL):
                 return byteInstruction("OP_GET_LOCAL", chunk, offset);
             case AS_OPCODE(OpCode::OP_SET_LOCAL):

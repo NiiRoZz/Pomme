@@ -175,5 +175,7 @@ namespace Pomme
 		bool m_InClass;
 		bool m_InNativeClass;
 		bool m_InMethod;
+
+		std::string m_SuperClass;
 	};
 }
