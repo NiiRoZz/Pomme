@@ -731,6 +731,12 @@ namespace Pomme
                 ObjClass* klass = AS_CLASS(peek(1));
                 ObjClass* superclass = AS_CLASS(peek(0));
 
+                std::memcpy(klass->staticFields, superclass->staticFields, sizeof(klass->staticFields));
+                klass->staticFieldsIndices = superclass->staticFieldsIndices;
+
+                std::memcpy(klass->defaultFields, superclass->defaultFields, sizeof(klass->defaultFields));
+                klass->fieldsIndices = superclass->fieldsIndices;
+
                 std::memcpy(klass->nativeMethods, superclass->nativeMethods, sizeof(klass->nativeMethods));
                 klass->nativeMethodsIndices = superclass->nativeMethodsIndices;
 
@@ -991,6 +997,8 @@ namespace Pomme
         #undef READ_SHORT
         #undef CASES
         #undef DISPATCH
+
+        return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
 
     void VirtualMachine::freeObject(Obj* object)

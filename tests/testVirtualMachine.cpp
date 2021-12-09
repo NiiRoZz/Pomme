@@ -545,6 +545,25 @@ TEST(TEST_VM, inheritTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, inherit2Test)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass {int a = 10;}; class Jui extends TestClass { int mass() { return a; }; }; void f() { Jui oui = new Jui(); t(oui.mass()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, inheritOverrideTest)
 {
 	TEST_VM_TEST("native void t(int a); class TestClass { int meth() { return 10; }; }; class Jui extends TestClass { override int meth() { return 20; }; }; void f() { Jui oui = new Jui(); t(oui.meth()); };\n");
