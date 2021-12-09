@@ -157,6 +157,7 @@ namespace Pomme
         }
 
         assert(false);
+        return PrimitiveType::COUNT;
     }
 
     #endif

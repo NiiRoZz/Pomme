@@ -91,6 +91,24 @@ namespace Pomme
                 {
                     std::cout << "!nTypeModded" << std::endl;
                     state->modded = true;
+                    std::string dependingClassName = dynamic_cast<ASTident*>(nTypeModded->jjtGetChild(0))->m_Identifier; // extends
+                    int dependingStateNumber = dependanceGraph.getState(dependingClassName);
+                    std::cout << "dependingStateNumber ? " << dependingStateNumber << std::endl;
+                    if(dependingStateNumber != -1)
+                    {
+                        dependanceGraph.addTransition(dependingStateNumber, nbState);
+                    }else
+                    {
+                        std::string className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                        auto ut = classToBeResolved.find(className);
+                        if(ut != classToBeResolved.end())
+                        {
+                            ut->second.insert(dependingClassName);
+                        }else
+                        {
+                            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
+                        }
+                    }
                 } else
                 {
                     state->extend = true;

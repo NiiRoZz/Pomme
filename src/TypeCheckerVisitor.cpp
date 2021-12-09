@@ -29,6 +29,11 @@ namespace Pomme
             auto it = classMap.find(context);
             if( it != classMap.end())
             {
+                if (path_number == 1)
+                {
+                    dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier);
+                }
+
                 std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
                 std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
@@ -62,7 +67,13 @@ namespace Pomme
         }else if(instrs_context)
         {
             std::cout << "instrs_context " << std::endl;
-            std::string &localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+            if (path_number == 1)
+            {
+                dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier);
+            }
+
+            std::string& localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+            std::cout << "localType : " << localType << std::endl;
             std::string &localName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
             for(int scope_number = 0; scope_number <= current_scopes; scope_number++)
@@ -581,7 +592,7 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeClass *node, void * data)
     {
-        std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
         class_context = true;
         class_name = context;
@@ -591,6 +602,7 @@ namespace Pomme
             case 0u:
             {
                 addClass(context);
+                moddedMap.emplace(context, context);
                 node->jjtChildAccept(1, this, data);
                 break;
             }
@@ -608,7 +620,7 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
     {
         const std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        const std::string& extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        std::string& extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
 
         class_context = true;
         class_name = context;
@@ -625,10 +637,16 @@ namespace Pomme
                     return;
                 }
 
+                extendedClass = getVariableType(extendedClass);
+
+                std::cout << "extendedClass childClass : " << extendedClass << std::endl;
+
                 auto it = classMap.find(extendedClass);
                 if(it != classMap.end())
                 {
                     addClass(context);
+                    std::cout << "context childClass : " << context << std::endl;
+                    moddedMap.emplace(class_name, class_name);
                     ClassClass& classClass = classMap.find(context)->second;
                     classClass.parent = extendedClass;
                     classClass.methods = it->second.methods;
@@ -640,6 +658,7 @@ namespace Pomme
                 else
                 {
                     errors.push_back(context + " is extending a non existing class " + extendedClass);
+                    return;
                 }
 
                 node->jjtChildAccept(2, this, data);
@@ -656,9 +675,87 @@ namespace Pomme
         class_context = false;
         child_context = false;
     }
+
     void TypeCheckerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
-        //todo check modded class existence
+        std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+
+        class_context = true;
+        class_name = context;
+        child_context = true;
+        parent_name = node->parentName;
+
+        switch (path_number)
+        {
+            case 0u:
+            {
+                static auto randString = [] (std::size_t length) -> std::string {
+                    static auto randchar = [] () -> char
+                    {
+                        const char charset[] =
+                        "0123456789"
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                        "abcdefghijklmnopqrstuvwxyz";
+                        const size_t max_index = (sizeof(charset) - 1);
+                        return charset[ rand() % max_index ];
+                    };
+                    std::string str(length, 0);
+                    std::generate_n( str.begin(), length, randchar);
+                    return str;
+                }; 
+
+                std::cout << "context moddedClass : " << context << std::endl;
+
+                auto it = moddedMap.find(context);
+                if (it == moddedMap.end())
+                {
+                    errors.push_back("Can't find className : " + context);
+                    return;
+                }
+
+                //Generate unique id for this class
+                std::string id = context + "@" + randString(10u);
+                auto ot = classMap.find(id);
+                while (ot != classMap.end())
+                {
+                    id = context + "@" + randString(10u);
+                    ot = classMap.find(id);
+                }
+
+                auto jt = classMap.find(it->second);
+
+                node->defaultClassName = context;
+                node->parentName = it->second;
+                context = id;
+                class_name = context;
+                parent_name = node->parentName;
+
+                std::cout << "context : " << context << " parentName : " << node->parentName << " defaultClassName : " << node->defaultClassName << std::endl;
+
+                addClass(context);
+                ClassClass& classClass = classMap[context];
+                classClass.parent = it->second;
+                classClass.methods = jt->second.methods;
+                classClass.nativeMethods = jt->second.nativeMethods;
+                classClass.attributes = jt->second.attributes;
+                classClass.staticAttributes = jt->second.staticAttributes;
+                classClass.keywords.emplace("modded");
+
+                moddedMap[node->defaultClassName] = id;
+
+                node->jjtChildAccept(1, this, data);
+                break;
+            }
+
+            case 1u:
+            {
+                node->jjtChildAccept(1, this, data);
+                break;
+            }
+        }
+
+        class_context = false;
+        child_context = false;
     }
 
     void TypeCheckerVisitor::visit(ASTdecls *node, void * data)
@@ -1015,6 +1112,7 @@ namespace Pomme
             }
         }
     }
+    
     void TypeCheckerVisitor::visit(ASTenumassign *node, void * data) {
 
         std::cout << " CLASS NAME = " << class_name << std::endl;
@@ -1647,13 +1745,15 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTpommeNew *node, void * data)
     {
-        const std::string& className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string& className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
 
         if (CommonVisitorFunction::isNativeType(className))
         {
             errors.push_back("can't use new on primitive types");
             return;
         }
+
+        className = getVariableType(className);
 
         auto it = classMap.find(className);
         if (it == classMap.end())
@@ -1769,5 +1869,10 @@ namespace Pomme
         visitBinaryOperator(node, "operator[]", static_cast<std::string*>(data), types);
 
         node->jjtChildAccept(2, this, data);
+    }
+
+    std::string TypeCheckerVisitor::getVariableType(const std::string& type)
+    {
+        return moddedMap[type];
     }
 }

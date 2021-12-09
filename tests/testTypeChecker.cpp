@@ -1056,3 +1056,16 @@ TEST(TEST_TYPECHECKER, SuperCallOnOverrideTest) {
         std::cout << error << std::endl;
     }
 }
+TEST(TEST_TYPECHECKER, ModdedClassTest) {
+    TEST_TYPECHECKER_TEST("class test {  void a(){}; }; modded class test { void b(){}; }; void f() { test a = new test(); a.b(); }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}

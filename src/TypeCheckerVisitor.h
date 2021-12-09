@@ -220,6 +220,7 @@ namespace Pomme
         TypeCheckerVisitor();
         std::unordered_map<std::string, FunctionClass> globalFunctionsMap;
         std::unordered_map<std::string, ClassClass> classMap;
+        std::unordered_map<std::string, std::string> moddedMap;
         std::unordered_map<std::string, EnumClass> enumMap;
         std::vector<std::string> errors;
 
@@ -331,6 +332,7 @@ namespace Pomme
         bool getExpType(ASTlistexp* node, ASTaccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className);
         std::unordered_set<std::string> buildKeyword(ASTidentFuncs *node);
         void checkNewMember(std::basic_string<char> enumName, std::basic_string<char> memberName);
+        std::string getVariableType(const std::string& type);
 
         bool checkAccessMethod(ASTaccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
 

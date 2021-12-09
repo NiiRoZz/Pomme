@@ -627,6 +627,110 @@ TEST(TEST_VM, superCallNativeTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ModdedClassTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { int a() { return 10; }; }; modded class TestClass { int b() { return 20; }; }; void f() { TestClass oui = new TestClass(); t(oui.b()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 20);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, MultipleModdedClassTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { int a() { return 10; }; }; modded class TestClass { int b() { return 20; }; }; modded class TestClass { int c() { return 30; }; }; void f() { TestClass oui = new TestClass(); t(oui.c()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 30);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ModdedClassSuperCallTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { int a() { return 10; }; }; modded class TestClass { int b() { return super.a(); }; }; void f() { TestClass oui = new TestClass(); t(oui.b()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, MultipleModdedClassSuperCallTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { int a() { return 10; }; }; modded class TestClass { int b() { return super.a(); }; }; modded class TestClass { int c() { return super.b(); }; }; void f() { TestClass oui = new TestClass(); t(oui.c()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, ModdedInheritedClassTest)
+{
+	TEST_VM_TEST("native void t(int a); native void r(int a); class TestClass { int a() { return 10; }; }; class Jui extends TestClass { int b() { return 20; }; }; modded class Jui { int c() { return super.b(); };  }; void f() { Jui oui = new Jui(); t(oui.c()); r(oui.a()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 20);
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("r", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");

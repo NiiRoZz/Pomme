@@ -514,17 +514,43 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_INHERIT));
 
         m_InClass = true;
-        m_InNativeClass = CommonVisitorFunction::isNativeType(name);
 
         node->jjtChildAccept(2, this, nullptr);
 
-        m_InNativeClass = m_InClass = false;
+        m_InClass = false;
 
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
     void CompilerVisitor::visit(ASTpommeModdedClass *node, void * data)
     {
+        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& parentName = node->parentName;
+
+        std::cout << "ASTpommeModdedClass name : " << name << " parentName : " << parentName << std::endl;
+
+        m_SuperClass = parentName;
+
+        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
+        std::optional<std::size_t> parentClass = m_Vm.getGlobal(parentName);
+        assert(parentClass.has_value());
+
+        uint8_t global = m_Vm.addGlobal(name);
+
+        emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
+        emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
+
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
+        emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *parentClass);
+        emitByte(AS_OPCODE(OpCode::OP_INHERIT));
+
+        m_InClass = true;
+
+        node->jjtChildAccept(1, this, nullptr);
+
+        m_InClass = false;
+
+        emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
     void CompilerVisitor::visit(ASTpommeMethode *node, void * data)
