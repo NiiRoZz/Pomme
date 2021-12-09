@@ -498,8 +498,10 @@ namespace Pomme
         DISPATCH();
         #endif
 
-        //printStack();
-        //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
+        #ifdef DEBUG_LOG
+        printStack();
+        disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
+        #endif
         
         #ifndef USE_COMPUTED_GOTO
         switch (READ_BYTE())
@@ -1279,7 +1281,9 @@ namespace Pomme
 
     void VirtualMachine::defineMethod(uint16_t slot, ObjString* name, bool isNative)
     {
+        #ifdef DEBUG_LOG
         std::cout << "VirtualMachine::defineMethod(" << slot << ", " << name->chars << ", " << isNative << ")" << std::endl;
+        #endif
 
         Value& method = peek(0);
 
@@ -1303,7 +1307,9 @@ namespace Pomme
 
     void VirtualMachine::defineField(uint16_t slot, ObjString* name, bool isStatic)
     {
+        #ifdef DEBUG_LOG
         std::cout << "VirtualMachine::defineField(" << slot << ", " << name->chars << ", " << isStatic << ")" << std::endl;
+        #endif
 
         Value& value = peek(0);
         assert(IS_CLASS(peek(1)));
