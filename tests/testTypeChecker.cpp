@@ -1017,6 +1017,19 @@ TEST(TEST_TYPECHECKER, EnumAssignDefault) {
     }
     EXPECT_EQ(visitor.errors.size(), 0);
 }
+TEST(TEST_TYPECHECKER, SuperNotCallTest) {
+    TEST_TYPECHECKER_TEST("class test { int z;  void a(){}; }; class test2 extends test{ void b() { super.z; }; }; \n");
+
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_TRUE(visitor.errors.size() > 0);
+    for (const auto &error: visitor.errors) {
+        std::cout << error << std::endl;
+    }
+}
 TEST(TEST_TYPECHECKER, SuperCallTest) {
     TEST_TYPECHECKER_TEST("class test {  void a(){}; }; class test2 extends test{ void b() { super.a(); }; }; \n");
 

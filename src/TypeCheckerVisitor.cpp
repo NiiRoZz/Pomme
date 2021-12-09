@@ -1698,24 +1698,29 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTlistaccess *node, void * data)
     {
+        auto acceptListAccess = [&node, this] (void* dataPtr)
+        {
+            node->jjtChildAccept(0, this, dataPtr);
+
+            if (super_call && dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1)) == nullptr)
+            {
+                errors.push_back("Can't user super without a method after the '.'");
+            }
+
+            node->jjtChildAccept(1, this, dataPtr);
+            super_call = false;
+
+            node->jjtChildAccept(2, this, dataPtr);
+        };
+
         if (data == nullptr)
         {
             std::string type = "";
-
-            node->jjtChildAccept(0, this, &type);
-            node->jjtChildAccept(1, this, &type);
-            super_call = false;
-
-            node->jjtChildAccept(2, this, &type);
+            acceptListAccess(&type);
+            return;
         }
-        else
-        {
-            node->jjtChildAccept(0, this, data);
-            node->jjtChildAccept(1, this, data);
-            super_call = false;
 
-            node->jjtChildAccept(2, this, data);
-        }
+        acceptListAccess(data);
     }
 
     void TypeCheckerVisitor::visit(ASTlistaccessP *node, void * data)
