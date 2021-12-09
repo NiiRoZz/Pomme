@@ -779,8 +779,10 @@ namespace Pomme
 
                 assert(IS_CLASS(peek(0)));
                 ObjClass* superclass = AS_CLASS(pop());
-                
-                if (!call(AS_FUNCTION(superclass->methods[slot]), argCount))
+
+                ObjBoundMethod bound(peek(argCount), (native) ? &superclass->nativeMethods[slot] : &superclass->methods[slot]);
+
+                if (!callBoundMethod(bound, argCount))
                 {
                     return InterpretResult::INTERPRET_RUNTIME_ERROR;
                 }

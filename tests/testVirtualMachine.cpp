@@ -602,6 +602,31 @@ TEST(TEST_VM, superCallTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, superCallNativeTest)
+{
+	TEST_VM_TEST("native void t(int a); class TestClass { native int z(); }; class Jui extends TestClass { int a() { return super.z(); }; }; void f() { Jui oui = new Jui(); t(oui.a()); };\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 35);
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("z"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
+		EXPECT_TRUE(argCount == 0);
+
+		return INT_VAL(35);
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");
