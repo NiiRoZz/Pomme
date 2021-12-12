@@ -335,7 +335,7 @@ TEST(TEST_TYPECHECKER, ExtendedClass) {
         std::cout << error << std::endl;
     }
     EXPECT_TRUE(visitor.classMap.find("test2")->second.keywords.count("extends"));
-    EXPECT_TRUE(visitor.classMap.find("test2")->second.methods.count("t2!")); // todo fix the class = class
+    EXPECT_TRUE(visitor.classMap.find("test2")->second.methods.count("t2!"));
 }
 TEST(TEST_TYPECHECKER, ExtendingNonExistingClass) {
     TEST_TYPECHECKER_TEST("class test extends t2{}; \n");
@@ -349,8 +349,6 @@ TEST(TEST_TYPECHECKER, ExtendingNonExistingClass) {
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
-
-    //todo check exception here
 }
 TEST(TEST_TYPECHECKER, OverridingWithoutExtends) {
     TEST_TYPECHECKER_TEST("class test{ override void x(){}; }; \n");
@@ -391,7 +389,7 @@ TEST(TEST_TYPECHECKER, OverridingAMethod) {
         std::cout << error << std::endl;
     }
 }
-TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) { // todo check variable redefinition
+TEST(TEST_TYPECHECKER, RedefinitionOfVarFromParentClass) {
     TEST_TYPECHECKER_TEST("class test{ int a; }; class test2 extends test { bool a;  bool b; };\n");
 
     std::cout << text << std::endl;
@@ -1068,4 +1066,20 @@ TEST(TEST_TYPECHECKER, ModdedClassTest) {
     for (const auto &error: visitor.errors) {
         std::cout << error << std::endl;
     }
+}
+
+TEST(TEST_TYPECHECKER, AssignementVarDependance)
+{
+    TEST_TYPECHECKER_TEST("class test2{ int j = test.k(); }; class test{ static int k(){}; };\n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
 }

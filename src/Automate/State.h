@@ -21,6 +21,7 @@ namespace Pomme {
         bool modded;
         bool extend;
         bool global;
+        std::string globalName;
 
         State(int name):
         name(name),
@@ -29,7 +30,8 @@ namespace Pomme {
         node(nullptr),
         modded(false),
         extend(false),
-        global(false)
+        global(false),
+        globalName("")
         {
 
         }

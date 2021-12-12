@@ -687,6 +687,33 @@ TEST(TEST_AUTOMATE, Graph_GlobalParamTypeIsClass) {
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
 }
 
+TEST(TEST_AUTOMATE, Graph_GlobalParamTypeIsClassVoidReturn) {
+    TEST_AUTOMATE_TEST("void test2(c2 x, int k){};  class c2{}; \n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_GlobalOverloadDependanceParam) {
+    TEST_AUTOMATE_TEST("void test2(c2 x){};  void test2(c1 x){}; class c2{}; class c1{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,0), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,1), true);
+}
+
 TEST(TEST_AUTOMATE, Graph_DoubleDependance) {
     TEST_AUTOMATE_TEST("class c2{}; class c1{ c2 x; c2 y;};\n");
     std::cout << text << std::endl;
@@ -698,6 +725,78 @@ TEST(TEST_AUTOMATE, Graph_DoubleDependance) {
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+}
+
+
+TEST(TEST_AUTOMATE, Graph_AssignementVarDependanceToResolve)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = test.k(); int k = test.a; }; class test{ static int a = 8; static int k(){}; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementVarDependance)
+{
+    TEST_AUTOMATE_TEST("class test{ static int k(){}; }; class test2{ int j = test.k(); };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = func(8); }; int func(int w){};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_GlobalDependanceOverloading)
+{
+    TEST_AUTOMATE_TEST("int func(int j){}; int func(int j, int k){}; class test{ int z = func(7); int k = func(8,7)}\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_xxx)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = 8; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
 }
 
 

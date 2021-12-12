@@ -178,11 +178,11 @@ namespace Pomme {
 
     int Automaton::getState(const std::string& name)
     {
-        for(auto it : this->m_state)
+        for(const auto& it : this->m_state)
         {
             if(it.second.global)
             {
-                if( dynamic_cast<ASTident*>(it.second.node->jjtGetChild(1))->m_Identifier == name)
+                if(it.second.globalName == name)
                 {
                     return it.second.name;
                 }

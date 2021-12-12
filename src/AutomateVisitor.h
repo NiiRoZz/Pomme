@@ -20,6 +20,9 @@ namespace Pomme
         void addGlobal(Node* node);
 
         void checkTypeDependance(Node* node);
+        void checkGlobalDependance(Node* node);
+        void checkHeaderDependance(Node* node, const std::string& functionCompleteName);
+
         void findDependingObject(Node* node);
         bool resolved(Node* node, bool isClass);
         void visit(SimpleNode *node, void * data);
