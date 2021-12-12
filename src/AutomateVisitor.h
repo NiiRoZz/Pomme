@@ -15,6 +15,7 @@ namespace Pomme
         std::unordered_map<std::string,std::unordered_set<std::string>> classToBeResolved;
         std::string currentClassName;
 
+        void classToResolveCheck(std::string className, std::string classToResolve);
         void addState(Node* node);
         void addEnum(Node* node);
         void addGlobal(Node* node);

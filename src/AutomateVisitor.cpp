@@ -4,6 +4,19 @@
 namespace Pomme
 {
 
+
+    void AutomateVisitor::classToResolveCheck(std::string className, std::string dependingClassName)
+    {
+        auto ut = classToBeResolved.find(className);
+        if(ut != classToBeResolved.end())
+        {
+            ut->second.insert(dependingClassName);
+        }else
+        {
+            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
+        }
+
+    }
     bool AutomateVisitor::resolved(Node* node, bool isClass)
     {
         bool resolved = false;
@@ -68,14 +81,7 @@ namespace Pomme
         }else
         {
             std::string className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-            auto ut = classToBeResolved.find(className);
-            if(ut != classToBeResolved.end())
-            {
-                ut->second.insert(dependingClassName);
-            }else
-            {
-                classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
-            }
+            classToResolveCheck(className,dependingClassName);
         }
     }
 
@@ -106,16 +112,7 @@ namespace Pomme
                         dependanceGraph.addTransition(dependingStateNumber, nbState);
                     }else
                     {
-                        auto ut = classToBeResolved.find(className);
-                        if(ut != classToBeResolved.end())
-                        {
-                            std::cout << "inserting dependance not currently found : " << className << " -> " << dependingClassName << std::endl;
-                            ut->second.insert(dependingClassName);
-                        }else
-                        {
-                            std::cout << "inserting dependance not currently found : " << className << " -> " << dependingClassName << std::endl;
-                            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{dependingClassName}));
-                        }
+                        classToResolveCheck(className,dependingClassName);
                     }
                 } else
                 {
@@ -231,15 +228,7 @@ namespace Pomme
                 }
             }else
             {
-                auto it = classToBeResolved.find(functionCompleteName);
-                if(it != classToBeResolved.end())
-                {
-                    it->second.insert(typeIdent);
-                }else
-                {
-                    classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(functionCompleteName,{typeIdent}));
-                }
-
+                classToResolveCheck(functionCompleteName,typeIdent);
             }
         }
         checkHeaderDependance(headers, functionCompleteName);
@@ -289,19 +278,7 @@ namespace Pomme
                     }
                 }else
                 {
-                    std::cout << " loonking forrorroo " << functionCompleteName <<std::endl;
-                    std::cout << " depend on type " << currenHeaderIdent << std::endl;
-
-                    auto it = classToBeResolved.find(functionCompleteName);
-                    if(it != classToBeResolved.end())
-                    {
-                        std::cout << " inserting " << currenHeaderIdent << std::endl;
-                        it->second.insert(currenHeaderIdent);
-                    }else
-                    {
-                        std::cout << " new class insert  "<< functionCompleteName << " -> " << currenHeaderIdent << std::endl;
-                        classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(functionCompleteName,{currenHeaderIdent}));
-                    }
+                    classToResolveCheck(functionCompleteName,currenHeaderIdent);
                 }
             }
             currHeaders = dynamic_cast<Pomme::ASTheaders*>(currHeaders->jjtGetChild(1));
@@ -361,16 +338,7 @@ namespace Pomme
             }else
             {
                 std::cout << "DEPENDANCE DETECTED WITH CLASS/ENUM/GLOBAL : " << typeIdent << " FOR CLASS " << currentClassName << std::endl;
-                std::string classToFind= currentClassName;
-                auto it = classToBeResolved.find(classToFind);
-                if(it != classToBeResolved.end())
-                {
-                    it->second.insert(typeIdent);
-                }else
-                {
-                    classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(classToFind,{typeIdent}));
-                }
-
+                classToResolveCheck(currentClassName,typeIdent);
             }
         }
     }
@@ -735,14 +703,7 @@ namespace Pomme
                 dependanceGraph.addTransition(dependingStateNumber, stateNumber);
             }else
             {
-                auto ut = classToBeResolved.find(currentClassName);
-                if(ut != classToBeResolved.end())
-                {
-                    ut->second.insert(dependingClass);
-                }else
-                {
-                    classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(currentClassName,{dependingClass}));
-                }
+                classToResolveCheck(currentClassName,dependingClass);
             }
         }
 
