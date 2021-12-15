@@ -1,15 +1,15 @@
-input
- scopes
-  pommeGlobalFunction
-   voidType
-   ident
-   enil
-   instrs
-    pommeWhile
-     pommeTrue
-     instrs
-      pommePrint
-       pommeString
-      inil
-    inil
-  scinil
+PommeInput
+ PommeScopes
+  PommeGlobalFunction
+   PommeVoidType
+   PommeIdent
+   PommeEnil
+   PommeInstrs
+    PommeWhile
+     PommeTrue
+     PommeInstrs
+      PommePrint
+       PommeString
+      PommeInil
+    PommeInil
+  PommeScinil

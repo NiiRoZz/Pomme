@@ -43,7 +43,7 @@ public:
   virtual void           jjtSetValue(void * value);
   virtual void*          jjtGetValue() const;
 
-  virtual void           jjtAccept(PommeLexerVisitor *visitor, void * data);
+  virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
   virtual void           jjtChildrenAccept(PommeLexerVisitor *visitor, void * data);
   virtual void           jjtChildAccept(int childNo, PommeLexerVisitor *visitor, void * data);
 

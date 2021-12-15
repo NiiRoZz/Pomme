@@ -29,7 +29,7 @@ namespace Pomme
     {
     }
 
-    void CompilerVisitor::visit(ASTinput *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeInput *node, void * data) 
     {
         line = node->getLineNumber();
 
@@ -40,7 +40,7 @@ namespace Pomme
         endCompiler();
     }
 
-    void CompilerVisitor::visit(ASTident *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeIdent *node, void * data) 
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
 
@@ -60,85 +60,85 @@ namespace Pomme
         namedVariable(node->m_Identifier, assign);
     }
 
-    void CompilerVisitor::visit(ASTidentOp *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeIdentOp *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeInt *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeInt *node, void * data) 
     {
         emitInt(node->m_Value);
     }
 
-    void CompilerVisitor::visit(ASTpommeFloat *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeFloat *node, void * data) 
     {
         emitFloat(node->m_Value);
     }
 
-    void CompilerVisitor::visit(ASTpommeString *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeString *node, void * data) 
     {
         emitConstant(OBJ_VAL(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
     }
 
-    void CompilerVisitor::visit(ASTscopes *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeScopes *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void CompilerVisitor::visit(ASTscinil *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeScinil *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTdecls *node, void * data) 
-    {
-        node->jjtChildrenAccept(this, data);
-    }
-
-    void CompilerVisitor::visit(ASTdnil *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTidentFuncs *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTsnil *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTvinil *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTonil *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTdeclenums *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTennil *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTenumassign *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTenumdefault *node, void * data) 
-    {
-    }
-
-    void CompilerVisitor::visit(ASTinstrs *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDecls *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void CompilerVisitor::visit(ASTinil *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDnil *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTassignement *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeIdentFuncs *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeSnil *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeVinil *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeOnil *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeDeclEnums *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeEnnil *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeEnumAssign *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeEnumDefault *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeInstrs *node, void * data) 
+    {
+        node->jjtChildrenAccept(this, data);
+    }
+
+    void CompilerVisitor::visit(ASTPommeInil *node, void * data) 
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeAssign *node, void * data) 
     {
         node->jjtChildAccept(1, this, data);
 
@@ -146,65 +146,69 @@ namespace Pomme
         node->jjtChildAccept(0, this, &value);
     }
 
-    void CompilerVisitor::visit(ASTaddeq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeAddEq *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTminuseq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeMinusEq *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTdiveq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDivEq *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTmulteq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeMultEq *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASToreq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeOrEq *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
         //emitByte(AS_OPCODE(OpCode::OP_OR_EQ));
     }
 
-    void CompilerVisitor::visit(ASTandeq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeAndEq *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
         //emitByte(AS_OPCODE(OpCode::OP_AND_EQ));
     }
 
-    void CompilerVisitor::visit(ASTshiftleq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeShiftLEq *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTshiftreq *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeShiftREq *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTincrementPost *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeIncrPost *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTdecrementPost *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDecrPost *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTincrementPre *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeIncrPre *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTdecrementPre *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDecrPre *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeReturn *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDelete *node, void * data)
+    {
+    }
+
+    void CompilerVisitor::visit(ASTPommeReturn *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
         emitByte(AS_OPCODE(OpCode::OP_RETURN));
     }
 
-    void CompilerVisitor::visit(ASTpommeWhile *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeWhile *node, void * data) 
     {
         int loopStart = currentChunk()->count;
 
@@ -226,11 +230,11 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
-    void CompilerVisitor::visit(ASTpommeBreak *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeBreak *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeIf *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeIf *node, void * data) 
     {
         //Condition
         node->jjtChildAccept(0, this, data);
@@ -267,78 +271,78 @@ namespace Pomme
         patchJump(elseJump);
     }
 
-    void CompilerVisitor::visit(ASTpommePrint *node, void * data) 
+    void CompilerVisitor::visit(ASTPommePrint *node, void * data) 
     {
         node->jjtChildrenAccept(this, data);
 
         emitByte(AS_OPCODE(OpCode::OP_PRINT));
     }
 
-    void CompilerVisitor::visit(ASTpommeSwitch *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeSwitch *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeCases *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeCases *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeDefault *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDefault *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTswinil *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeSwinil *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTlistexp *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeListExp *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTexnil *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeExnil *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTomega *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeOmega *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTenil *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeEnil *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTvoidType *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeVoidType *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeAnd *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeAnd *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeOr *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeOr *node, void * data) 
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeEQ *node, void * data) 
-    {
-        binaryOperator(node, node->index, node->native);
-    }
-
-    void CompilerVisitor::visit(ASTpommeNEQ *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeEQ *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeGT *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeNEQ *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeGET *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeGT *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeLT *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeGET *node, void * data) 
+    {
+        binaryOperator(node, node->index, node->native);
+    }
+
+    void CompilerVisitor::visit(ASTPommeLT *node, void * data) 
     {
         if (node->primitive)
         {
@@ -351,12 +355,12 @@ namespace Pomme
         }
     }
 
-    void CompilerVisitor::visit(ASTpommeLET *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeLET *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeAdd *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeAdd *node, void * data) 
     {
         if (node->primitive)
         {
@@ -369,7 +373,7 @@ namespace Pomme
         }
     }
 
-    void CompilerVisitor::visit(ASTpommeMinus *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeMinus *node, void * data) 
     {
         if (node->primitive)
         {
@@ -382,51 +386,51 @@ namespace Pomme
         }
     }
 
-    void CompilerVisitor::visit(ASTpommeShiftR *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeShiftR *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeShiftL *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeShiftL *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeMult *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeMult *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeDiv *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeDiv *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeModulo *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeModulo *node, void * data) 
     {
         binaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeUnary *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeUnary *node, void * data) 
     {
         unaryOperator(node, node->index, node->native);
     }
 
-    void CompilerVisitor::visit(ASTpommeNot *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeNot *node, void * data) 
     {
         emitByte(AS_OPCODE(OpCode::OP_NOT));
     }
 
-    void CompilerVisitor::visit(ASTpommeTilde *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeTilde *node, void * data) 
     {
         //emitByte(AS_OPCODE(OpCode::OP_TILDE));
     }
 
-    void CompilerVisitor::visit(ASTpommeNew *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeNew *node, void * data) 
     {
         uint16_t argCount = 0;
 
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
         std::optional<std::size_t> global = m_Vm.getGlobal(name);
 
@@ -437,14 +441,14 @@ namespace Pomme
 
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *global);
 
-        ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+        ASTPommeListExp* exp = dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1));
 
         while (exp != nullptr)
         {
             argCount++;
             exp->jjtGetChild(0)->jjtAccept(this, nullptr);
 
-            exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
+            exp = dynamic_cast<ASTPommeListExp*>(exp->jjtGetChild(1));
         }
 
         emitByte(AS_OPCODE(OpCode::OP_NEW));
@@ -453,28 +457,28 @@ namespace Pomme
         emit16Bits(node->index);
     }
 
-    void CompilerVisitor::visit(ASTpommeTrue *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeTrue *node, void * data) 
     {
         emitBytes(AS_OPCODE(OpCode::OP_BOOL), 1u);
     }
 
-    void CompilerVisitor::visit(ASTpommeFalse *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeFalse *node, void * data) 
     {
         emitBytes(AS_OPCODE(OpCode::OP_BOOL), 0u);
     }
 
-    void CompilerVisitor::visit(ASTpommeNull *node, void * data) 
+    void CompilerVisitor::visit(ASTPommeNull *node, void * data) 
     {
         emitByte(AS_OPCODE(OpCode::OP_NULL));
     }
 
-    void CompilerVisitor::visit(ASTpommeTypeDef *node, void * data)
+    void CompilerVisitor::visit(ASTPommeTypeDef *node, void * data)
     {
     }
     
-    void CompilerVisitor::visit(ASTpommeClass *node, void * data)
+    void CompilerVisitor::visit(ASTPommeClass *node, void * data)
     {
-        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
         uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
         uint8_t global = m_Vm.addGlobal(name);
@@ -493,10 +497,10 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
-    void CompilerVisitor::visit(ASTpommeClassChild *node, void * data)
+    void CompilerVisitor::visit(ASTPommeClassChild *node, void * data)
     {
-        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        const std::string& parentName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        const std::string& name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& parentName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
         m_SuperClass = parentName;
 
@@ -522,12 +526,12 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
-    void CompilerVisitor::visit(ASTpommeModdedClass *node, void * data)
+    void CompilerVisitor::visit(ASTPommeModdedClass *node, void * data)
     {
-        const std::string& name = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         const std::string& parentName = node->parentName;
 
-        std::cout << "ASTpommeModdedClass name : " << name << " parentName : " << parentName << std::endl;
+        std::cout << "ASTPommeModdedClass name : " << name << " parentName : " << parentName << std::endl;
 
         m_SuperClass = parentName;
 
@@ -553,10 +557,10 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
     }
 
-    void CompilerVisitor::visit(ASTpommeMethode *node, void * data)
+    void CompilerVisitor::visit(ASTPommeMethode *node, void * data)
     {
-        auto* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(2));
-        auto* identOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(2));
+        auto* identFunc = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(2));
+        auto* identOp = dynamic_cast<ASTPommeIdentOp*>(node->jjtGetChild(2));
 
         std::string ident = (identFunc != nullptr) ? identFunc->m_Identifier : identOp->m_Identifier;
         std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
@@ -564,10 +568,10 @@ namespace Pomme
         method(node, ident, identMethod, node->index, false);
     }
 
-    void CompilerVisitor::visit(ASTpommeMethodeNative *node, void * data)
+    void CompilerVisitor::visit(ASTPommeMethodeNative *node, void * data)
     {
-        ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(3));
-        ASTidentOp* identOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(3));
+        ASTPommeIdent* identFunc = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(3));
+        ASTPommeIdentOp* identOp = dynamic_cast<ASTPommeIdentOp*>(node->jjtGetChild(3));
         //1: name
         std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
 
@@ -588,41 +592,41 @@ namespace Pomme
         emitByte(true);
     }
 
-    void CompilerVisitor::visit(ASTpommeStatic *node, void * data)
+    void CompilerVisitor::visit(ASTPommeStatic *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommePublic *node, void * data)
+    void CompilerVisitor::visit(ASTPommePublic *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommePrivate *node, void * data)
+    void CompilerVisitor::visit(ASTPommePrivate *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeProtected *node, void * data)
+    void CompilerVisitor::visit(ASTPommeProtected *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeOverride *node, void * data)
+    void CompilerVisitor::visit(ASTPommeOverride *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeEnum *node, void * data)
+    void CompilerVisitor::visit(ASTPommeEnum *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeExtendsEnum *node, void * data)
+    void CompilerVisitor::visit(ASTPommeExtendsEnum *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeModdedEnum *node, void * data)
+    void CompilerVisitor::visit(ASTPommeModdedEnum *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
+    void CompilerVisitor::visit(ASTPommeGlobalFunction *node, void * data)
     {
-        ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+        ASTPommeIdent* identFunc = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1));
         //1: name
         std::string name = identFunc->m_Identifier;
         std::string nameFunc = identFunc->m_MethodIdentifier;
@@ -655,9 +659,9 @@ namespace Pomme
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
-    void CompilerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
+    void CompilerVisitor::visit(ASTPommeGlobalFunctionNative *node, void * data)
     {
-        ASTident* identFunc = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+        ASTPommeIdent* identFunc = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1));
         //1: name
         std::string nameFunc = identFunc->m_MethodIdentifier;
 
@@ -667,25 +671,25 @@ namespace Pomme
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
-    void CompilerVisitor::visit(ASTpommeCase *node, void * data)
+    void CompilerVisitor::visit(ASTPommeCase *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTvarDecls *node, void * data)
+    void CompilerVisitor::visit(ASTPommeVarDecls *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void CompilerVisitor::visit(ASTpommeVariable *node, void * data)
+    void CompilerVisitor::visit(ASTPommeVariable *node, void * data)
     {
         //0: type
-        std::string typeName = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string typeName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
         //1: name
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        std::string name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
         //2: expression value
-        ASTomega* defaultValue = dynamic_cast<ASTomega*>(node->jjtGetChild(2));
+        ASTPommeOmega* defaultValue = dynamic_cast<ASTPommeOmega*>(node->jjtGetChild(2));
 
         if (!m_InClass || (m_InClass && m_InMethod)) addLocal(name);
 
@@ -707,35 +711,43 @@ namespace Pomme
         }
     }
 
-    void CompilerVisitor::visit(ASTpommeConstant *node, void * data)
+    void CompilerVisitor::visit(ASTPommeConstant *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTheaders *node, void * data)
+    void CompilerVisitor::visit(ASTPommeHeaders *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void CompilerVisitor::visit(ASTheader *node, void * data)
+    void CompilerVisitor::visit(ASTPommeConstHeader *node, void * data)
     {
         //1: name
-        std::string name = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        std::string name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(2))->m_Identifier;
         addLocal(name);
         function->arity++;
     }
 
-    void CompilerVisitor::visit(ASTpommeConstructor *node, void * data)
+    void CompilerVisitor::visit(ASTPommeHeader *node, void * data)
     {
-        auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+        //1: name
+        std::string name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
+        addLocal(name);
+        function->arity++;
+    }
+
+    void CompilerVisitor::visit(ASTPommeConstructor *node, void * data)
+    {
+        auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
         
         method(node, name->m_Identifier, name->m_MethodIdentifier, node->index, true);
     }
 
-    void CompilerVisitor::visit(ASTpommeDestructor *node, void * data)
+    void CompilerVisitor::visit(ASTPommeDestructor *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTlistaccess *node, void * data)
+    void CompilerVisitor::visit(ASTPommeListAccess *node, void * data)
     {
         //We need to check for local variable or method
         node->jjtChildAccept(0, this, nullptr);
@@ -743,16 +755,16 @@ namespace Pomme
         accessProperty(nullptr, node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
-    void CompilerVisitor::visit(ASTlistaccessP *node, void * data)
+    void CompilerVisitor::visit(ASTPommeListAccessP *node, void * data)
     {
         accessProperty(node->jjtGetChild(0), node->jjtGetChild(1), node->jjtGetChild(2), data);
     }
 
-    void CompilerVisitor::visit(ASTacnil *node, void * data)
+    void CompilerVisitor::visit(ASTPommeAcnil *node, void * data)
     {
     }
 
-    void CompilerVisitor::visit(ASTaccessMethode *node, void * data)
+    void CompilerVisitor::visit(ASTPommeAccessMethode *node, void * data)
     {
         //If we don't have GET_PROPERTY before, we are accessing method of global variable
         if (node->global)
@@ -767,7 +779,7 @@ namespace Pomme
 
         uint16_t argCount = 0;
 
-        ASTlistexp* exp = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+        ASTPommeListExp* exp = dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1));
 
         while (exp != nullptr)
         {
@@ -785,7 +797,7 @@ namespace Pomme
                 }
             }
 
-            exp = dynamic_cast<ASTlistexp*>(exp->jjtGetChild(1));
+            exp = dynamic_cast<ASTPommeListExp*>(exp->jjtGetChild(1));
         }
 
         if (node->superCall)
@@ -955,9 +967,9 @@ namespace Pomme
     void CompilerVisitor::accessProperty(Node* left, Node* middle, Node* right, void * data)
     {
         bool assign = (data == nullptr) ? false : *(bool*)data;
-        bool hasNext = dynamic_cast<ASTacnil*>(right) == nullptr;
+        bool hasNext = dynamic_cast<ASTPommeAcnil*>(right) == nullptr;
 
-        auto emitMethod = [&] (ASTaccessMethode* method) { 
+        auto emitMethod = [&] (ASTPommeAccessMethode* method) { 
             if (method == nullptr) return false; 
 
             assert(!assign);
@@ -974,7 +986,7 @@ namespace Pomme
             return true;
         };
 
-        auto emitIdent = [&] (ASTident* ident, bool check, bool forceCheck) {
+        auto emitIdent = [&] (ASTPommeIdent* ident, bool check, bool forceCheck) {
             if (ident == nullptr) return false; 
 
             OpCode code = OpCode::OP_GET_PROPERTY;
@@ -988,24 +1000,24 @@ namespace Pomme
 
         if (left != nullptr)
         {
-            emitMethod(dynamic_cast<ASTaccessMethode*>(left)) || emitIdent(dynamic_cast<ASTident*>(left), false, false);
+            emitMethod(dynamic_cast<ASTPommeAccessMethode*>(left)) || emitIdent(dynamic_cast<ASTPommeIdent*>(left), false, false);
         }
 
         if (middle != nullptr)
         {
-            emitMethod(dynamic_cast<ASTaccessMethode*>(middle)) || emitIdent(dynamic_cast<ASTident*>(middle), true, false);
+            emitMethod(dynamic_cast<ASTPommeAccessMethode*>(middle)) || emitIdent(dynamic_cast<ASTPommeIdent*>(middle), true, false);
         }
 
         if (!hasNext || right == nullptr) return;
 
         //We continue through the list
-        if (dynamic_cast<ASTlistaccessP*>(right) != nullptr)
+        if (dynamic_cast<ASTPommeListAccessP*>(right) != nullptr)
         {
             right->jjtAccept(this, &assign);
             return;
         }
 
-        emitMethod(dynamic_cast<ASTaccessMethode*>(right)) || emitIdent(dynamic_cast<ASTident*>(right), false, true);
+        emitMethod(dynamic_cast<ASTPommeAccessMethode*>(right)) || emitIdent(dynamic_cast<ASTPommeIdent*>(right), false, true);
     }
 
     void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor)
@@ -1110,7 +1122,7 @@ namespace Pomme
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *idx);
     }
 
-    void CompilerVisitor::visit(ASTaccessTab *node, void * data)
+    void CompilerVisitor::visit(ASTPommeAccessTab *node, void * data)
     {
     }
 }

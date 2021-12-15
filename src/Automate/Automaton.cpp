@@ -188,7 +188,7 @@ namespace Pomme {
                 }
             }else
             {
-                if( dynamic_cast<ASTident*>(it.second.node->jjtGetChild(0))->m_Identifier == name)
+                if( dynamic_cast<ASTPommeIdent*>(it.second.node->jjtGetChild(0))->m_Identifier == name)
                 {
                     return it.second.name;
                 }
@@ -317,7 +317,7 @@ namespace Pomme {
         {
             if(getState(i)->node != nullptr)
             {
-                this->loop += static_cast<ASTident*>(getState(i)->node->jjtGetChild(0))->m_Identifier+ " ";
+                this->loop += static_cast<ASTPommeIdent*>(getState(i)->node->jjtGetChild(0))->m_Identifier+ " ";
             }
             std::cout << i << std::endl;
             if(i == state)

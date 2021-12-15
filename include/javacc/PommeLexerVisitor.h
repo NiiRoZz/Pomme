@@ -9,104 +9,106 @@ class PommeLexerVisitor
 {
   public:
   virtual void  visit(SimpleNode *node, void * data) = 0;
-  virtual void  visit(ASTinput *node, void * data) = 0;
-  virtual void  visit(ASTident *node, void * data) = 0;
-  virtual void  visit(ASTidentOp *node, void * data) = 0;
-  virtual void  visit(ASTpommeInt *node, void * data) = 0;
-  virtual void  visit(ASTpommeFloat *node, void * data) = 0;
-  virtual void  visit(ASTpommeString *node, void * data) = 0;
-  virtual void  visit(ASTscopes *node, void * data) = 0;
-  virtual void  visit(ASTscinil *node, void * data) = 0;
-  virtual void  visit(ASTpommeTypeDef *node, void * data) = 0;
-  virtual void  visit(ASTpommeClass *node, void * data) = 0;
-  virtual void  visit(ASTpommeClassChild *node, void * data) = 0;
-  virtual void  visit(ASTpommeModdedClass *node, void * data) = 0;
-  virtual void  visit(ASTdecls *node, void * data) = 0;
-  virtual void  visit(ASTdnil *node, void * data) = 0;
-  virtual void  visit(ASTpommeDestructor *node, void * data) = 0;
-  virtual void  visit(ASTpommeMethodeNative *node, void * data) = 0;
-  virtual void  visit(ASTpommeConstructor *node, void * data) = 0;
-  virtual void  visit(ASTvarDecls *node, void * data) = 0;
-  virtual void  visit(ASTpommeMethode *node, void * data) = 0;
-  virtual void  visit(ASTidentFuncs *node, void * data) = 0;
-  virtual void  visit(ASTpommeStatic *node, void * data) = 0;
-  virtual void  visit(ASTsnil *node, void * data) = 0;
-  virtual void  visit(ASTpommePublic *node, void * data) = 0;
-  virtual void  visit(ASTpommePrivate *node, void * data) = 0;
-  virtual void  visit(ASTpommeProtected *node, void * data) = 0;
-  virtual void  visit(ASTvinil *node, void * data) = 0;
-  virtual void  visit(ASTpommeOverride *node, void * data) = 0;
-  virtual void  visit(ASTonil *node, void * data) = 0;
-  virtual void  visit(ASTpommeEnum *node, void * data) = 0;
-  virtual void  visit(ASTpommeExtendsEnum *node, void * data) = 0;
-  virtual void  visit(ASTpommeModdedEnum *node, void * data) = 0;
-  virtual void  visit(ASTdeclenums *node, void * data) = 0;
-  virtual void  visit(ASTennil *node, void * data) = 0;
-  virtual void  visit(ASTenumassign *node, void * data) = 0;
-  virtual void  visit(ASTenumdefault *node, void * data) = 0;
-  virtual void  visit(ASTpommeGlobalFunction *node, void * data) = 0;
-  virtual void  visit(ASTpommeGlobalFunctionNative *node, void * data) = 0;
-  virtual void  visit(ASTinstrs *node, void * data) = 0;
-  virtual void  visit(ASTinil *node, void * data) = 0;
-  virtual void  visit(ASTincrementPre *node, void * data) = 0;
-  virtual void  visit(ASTdecrementPre *node, void * data) = 0;
-  virtual void  visit(ASTpommeReturn *node, void * data) = 0;
-  virtual void  visit(ASTpommeWhile *node, void * data) = 0;
-  virtual void  visit(ASTpommeBreak *node, void * data) = 0;
-  virtual void  visit(ASTpommeIf *node, void * data) = 0;
-  virtual void  visit(ASTpommePrint *node, void * data) = 0;
-  virtual void  visit(ASTpommeSwitch *node, void * data) = 0;
-  virtual void  visit(ASTassignement *node, void * data) = 0;
-  virtual void  visit(ASTaddeq *node, void * data) = 0;
-  virtual void  visit(ASTminuseq *node, void * data) = 0;
-  virtual void  visit(ASTdiveq *node, void * data) = 0;
-  virtual void  visit(ASTmulteq *node, void * data) = 0;
-  virtual void  visit(ASToreq *node, void * data) = 0;
-  virtual void  visit(ASTandeq *node, void * data) = 0;
-  virtual void  visit(ASTshiftleq *node, void * data) = 0;
-  virtual void  visit(ASTshiftreq *node, void * data) = 0;
-  virtual void  visit(ASTincrementPost *node, void * data) = 0;
-  virtual void  visit(ASTdecrementPost *node, void * data) = 0;
-  virtual void  visit(ASTpommeCases *node, void * data) = 0;
-  virtual void  visit(ASTpommeDefault *node, void * data) = 0;
-  virtual void  visit(ASTswinil *node, void * data) = 0;
-  virtual void  visit(ASTpommeCase *node, void * data) = 0;
-  virtual void  visit(ASTlistexp *node, void * data) = 0;
-  virtual void  visit(ASTexnil *node, void * data) = 0;
-  virtual void  visit(ASTpommeVariable *node, void * data) = 0;
-  virtual void  visit(ASTpommeConstant *node, void * data) = 0;
-  virtual void  visit(ASTomega *node, void * data) = 0;
-  virtual void  visit(ASTheaders *node, void * data) = 0;
-  virtual void  visit(ASTenil *node, void * data) = 0;
-  virtual void  visit(ASTheader *node, void * data) = 0;
-  virtual void  visit(ASTvoidType *node, void * data) = 0;
-  virtual void  visit(ASTpommeAnd *node, void * data) = 0;
-  virtual void  visit(ASTpommeOr *node, void * data) = 0;
-  virtual void  visit(ASTpommeEQ *node, void * data) = 0;
-  virtual void  visit(ASTpommeNEQ *node, void * data) = 0;
-  virtual void  visit(ASTpommeGT *node, void * data) = 0;
-  virtual void  visit(ASTpommeGET *node, void * data) = 0;
-  virtual void  visit(ASTpommeLT *node, void * data) = 0;
-  virtual void  visit(ASTpommeLET *node, void * data) = 0;
-  virtual void  visit(ASTpommeAdd *node, void * data) = 0;
-  virtual void  visit(ASTpommeMinus *node, void * data) = 0;
-  virtual void  visit(ASTpommeShiftR *node, void * data) = 0;
-  virtual void  visit(ASTpommeShiftL *node, void * data) = 0;
-  virtual void  visit(ASTpommeMult *node, void * data) = 0;
-  virtual void  visit(ASTpommeDiv *node, void * data) = 0;
-  virtual void  visit(ASTpommeModulo *node, void * data) = 0;
-  virtual void  visit(ASTpommeUnary *node, void * data) = 0;
-  virtual void  visit(ASTpommeNot *node, void * data) = 0;
-  virtual void  visit(ASTpommeTilde *node, void * data) = 0;
-  virtual void  visit(ASTpommeNew *node, void * data) = 0;
-  virtual void  visit(ASTpommeTrue *node, void * data) = 0;
-  virtual void  visit(ASTpommeFalse *node, void * data) = 0;
-  virtual void  visit(ASTpommeNull *node, void * data) = 0;
-  virtual void  visit(ASTlistaccess *node, void * data) = 0;
-  virtual void  visit(ASTaccessTab *node, void * data) = 0;
-  virtual void  visit(ASTlistaccessP *node, void * data) = 0;
-  virtual void  visit(ASTacnil *node, void * data) = 0;
-  virtual void  visit(ASTaccessMethode *node, void * data) = 0;
+  virtual void  visit(ASTPommeInput *node, void * data) = 0;
+  virtual void  visit(ASTPommeIdent *node, void * data) = 0;
+  virtual void  visit(ASTPommeIdentOp *node, void * data) = 0;
+  virtual void  visit(ASTPommeInt *node, void * data) = 0;
+  virtual void  visit(ASTPommeFloat *node, void * data) = 0;
+  virtual void  visit(ASTPommeString *node, void * data) = 0;
+  virtual void  visit(ASTPommeScopes *node, void * data) = 0;
+  virtual void  visit(ASTPommeScinil *node, void * data) = 0;
+  virtual void  visit(ASTPommeTypeDef *node, void * data) = 0;
+  virtual void  visit(ASTPommeClass *node, void * data) = 0;
+  virtual void  visit(ASTPommeClassChild *node, void * data) = 0;
+  virtual void  visit(ASTPommeModdedClass *node, void * data) = 0;
+  virtual void  visit(ASTPommeDecls *node, void * data) = 0;
+  virtual void  visit(ASTPommeDnil *node, void * data) = 0;
+  virtual void  visit(ASTPommeDestructor *node, void * data) = 0;
+  virtual void  visit(ASTPommeMethodeNative *node, void * data) = 0;
+  virtual void  visit(ASTPommeConstructor *node, void * data) = 0;
+  virtual void  visit(ASTPommeVarDecls *node, void * data) = 0;
+  virtual void  visit(ASTPommeMethode *node, void * data) = 0;
+  virtual void  visit(ASTPommeIdentFuncs *node, void * data) = 0;
+  virtual void  visit(ASTPommeStatic *node, void * data) = 0;
+  virtual void  visit(ASTPommeSnil *node, void * data) = 0;
+  virtual void  visit(ASTPommePublic *node, void * data) = 0;
+  virtual void  visit(ASTPommePrivate *node, void * data) = 0;
+  virtual void  visit(ASTPommeProtected *node, void * data) = 0;
+  virtual void  visit(ASTPommeVinil *node, void * data) = 0;
+  virtual void  visit(ASTPommeOverride *node, void * data) = 0;
+  virtual void  visit(ASTPommeOnil *node, void * data) = 0;
+  virtual void  visit(ASTPommeEnum *node, void * data) = 0;
+  virtual void  visit(ASTPommeExtendsEnum *node, void * data) = 0;
+  virtual void  visit(ASTPommeModdedEnum *node, void * data) = 0;
+  virtual void  visit(ASTPommeDeclEnums *node, void * data) = 0;
+  virtual void  visit(ASTPommeEnnil *node, void * data) = 0;
+  virtual void  visit(ASTPommeEnumAssign *node, void * data) = 0;
+  virtual void  visit(ASTPommeEnumDefault *node, void * data) = 0;
+  virtual void  visit(ASTPommeGlobalFunction *node, void * data) = 0;
+  virtual void  visit(ASTPommeGlobalFunctionNative *node, void * data) = 0;
+  virtual void  visit(ASTPommeInstrs *node, void * data) = 0;
+  virtual void  visit(ASTPommeInil *node, void * data) = 0;
+  virtual void  visit(ASTPommeIncrPre *node, void * data) = 0;
+  virtual void  visit(ASTPommeDecrPre *node, void * data) = 0;
+  virtual void  visit(ASTPommeDelete *node, void * data) = 0;
+  virtual void  visit(ASTPommeReturn *node, void * data) = 0;
+  virtual void  visit(ASTPommeWhile *node, void * data) = 0;
+  virtual void  visit(ASTPommeBreak *node, void * data) = 0;
+  virtual void  visit(ASTPommeIf *node, void * data) = 0;
+  virtual void  visit(ASTPommePrint *node, void * data) = 0;
+  virtual void  visit(ASTPommeSwitch *node, void * data) = 0;
+  virtual void  visit(ASTPommeAssign *node, void * data) = 0;
+  virtual void  visit(ASTPommeAddEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeMinusEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeDivEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeMultEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeOrEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeAndEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeShiftLEq *node, void * data) = 0;
+  virtual void  visit(ASTPommeShiftREq *node, void * data) = 0;
+  virtual void  visit(ASTPommeIncrPost *node, void * data) = 0;
+  virtual void  visit(ASTPommeDecrPost *node, void * data) = 0;
+  virtual void  visit(ASTPommeCases *node, void * data) = 0;
+  virtual void  visit(ASTPommeDefault *node, void * data) = 0;
+  virtual void  visit(ASTPommeSwinil *node, void * data) = 0;
+  virtual void  visit(ASTPommeCase *node, void * data) = 0;
+  virtual void  visit(ASTPommeListExp *node, void * data) = 0;
+  virtual void  visit(ASTPommeExnil *node, void * data) = 0;
+  virtual void  visit(ASTPommeVariable *node, void * data) = 0;
+  virtual void  visit(ASTPommeConstant *node, void * data) = 0;
+  virtual void  visit(ASTPommeOmega *node, void * data) = 0;
+  virtual void  visit(ASTPommeHeaders *node, void * data) = 0;
+  virtual void  visit(ASTPommeEnil *node, void * data) = 0;
+  virtual void  visit(ASTPommeConstHeader *node, void * data) = 0;
+  virtual void  visit(ASTPommeHeader *node, void * data) = 0;
+  virtual void  visit(ASTPommeVoidType *node, void * data) = 0;
+  virtual void  visit(ASTPommeAnd *node, void * data) = 0;
+  virtual void  visit(ASTPommeOr *node, void * data) = 0;
+  virtual void  visit(ASTPommeEQ *node, void * data) = 0;
+  virtual void  visit(ASTPommeNEQ *node, void * data) = 0;
+  virtual void  visit(ASTPommeGT *node, void * data) = 0;
+  virtual void  visit(ASTPommeGET *node, void * data) = 0;
+  virtual void  visit(ASTPommeLT *node, void * data) = 0;
+  virtual void  visit(ASTPommeLET *node, void * data) = 0;
+  virtual void  visit(ASTPommeAdd *node, void * data) = 0;
+  virtual void  visit(ASTPommeMinus *node, void * data) = 0;
+  virtual void  visit(ASTPommeShiftR *node, void * data) = 0;
+  virtual void  visit(ASTPommeShiftL *node, void * data) = 0;
+  virtual void  visit(ASTPommeMult *node, void * data) = 0;
+  virtual void  visit(ASTPommeDiv *node, void * data) = 0;
+  virtual void  visit(ASTPommeModulo *node, void * data) = 0;
+  virtual void  visit(ASTPommeUnary *node, void * data) = 0;
+  virtual void  visit(ASTPommeNot *node, void * data) = 0;
+  virtual void  visit(ASTPommeTilde *node, void * data) = 0;
+  virtual void  visit(ASTPommeNew *node, void * data) = 0;
+  virtual void  visit(ASTPommeTrue *node, void * data) = 0;
+  virtual void  visit(ASTPommeFalse *node, void * data) = 0;
+  virtual void  visit(ASTPommeNull *node, void * data) = 0;
+  virtual void  visit(ASTPommeListAccess *node, void * data) = 0;
+  virtual void  visit(ASTPommeAccessTab *node, void * data) = 0;
+  virtual void  visit(ASTPommeListAccessP *node, void * data) = 0;
+  virtual void  visit(ASTPommeAcnil *node, void * data) = 0;
+  virtual void  visit(ASTPommeAccessMethode *node, void * data) = 0;
   virtual ~PommeLexerVisitor() { }
 };
 class PommeLexerDefaultVisitor : public PommeLexerVisitor {
@@ -115,302 +117,308 @@ public:
   virtual void  visit(SimpleNode *node, void * data) {
     defaultVisit(node, data);
 }
-  virtual void  visit(ASTinput *node, void * data) {
+  virtual void  visit(ASTPommeInput *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTident *node, void * data) {
+  virtual void  visit(ASTPommeIdent *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTidentOp *node, void * data) {
+  virtual void  visit(ASTPommeIdentOp *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeInt *node, void * data) {
+  virtual void  visit(ASTPommeInt *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeFloat *node, void * data) {
+  virtual void  visit(ASTPommeFloat *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeString *node, void * data) {
+  virtual void  visit(ASTPommeString *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTscopes *node, void * data) {
+  virtual void  visit(ASTPommeScopes *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTscinil *node, void * data) {
+  virtual void  visit(ASTPommeScinil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeTypeDef *node, void * data) {
+  virtual void  visit(ASTPommeTypeDef *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeClass *node, void * data) {
+  virtual void  visit(ASTPommeClass *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeClassChild *node, void * data) {
+  virtual void  visit(ASTPommeClassChild *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeModdedClass *node, void * data) {
+  virtual void  visit(ASTPommeModdedClass *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTdecls *node, void * data) {
+  virtual void  visit(ASTPommeDecls *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTdnil *node, void * data) {
+  virtual void  visit(ASTPommeDnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeDestructor *node, void * data) {
+  virtual void  visit(ASTPommeDestructor *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeMethodeNative *node, void * data) {
+  virtual void  visit(ASTPommeMethodeNative *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeConstructor *node, void * data) {
+  virtual void  visit(ASTPommeConstructor *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTvarDecls *node, void * data) {
+  virtual void  visit(ASTPommeVarDecls *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeMethode *node, void * data) {
+  virtual void  visit(ASTPommeMethode *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTidentFuncs *node, void * data) {
+  virtual void  visit(ASTPommeIdentFuncs *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeStatic *node, void * data) {
+  virtual void  visit(ASTPommeStatic *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTsnil *node, void * data) {
+  virtual void  visit(ASTPommeSnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommePublic *node, void * data) {
+  virtual void  visit(ASTPommePublic *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommePrivate *node, void * data) {
+  virtual void  visit(ASTPommePrivate *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeProtected *node, void * data) {
+  virtual void  visit(ASTPommeProtected *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTvinil *node, void * data) {
+  virtual void  visit(ASTPommeVinil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeOverride *node, void * data) {
+  virtual void  visit(ASTPommeOverride *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTonil *node, void * data) {
+  virtual void  visit(ASTPommeOnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeEnum *node, void * data) {
+  virtual void  visit(ASTPommeEnum *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeExtendsEnum *node, void * data) {
+  virtual void  visit(ASTPommeExtendsEnum *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeModdedEnum *node, void * data) {
+  virtual void  visit(ASTPommeModdedEnum *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTdeclenums *node, void * data) {
+  virtual void  visit(ASTPommeDeclEnums *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTennil *node, void * data) {
+  virtual void  visit(ASTPommeEnnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTenumassign *node, void * data) {
+  virtual void  visit(ASTPommeEnumAssign *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTenumdefault *node, void * data) {
+  virtual void  visit(ASTPommeEnumDefault *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeGlobalFunction *node, void * data) {
+  virtual void  visit(ASTPommeGlobalFunction *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeGlobalFunctionNative *node, void * data) {
+  virtual void  visit(ASTPommeGlobalFunctionNative *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTinstrs *node, void * data) {
+  virtual void  visit(ASTPommeInstrs *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTinil *node, void * data) {
+  virtual void  visit(ASTPommeInil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTincrementPre *node, void * data) {
+  virtual void  visit(ASTPommeIncrPre *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTdecrementPre *node, void * data) {
+  virtual void  visit(ASTPommeDecrPre *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeReturn *node, void * data) {
+  virtual void  visit(ASTPommeDelete *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeWhile *node, void * data) {
+  virtual void  visit(ASTPommeReturn *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeBreak *node, void * data) {
+  virtual void  visit(ASTPommeWhile *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeIf *node, void * data) {
+  virtual void  visit(ASTPommeBreak *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommePrint *node, void * data) {
+  virtual void  visit(ASTPommeIf *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeSwitch *node, void * data) {
+  virtual void  visit(ASTPommePrint *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTassignement *node, void * data) {
+  virtual void  visit(ASTPommeSwitch *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTaddeq *node, void * data) {
+  virtual void  visit(ASTPommeAssign *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTminuseq *node, void * data) {
+  virtual void  visit(ASTPommeAddEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTdiveq *node, void * data) {
+  virtual void  visit(ASTPommeMinusEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTmulteq *node, void * data) {
+  virtual void  visit(ASTPommeDivEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASToreq *node, void * data) {
+  virtual void  visit(ASTPommeMultEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTandeq *node, void * data) {
+  virtual void  visit(ASTPommeOrEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTshiftleq *node, void * data) {
+  virtual void  visit(ASTPommeAndEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTshiftreq *node, void * data) {
+  virtual void  visit(ASTPommeShiftLEq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTincrementPost *node, void * data) {
+  virtual void  visit(ASTPommeShiftREq *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTdecrementPost *node, void * data) {
+  virtual void  visit(ASTPommeIncrPost *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeCases *node, void * data) {
+  virtual void  visit(ASTPommeDecrPost *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeDefault *node, void * data) {
+  virtual void  visit(ASTPommeCases *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTswinil *node, void * data) {
+  virtual void  visit(ASTPommeDefault *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeCase *node, void * data) {
+  virtual void  visit(ASTPommeSwinil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTlistexp *node, void * data) {
+  virtual void  visit(ASTPommeCase *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTexnil *node, void * data) {
+  virtual void  visit(ASTPommeListExp *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeVariable *node, void * data) {
+  virtual void  visit(ASTPommeExnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeConstant *node, void * data) {
+  virtual void  visit(ASTPommeVariable *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTomega *node, void * data) {
+  virtual void  visit(ASTPommeConstant *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTheaders *node, void * data) {
+  virtual void  visit(ASTPommeOmega *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTenil *node, void * data) {
+  virtual void  visit(ASTPommeHeaders *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTheader *node, void * data) {
+  virtual void  visit(ASTPommeEnil *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTvoidType *node, void * data) {
+  virtual void  visit(ASTPommeConstHeader *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeAnd *node, void * data) {
+  virtual void  visit(ASTPommeHeader *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeOr *node, void * data) {
+  virtual void  visit(ASTPommeVoidType *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeEQ *node, void * data) {
+  virtual void  visit(ASTPommeAnd *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeNEQ *node, void * data) {
+  virtual void  visit(ASTPommeOr *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeGT *node, void * data) {
+  virtual void  visit(ASTPommeEQ *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeGET *node, void * data) {
+  virtual void  visit(ASTPommeNEQ *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeLT *node, void * data) {
+  virtual void  visit(ASTPommeGT *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeLET *node, void * data) {
+  virtual void  visit(ASTPommeGET *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeAdd *node, void * data) {
+  virtual void  visit(ASTPommeLT *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeMinus *node, void * data) {
+  virtual void  visit(ASTPommeLET *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeShiftR *node, void * data) {
+  virtual void  visit(ASTPommeAdd *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeShiftL *node, void * data) {
+  virtual void  visit(ASTPommeMinus *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeMult *node, void * data) {
+  virtual void  visit(ASTPommeShiftR *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeDiv *node, void * data) {
+  virtual void  visit(ASTPommeShiftL *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeModulo *node, void * data) {
+  virtual void  visit(ASTPommeMult *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeUnary *node, void * data) {
+  virtual void  visit(ASTPommeDiv *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeNot *node, void * data) {
+  virtual void  visit(ASTPommeModulo *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeTilde *node, void * data) {
+  virtual void  visit(ASTPommeUnary *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeNew *node, void * data) {
+  virtual void  visit(ASTPommeNot *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeTrue *node, void * data) {
+  virtual void  visit(ASTPommeTilde *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeFalse *node, void * data) {
+  virtual void  visit(ASTPommeNew *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTpommeNull *node, void * data) {
+  virtual void  visit(ASTPommeTrue *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTlistaccess *node, void * data) {
+  virtual void  visit(ASTPommeFalse *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTaccessTab *node, void * data) {
+  virtual void  visit(ASTPommeNull *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTlistaccessP *node, void * data) {
+  virtual void  visit(ASTPommeListAccess *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTacnil *node, void * data) {
+  virtual void  visit(ASTPommeAccessTab *node, void * data) {
     defaultVisit(node, data);
   }
-  virtual void  visit(ASTaccessMethode *node, void * data) {
+  virtual void  visit(ASTPommeListAccessP *node, void * data) {
+    defaultVisit(node, data);
+  }
+  virtual void  visit(ASTPommeAcnil *node, void * data) {
+    defaultVisit(node, data);
+  }
+  virtual void  visit(ASTPommeAccessMethode *node, void * data) {
     defaultVisit(node, data);
   }
   ~PommeLexerDefaultVisitor() { }
 };
 }
 #endif
-/* JavaCC - OriginalChecksum=fcfb24d1b6b794d9af71fd7345fa6aab (do not edit this line) */
+/* JavaCC - OriginalChecksum=0c421a733281c91d21a308221b49f097 (do not edit this line) */

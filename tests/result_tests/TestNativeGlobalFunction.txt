@@ -1,7 +1,7 @@
-input
- scopes
-  pommeGlobalFunctionNative
-   voidType
-   ident
-   enil
-  scinil
+PommeInput
+ PommeScopes
+  PommeGlobalFunctionNative
+   PommeVoidType
+   PommeIdent
+   PommeEnil
+  PommeScinil

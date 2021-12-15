@@ -1,13 +1,13 @@
-input
- scopes
-  pommeGlobalFunction
-   voidType
-   ident
-   enil
-   instrs
-    pommeConstant
-     ident
-     ident
-     pommeInt
-    inil
-  scinil
+PommeInput
+ PommeScopes
+  PommeGlobalFunction
+   PommeVoidType
+   PommeIdent
+   PommeEnil
+   PommeInstrs
+    PommeConstant
+     PommeIdent
+     PommeIdent
+     PommeInt
+    PommeInil
+  PommeScinil

@@ -194,5 +194,10 @@ TEST(TEST_LEXER_PARSER, TestHeaders)
 	TEST_PARSER_FILE("class Array{ int b; int test(int a, int c, int d){};  void test2(int a){}; };\n", "tests/TestHeaders.txt");
 }
 
+TEST(TEST_LEXER_PARSER, TestConstHeaders)
+{
+	TEST_PARSER_FILE("class Array{ int b; int test(const int a, int c, const int d){}; }; void global(int a, const int b){};\n", "tests/TestConstHeaders.txt");
+}
+
 
 #undef TEST_PARSER_FILE

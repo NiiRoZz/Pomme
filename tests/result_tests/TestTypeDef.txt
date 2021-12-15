@@ -1,14 +1,14 @@
-input
- scopes
-  pommeClass
-   ident
-   dnil
-  scopes
-   pommeEnum
-    ident
-    ennil
-   scopes
-    pommeTypeDef
-     ident
-     ident
-    scinil
+PommeInput
+ PommeScopes
+  PommeClass
+   PommeIdent
+   PommeDnil
+  PommeScopes
+   PommeEnum
+    PommeIdent
+    PommeEnnil
+   PommeScopes
+    PommeTypeDef
+     PommeIdent
+     PommeIdent
+    PommeScinil

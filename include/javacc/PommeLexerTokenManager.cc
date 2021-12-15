@@ -115,11 +115,13 @@ static JJChar jjstrLiteralChars_68[] = {0x66, 0x61, 0x6c, 0x73, 0x65, 0};
 static JJChar jjstrLiteralChars_69[] = {0x6e, 0x75, 0x6c, 0x6c, 0};
 
 static JJChar jjstrLiteralChars_70[] = {0x6e, 0x65, 0x77, 0};
-static JJChar jjstrLiteralChars_71[] = {0};
+static JJChar jjstrLiteralChars_71[] = {0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0};
+
 static JJChar jjstrLiteralChars_72[] = {0};
 static JJChar jjstrLiteralChars_73[] = {0};
 static JJChar jjstrLiteralChars_74[] = {0};
 static JJChar jjstrLiteralChars_75[] = {0};
+static JJChar jjstrLiteralChars_76[] = {0};
 static const JJString jjstrLiteralImages[] = {
 jjstrLiteralChars_0, 
 jjstrLiteralChars_1, 
@@ -197,6 +199,7 @@ jjstrLiteralChars_72,
 jjstrLiteralChars_73, 
 jjstrLiteralChars_74, 
 jjstrLiteralChars_75, 
+jjstrLiteralChars_76, 
 };
 
 /** Lexer state names. */
@@ -206,7 +209,7 @@ static const JJString lexStateNames[] = {
 lexStateNames_arr_0, 
 };
 static const unsigned long long jjtoToken[] = {
-   0xffffffffffffff81ULL, 0xfffULL, 
+   0xffffffffffffff81ULL, 0x1fffULL, 
 };
 static const unsigned long long jjtoSkip[] = {
    0x7eULL, 0x0ULL, 
@@ -220,25 +223,25 @@ static const unsigned long long jjtoSkip[] = {
       case 0:
          if ((active0 & 0x400000000000ULL) != 0L)
             return 34;
+         if ((active0 & 0xfe00001ffe000000ULL) != 0L || (active1 & 0xfbULL) != 0L)
+         {
+            jjmatchedKind = 74;
+            return 29;
+         }
          if ((active1 & 0x4ULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             return 26;
-         }
-         if ((active0 & 0xfe00001ffe000000ULL) != 0L || (active1 & 0x7bULL) != 0L)
-         {
-            jjmatchedKind = 73;
-            return 29;
          }
          if ((active0 & 0xc000ULL) != 0L)
             return 36;
          return -1;
       case 1:
-         if ((active0 & 0xfe00001fee000000ULL) != 0L || (active1 & 0x7fULL) != 0L)
+         if ((active0 & 0xfe00001fee000000ULL) != 0L || (active1 & 0xffULL) != 0L)
          {
             if (jjmatchedPos != 1)
             {
-               jjmatchedKind = 73;
+               jjmatchedKind = 74;
                jjmatchedPos = 1;
             }
             return 29;
@@ -247,9 +250,9 @@ static const unsigned long long jjtoSkip[] = {
             return 29;
          return -1;
       case 2:
-         if ((active0 & 0xfe00001fee000000ULL) != 0L || (active1 & 0x3fULL) != 0L)
+         if ((active0 & 0xfe00001fee000000ULL) != 0L || (active1 & 0xbfULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             jjmatchedPos = 2;
             return 29;
          }
@@ -257,9 +260,9 @@ static const unsigned long long jjtoSkip[] = {
             return 29;
          return -1;
       case 3:
-         if ((active0 & 0xfc000017ca000000ULL) != 0L || (active1 & 0x17ULL) != 0L)
+         if ((active0 & 0xfc000017ca000000ULL) != 0L || (active1 & 0x97ULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             jjmatchedPos = 3;
             return 29;
          }
@@ -269,9 +272,9 @@ static const unsigned long long jjtoSkip[] = {
       case 4:
          if ((active0 & 0x4000002c2000000ULL) != 0L || (active1 & 0x10ULL) != 0L)
             return 29;
-         if ((active0 & 0xf800001508000000ULL) != 0L || (active1 & 0x7ULL) != 0L)
+         if ((active0 & 0xf800001508000000ULL) != 0L || (active1 & 0x87ULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             jjmatchedPos = 4;
             return 29;
          }
@@ -279,17 +282,17 @@ static const unsigned long long jjtoSkip[] = {
       case 5:
          if ((active0 & 0x1000001008000000ULL) != 0L || (active1 & 0x7ULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             jjmatchedPos = 5;
             return 29;
          }
-         if ((active0 & 0xe800000500000000ULL) != 0L)
+         if ((active0 & 0xe800000500000000ULL) != 0L || (active1 & 0x80ULL) != 0L)
             return 29;
          return -1;
       case 6:
          if ((active1 & 0x6ULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             jjmatchedPos = 6;
             return 29;
          }
@@ -301,7 +304,7 @@ static const unsigned long long jjtoSkip[] = {
             return 29;
          if ((active1 & 0x2ULL) != 0L)
          {
-            jjmatchedKind = 73;
+            jjmatchedKind = 74;
             jjmatchedPos = 7;
             return 29;
          }
@@ -373,7 +376,7 @@ int  PommeLexerTokenManager::jjStartNfa_0(int pos, unsigned long long active0, u
       case 99:
          return jjMoveStringLiteralDfa1_0(0x400000802000000ULL, 0x0ULL);
       case 100:
-         return jjMoveStringLiteralDfa1_0(0x1000000000ULL, 0x0ULL);
+         return jjMoveStringLiteralDfa1_0(0x1000000000ULL, 0x80ULL);
       case 101:
          return jjMoveStringLiteralDfa1_0(0x1000000024000000ULL, 0x0ULL);
       case 102:
@@ -470,7 +473,7 @@ int  PommeLexerTokenManager::jjStartNfa_0(int pos, unsigned long long active0, u
       case 97:
          return jjMoveStringLiteralDfa2_0(active0, 0x800000800000000ULL, active1, 0x10ULL);
       case 101:
-         return jjMoveStringLiteralDfa2_0(active0, 0x1100000000ULL, active1, 0x40ULL);
+         return jjMoveStringLiteralDfa2_0(active0, 0x1100000000ULL, active1, 0xc0ULL);
       case 102:
          if ((active0 & 0x10000000ULL) != 0L)
             return jjStartNfaWithStates_0(1, 28, 29);
@@ -536,7 +539,7 @@ int  PommeLexerTokenManager::jjStartNfa_0(int pos, unsigned long long active0, u
       case 105:
          return jjMoveStringLiteralDfa3_0(active0, 0x2000004c0000000ULL, active1, 0x1ULL);
       case 108:
-         return jjMoveStringLiteralDfa3_0(active0, 0L, active1, 0x30ULL);
+         return jjMoveStringLiteralDfa3_0(active0, 0L, active1, 0xb0ULL);
       case 110:
          return jjMoveStringLiteralDfa3_0(active0, 0x400000000000000ULL, active1, 0L);
       case 111:
@@ -582,7 +585,7 @@ int  PommeLexerTokenManager::jjStartNfa_0(int pos, unsigned long long active0, u
             return jjStartNfaWithStates_0(3, 35, 29);
          else if ((active1 & 0x8ULL) != 0L)
             return jjStartNfaWithStates_0(3, 67, 29);
-         return jjMoveStringLiteralDfa4_0(active0, 0x1000000008000000ULL, active1, 0L);
+         return jjMoveStringLiteralDfa4_0(active0, 0x1000000008000000ULL, active1, 0x80ULL);
       case 105:
          return jjMoveStringLiteralDfa4_0(active0, 0x800000000000000ULL, active1, 0L);
       case 108:
@@ -652,7 +655,7 @@ int  PommeLexerTokenManager::jjStartNfa_0(int pos, unsigned long long active0, u
             return jjStartNfaWithStates_0(4, 31, 29);
          else if ((active0 & 0x400000000000000ULL) != 0L)
             return jjStartNfaWithStates_0(4, 58, 29);
-         break;
+         return jjMoveStringLiteralDfa5_0(active0, 0L, active1, 0x80ULL);
       case 117:
          return jjMoveStringLiteralDfa5_0(active0, 0x1000000000ULL, active1, 0L);
       case 118:
@@ -686,6 +689,8 @@ int  PommeLexerTokenManager::jjStartNfa_0(int pos, unsigned long long active0, u
       case 101:
          if ((active0 & 0x800000000000000ULL) != 0L)
             return jjStartNfaWithStates_0(5, 59, 29);
+         else if ((active1 & 0x80ULL) != 0L)
+            return jjStartNfaWithStates_0(5, 71, 29);
          return jjMoveStringLiteralDfa6_0(active0, 0x8000000ULL, active1, 0L);
       case 104:
          if ((active0 & 0x400000000ULL) != 0L)
@@ -811,8 +816,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 29:
                   if ((0x3ff000000000000ULL & l) == 0L)
                      break;
-                  if (kind > 73)
-                     kind = 73;
+                  if (kind > 74)
+                     kind = 74;
                   { jjCheckNAdd(29); }
                   break;
                case 36:
@@ -824,8 +829,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 27:
                   if ((0x3ff000000000000ULL & l) != 0L)
                   {
-                     if (kind > 71)
-                        kind = 71;
+                     if (kind > 72)
+                        kind = 72;
                      { jjCheckNAddStates(3, 5); }
                   }
                   else if (curChar == 47)
@@ -836,8 +841,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                      { jjCheckNAddTwoStates(31, 32); }
                   break;
                case 1:
-                  if (curChar == 61 && kind > 72)
-                     kind = 72;
+                  if (curChar == 61 && kind > 73)
+                     kind = 73;
                   break;
                case 2:
                   if (curChar == 42)
@@ -852,8 +857,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                      { jjCheckNAdd(1); }
                   break;
                case 6:
-                  if ((0x5000ac2000000000ULL & l) != 0L && kind > 72)
-                     kind = 72;
+                  if ((0x5000ac2000000000ULL & l) != 0L && kind > 73)
+                     kind = 73;
                   break;
                case 7:
                   if (curChar == 61)
@@ -868,16 +873,16 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                      { jjCheckNAddTwoStates(1, 14); }
                   break;
                case 14:
-                  if (curChar == 43 && kind > 72)
-                     kind = 72;
+                  if (curChar == 43 && kind > 73)
+                     kind = 73;
                   break;
                case 15:
                   if (curChar == 45)
                      { jjCheckNAddTwoStates(1, 16); }
                   break;
                case 16:
-                  if (curChar == 45 && kind > 72)
-                     kind = 72;
+                  if (curChar == 45 && kind > 73)
+                     kind = 73;
                   break;
                case 17:
                   if (curChar == 62)
@@ -904,8 +909,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                      { jjCheckNAddTwoStates(31, 32); }
                   break;
                case 32:
-                  if (curChar == 34 && kind > 74)
-                     kind = 74;
+                  if (curChar == 34 && kind > 75)
+                     kind = 75;
                   break;
                case 33:
                   if (curChar == 46)
@@ -914,8 +919,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 34:
                   if ((0x3ff000000000000ULL & l) == 0L)
                      break;
-                  if (kind > 75)
-                     kind = 75;
+                  if (kind > 76)
+                     kind = 76;
                   { jjCheckNAdd(34); }
                   break;
                case 35:
@@ -957,15 +962,15 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 45:
                   if ((0x3ff000000000000ULL & l) == 0L)
                      break;
-                  if (kind > 71)
-                     kind = 71;
+                  if (kind > 72)
+                     kind = 72;
                   { jjCheckNAddStates(3, 5); }
                   break;
                case 46:
                   if ((0x3ff000000000000ULL & l) == 0L)
                      break;
-                  if (kind > 71)
-                     kind = 71;
+                  if (kind > 72)
+                     kind = 72;
                   { jjCheckNAdd(46); }
                   break;
                case 47:
@@ -987,8 +992,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 26:
                   if ((0x7fffffe87fffffeULL & l) != 0L)
                   {
-                     if (kind > 73)
-                        kind = 73;
+                     if (kind > 74)
+                        kind = 74;
                      { jjCheckNAdd(29); }
                   }
                   if (curChar == 112)
@@ -997,8 +1002,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 27:
                   if ((0x7fffffe07fffffeULL & l) != 0L)
                   {
-                     if (kind > 73)
-                        kind = 73;
+                     if (kind > 74)
+                        kind = 74;
                      { jjCheckNAdd(29); }
                   }
                   if (curChar == 111)
@@ -1013,8 +1018,8 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                      jjstateSet[jjnewStateCnt++] = 1;
                   break;
                case 9:
-                  if (curChar == 108 && kind > 72)
-                     kind = 72;
+                  if (curChar == 108 && kind > 73)
+                     kind = 73;
                   break;
                case 10:
                   if (curChar == 111)
@@ -1051,15 +1056,15 @@ int PommeLexerTokenManager::jjMoveNfa_0(int startState, int curPos){
                case 28:
                   if ((0x7fffffe07fffffeULL & l) == 0L)
                      break;
-                  if (kind > 73)
-                     kind = 73;
+                  if (kind > 74)
+                     kind = 74;
                   { jjCheckNAdd(29); }
                   break;
                case 29:
                   if ((0x7fffffe87fffffeULL & l) == 0L)
                      break;
-                  if (kind > 73)
-                     kind = 73;
+                  if (kind > 74)
+                     kind = 74;
                   { jjCheckNAdd(29); }
                   break;
                case 31:

@@ -183,11 +183,11 @@ TEST(TEST_AUTOMATE, Graph_Basic) {
     tree->jjtAccept(&visitor, nullptr);
 
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
-    ASTpommeClass* n = dynamic_cast<ASTpommeClass*>(visitor.dependanceGraph.getState(0)->node);
-    std::string ident = dynamic_cast<ASTident*>(n->jjtGetChild(0))->m_Identifier;
+    ASTPommeClass* n = dynamic_cast<ASTPommeClass*>(visitor.dependanceGraph.getState(0)->node);
+    std::string ident = dynamic_cast<ASTPommeIdent*>(n->jjtGetChild(0))->m_Identifier;
 
-    ASTpommeClass* n2 = dynamic_cast<ASTpommeClass*>(visitor.dependanceGraph.getState(1)->node);
-    std::string ident2 = dynamic_cast<ASTident*>(n2->jjtGetChild(0))->m_Identifier;
+    ASTPommeClass* n2 = dynamic_cast<ASTPommeClass*>(visitor.dependanceGraph.getState(1)->node);
+    std::string ident2 = dynamic_cast<ASTPommeIdent*>(n2->jjtGetChild(0))->m_Identifier;
 
     EXPECT_EQ(ident,"test");
     EXPECT_EQ(ident2, "test2");

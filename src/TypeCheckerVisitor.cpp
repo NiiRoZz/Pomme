@@ -31,11 +31,11 @@ namespace Pomme
             {
                 if (path_number == 1)
                 {
-                    dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier);
+                    dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier);
                 }
 
-                std::string &attributeType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-                std::string &attributeName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+                std::string &attributeType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+                std::string &attributeName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
                 std::cout << it->second << std::endl << std::endl;
 
@@ -47,14 +47,14 @@ namespace Pomme
 
                 it->second.addAttribute(attributeType, attributeName, isConst, isStatic, this);
 
-                auto* constant = dynamic_cast<ASTpommeConstant*>(node);
+                auto* constant = dynamic_cast<ASTPommeConstant*>(node);
                 if(constant != nullptr)
                 {
                     constant->index = isStatic ? it->second.staticAttributes.size() - 1 : it->second.attributes.size() - 1;
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << constant->index << std::endl;
                 }else
                 {
-                    auto* variable = dynamic_cast<ASTpommeVariable*>(node);
+                    auto* variable = dynamic_cast<ASTPommeVariable*>(node);
                     variable->index = isStatic ? it->second.staticAttributes.size() - 1 : it->second.attributes.size() - 1;
                     variable->isStatic = isStatic;
                     std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << variable->index << std::endl;
@@ -69,12 +69,12 @@ namespace Pomme
             std::cout << "instrs_context " << std::endl;
             if (path_number == 1)
             {
-                dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier);
+                dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier);
             }
 
-            std::string& localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+            std::string& localType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
             std::cout << "localType : " << localType << std::endl;
-            std::string &localName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+            std::string &localName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
             for(int scope_number = 0; scope_number <= current_scopes; scope_number++)
             {
@@ -234,9 +234,9 @@ namespace Pomme
         }
     }
 
-    std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTheaders *headers) {
+    std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTPommeHeaders *headers) {
         std::unordered_set<std::string> parameters;
-        ASTheader* header;
+        Pomme::Node* header;
 
         std::string parameterName;
         std::string delimiter = " ";
@@ -244,8 +244,10 @@ namespace Pomme
         std::cout << "buildSignature" << std::endl;
         while(headers != nullptr)
         {
-            header = dynamic_cast<ASTheader*>(headers->jjtGetChild(0));
-            parameterName = dynamic_cast<ASTident*>(header->jjtGetChild(1))->m_Identifier;
+            header = headers->jjtGetChild(0);
+
+            const int index = (dynamic_cast<ASTPommeHeader*>(header) != nullptr) ? 1 : 2;
+            parameterName = dynamic_cast<ASTPommeIdent*>(header->jjtGetChild(index))->m_Identifier;
 
             auto it = parameters.emplace(parameterName);
             std::cout << " parameter NAME =+++ ++ ++ ++ ++ ++  + " << parameterName <<std::endl;
@@ -255,7 +257,7 @@ namespace Pomme
                 std::cout << "ERROR DETECTED while adding parameter " << parameterName << " : parameter already defined"
                           << std::endl;
             }
-            headers = dynamic_cast<ASTheaders*>(headers->jjtGetChild(1));
+            headers = dynamic_cast<ASTPommeHeaders*>(headers->jjtGetChild(1));
         }
 
         std::cout << "-------------parameters--------------" <<std::endl;
@@ -266,14 +268,14 @@ namespace Pomme
         return parameters;
     }
 
-    bool TypeCheckerVisitor::getMethodType(ASTaccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className)
+    bool TypeCheckerVisitor::getMethodType(ASTPommeAccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className)
     {
-        auto* functionParameters = dynamic_cast<ASTlistexp*>(node->jjtGetChild(1));
+        auto* functionParameters = dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1));
         std::string typeExp = "";
         return getExpType(functionParameters, node, variableType, functionIdent, typeExp, className);
     }
 
-    bool TypeCheckerVisitor::getExpType(ASTlistexp* node, ASTaccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className)
+    bool TypeCheckerVisitor::getExpType(ASTPommeListExp* node, ASTPommeAccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className)
     {
         if (node == nullptr)
         {
@@ -336,7 +338,7 @@ namespace Pomme
 
         current += type + HEADER_FUNC_SEPARATOR;
         
-        if (getExpType(dynamic_cast<ASTlistexp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, current, className))
+        if (getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, current, className))
         {
             node->convert = false;
             return true;
@@ -348,7 +350,7 @@ namespace Pomme
         if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
         {
             next += std::string("bool") + HEADER_FUNC_SEPARATOR;
-            if (getExpType(dynamic_cast<ASTlistexp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, next, className))
+            if (getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, next, className))
             {
                 node->convert = true;
                 node->convertTo = "bool";
@@ -361,11 +363,11 @@ namespace Pomme
         return false;
     }
 
-    std::unordered_set<std::string> TypeCheckerVisitor::buildKeyword(ASTidentFuncs *node)
+    std::unordered_set<std::string> TypeCheckerVisitor::buildKeyword(ASTPommeIdentFuncs *node)
     {
         std::unordered_set<std::string> keywords;
 
-        auto* nodeStatic = dynamic_cast<ASTpommeStatic*>(node->jjtGetChild(0));
+        auto* nodeStatic = dynamic_cast<ASTPommeStatic*>(node->jjtGetChild(0));
         if(nodeStatic != nullptr)
         {
             keywords.emplace("static");
@@ -377,7 +379,7 @@ namespace Pomme
             keywords.emplace("private");
         }
 
-        auto* nodeOverride = dynamic_cast<ASTpommeOverride*>(node->jjtGetChild(2));
+        auto* nodeOverride = dynamic_cast<ASTPommeOverride*>(node->jjtGetChild(2));
         if(nodeOverride != nullptr)
         {
             keywords.emplace("override");
@@ -397,11 +399,11 @@ namespace Pomme
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(ASTinput *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeInput *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
-    void TypeCheckerVisitor::visit(ASTident *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeIdent *node, void * data)
     {
         switch (path_number)
         {
@@ -419,7 +421,7 @@ namespace Pomme
                     return "";
                 }();     
                 
-                std::cout << "ASTident identifier : " << node->m_Identifier << " currentClassName : " << currentClassName << std::endl;
+                std::cout << "ASTPommeIdent identifier : " << node->m_Identifier << " currentClassName : " << currentClassName << std::endl;
 
                 //locals should be checked only when on left side of listaccess
                 if (variableType == nullptr || *variableType == "")
@@ -548,11 +550,11 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTidentOp *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeIdentOp *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeInt *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeInt *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -560,7 +562,7 @@ namespace Pomme
         *variableType = "int";
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeFloat *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeFloat *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -568,7 +570,7 @@ namespace Pomme
         *variableType = "float";
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeString *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeString *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -576,23 +578,23 @@ namespace Pomme
         *variableType = "string";
     }
 
-    void TypeCheckerVisitor::visit(ASTscopes *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeScopes *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void TypeCheckerVisitor::visit(ASTscinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeScinil *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeTypeDef *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeTypeDef *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeClass *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeClass *node, void * data)
     {
-        const std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        const std::string& context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
         class_context = true;
         class_name = context;
@@ -617,10 +619,10 @@ namespace Pomme
         class_context = false;
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeClassChild *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeClassChild *node, void * data)
     {
-        const std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        std::string& extendedClass = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        const std::string& context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        std::string& extendedClass = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
         class_context = true;
         class_name = context;
@@ -676,9 +678,9 @@ namespace Pomme
         child_context = false;
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeModdedClass *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeModdedClass *node, void * data)
     {
-        std::string& context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string& context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
         class_context = true;
         class_name = context;
@@ -758,24 +760,24 @@ namespace Pomme
         child_context = false;
     }
 
-    void TypeCheckerVisitor::visit(ASTdecls *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDecls *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void TypeCheckerVisitor::visit(ASTvarDecls *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeVarDecls *node, void * data)
     {
         switch (path_number)
         {
             case 0u:
             {
-                std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
-                visiteVariable(node->jjtGetChild(1), dynamic_cast<ASTpommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
+                std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTPommeIdentFuncs*>(node->jjtGetChild(0)));
+                visiteVariable(node->jjtGetChild(1), dynamic_cast<ASTPommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
                 break;
             }
         }
     }
-    void TypeCheckerVisitor::visit(ASTpommeVariable *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeVariable *node, void * data)
     {
         switch (path_number)
         {
@@ -790,7 +792,7 @@ namespace Pomme
             {
                 visiteVariable(node, false, {});
 
-                const std::string &leftType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
                 std::string rightType = "";
 
                 node->jjtChildAccept(2, this, &rightType);
@@ -819,18 +821,18 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTdnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDnil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeMethode *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeMethode *node, void * data)
     {
         switch (path_number)
         {
             case 0u:
             {
-                std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTidentFuncs*>(node->jjtGetChild(0)));
-                auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+                std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTPommeIdentFuncs*>(node->jjtGetChild(0)));
+                auto* type = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1));
                 std::string functionType = [&] () {
                     if(type == nullptr)
                     {
@@ -839,8 +841,8 @@ namespace Pomme
 
                     return type->m_Identifier.c_str();
                 }();
-                auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(2));
-                auto* nameOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(2));
+                auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(2));
+                auto* nameOp = dynamic_cast<ASTPommeIdentOp*>(node->jjtGetChild(2));
                 assert(name != nullptr || nameOp != nullptr);
 
                 const std::string& functionName = (name != nullptr) ? name->m_Identifier : nameOp->m_Identifier;
@@ -857,7 +859,7 @@ namespace Pomme
                     errors.push_back("can't define a method with the same name of the class");
                 }
 
-                auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(3)); // headers
+                auto* headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(3)); // headers
                 std::unordered_set<std::string> parameters = buildSignature(headers);
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 functionIdent += signatureParameter;
@@ -912,7 +914,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeMethodeNative *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeMethodeNative *node, void * data)
     {
         switch (path_number)
         {
@@ -920,12 +922,12 @@ namespace Pomme
             {
                 std::unordered_set<std::string> keywords;
 
-                if (dynamic_cast<ASTsnil*>(node->jjtGetChild(0)) == nullptr)
+                if (dynamic_cast<ASTPommeSnil*>(node->jjtGetChild(0)) == nullptr)
                 {
                     keywords.emplace("static");
                 }
 
-                auto* type = dynamic_cast<ASTident*>(node->jjtGetChild(2));
+                auto* type = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(2));
                 std::string functionType = [&] () {
                     if(type == nullptr)
                     {
@@ -934,8 +936,8 @@ namespace Pomme
 
                     return type->m_Identifier.c_str();
                 }();
-                auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(3));
-                auto* nameOp = dynamic_cast<ASTidentOp*>(node->jjtGetChild(3));
+                auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(3));
+                auto* nameOp = dynamic_cast<ASTPommeIdentOp*>(node->jjtGetChild(3));
                 assert(name != nullptr || nameOp != nullptr);
 
                 const std::string& functionName = (name != nullptr) ? name->m_Identifier : nameOp->m_Identifier;
@@ -961,7 +963,7 @@ namespace Pomme
                     return;
                 }
 
-                auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(4)); // headers
+                auto* headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(4)); // headers
                 std::unordered_set<std::string> parameters = buildSignature(headers);
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 functionIdent += signatureParameter;
@@ -992,70 +994,70 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTidentFuncs *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeIdentFuncs *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeStatic *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeStatic *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTsnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeSnil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommePublic *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommePublic *node, void * data)
     {
         static_cast<std::unordered_set<std::string>*>(data)->insert("public");
     }
 
-    void TypeCheckerVisitor::visit(ASTpommePrivate *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommePrivate *node, void * data)
     {
         static_cast<std::unordered_set<std::string>*>(data)->insert("private");
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeProtected *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeProtected *node, void * data)
     {
         static_cast<std::unordered_set<std::string>*>(data)->insert("protected");
     }
 
-    void TypeCheckerVisitor::visit(ASTvinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeVinil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeOverride *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeOverride *node, void * data)
     {
         static_cast<std::unordered_set<std::string>*>(data)->insert("override"); // check if correct todo
     }
 
-    void TypeCheckerVisitor::visit(ASTonil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeOnil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeEnum *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeEnum *node, void * data)
     {
         switch (path_number)
         {
             case 0u: {
-                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                std::string context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
                 addEnum(context);
-                std::cout << "ASTpommeEnum " << std::endl;
+                std::cout << "ASTPommeEnum " << std::endl;
                 class_name = context;
                 node->jjtChildAccept(1,this,data);
             }
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeExtendsEnum *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeExtendsEnum *node, void * data)
     {
         switch (path_number)
         {
             case 0u: {
-                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-                std::string extendedEnum = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+                std::string context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+                std::string extendedEnum = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
                 addEnum(context);
-                std::cout << "ASTpommeExtendsEnum " << std::endl;
+                std::cout << "ASTPommeExtendsEnum " << std::endl;
 
                 auto it = enumMap.find(extendedEnum);
                 if(it != enumMap.end())
@@ -1075,26 +1077,26 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeModdedEnum *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeModdedEnum *node, void * data)
     {
         switch (path_number)
         {
             case 0u: {
-                std::string context = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                std::string context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
                 addEnum(context);
-                std::cout << "ASTpommeModdedEnum " << std::endl;
+                std::cout << "ASTPommeModdedEnum " << std::endl;
                 class_name = context;
                 node->jjtChildAccept(1,this,data);
             }
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTdeclenums *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDeclEnums *node, void * data)
     {
         node->jjtChildrenAccept(this,data);
     }
 
-    void TypeCheckerVisitor::visit(ASTennil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeEnnil *node, void * data)
     {
     }
 
@@ -1113,35 +1115,35 @@ namespace Pomme
         }
     }
     
-    void TypeCheckerVisitor::visit(ASTenumassign *node, void * data) {
+    void TypeCheckerVisitor::visit(ASTPommeEnumAssign *node, void * data) {
 
         std::cout << " CLASS NAME = " << class_name << std::endl;
-        std::string memberName = static_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string memberName = static_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         checkNewMember(class_name, memberName);
     }
 
-    void TypeCheckerVisitor::visit(ASTenumdefault *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeEnumDefault *node, void * data)
     {
         std::cout << " CLASS NAME = "<< class_name <<std::endl;
-        std::string memberName = static_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string memberName = static_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         checkNewMember(class_name, memberName);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeGlobalFunction *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeGlobalFunction *node, void * data)
     {
         switch (path_number)
         {
             case 0u:
             {
-                std::cout << "ASTpommeGlobalFunction path 0" << std::endl;
+                std::cout << "ASTPommeGlobalFunction path 0" << std::endl;
                 break;
             }
 
             case 1u:
             {
-                ASTident* functionIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+                ASTPommeIdent* functionIdentNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1));
                 std::string functionName = functionIdentNode->m_Identifier;
-                auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
+                auto* headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(2));
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 std::unordered_set<std::string> parameters = buildSignature(headers);
 
@@ -1155,7 +1157,7 @@ namespace Pomme
 
                 functionIdentNode->m_MethodIdentifier = functionIdent;
 
-                auto* typeIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+                auto* typeIdentNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
                 addGlobalFunction ( (
                         (typeIdentNode != nullptr) ? 
                         typeIdentNode->m_Identifier //get return type
@@ -1174,15 +1176,15 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeGlobalFunctionNative *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeGlobalFunctionNative *node, void * data)
     {
         switch (path_number)
         {
             case 1u:
             {
-                ASTident* functionIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(1));
+                ASTPommeIdent* functionIdentNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1));
                 std::string functionName = functionIdentNode->m_Identifier;
-                auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(2));
+                auto* headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(2));
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 std::unordered_set<std::string> parameters = buildSignature(headers);
                 
@@ -1194,7 +1196,7 @@ namespace Pomme
                     std::cout << it << std::endl;
                 }
 
-                auto* typeIdentNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+                auto* typeIdentNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
                 addGlobalFunction ( (
                         (typeIdentNode != nullptr) ? 
                         typeIdentNode->m_Identifier //get return type
@@ -1212,26 +1214,30 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTinstrs *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeInstrs *node, void * data)
     {
         instrs_context = true;
         node->jjtChildrenAccept(this, data);
         instrs_context = false;
     }
 
-    void TypeCheckerVisitor::visit(ASTinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeInil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTincrementPre *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeIncrPre *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTdecrementPre *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDecrPre *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeReturn *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDelete *node, void * data)
+    {
+    }
+
+    void TypeCheckerVisitor::visit(ASTPommeReturn *node, void * data)
     {
         std::string type;
         node->jjtChildrenAccept(this, &type);
@@ -1239,18 +1245,18 @@ namespace Pomme
         //TODO: check if it's equal to the return type of the current function
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeWhile *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeWhile *node, void * data)
     {
         current_scopes++;
 
         current_scopes--;
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeBreak *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeBreak *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeIf *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeIf *node, void * data)
     {
         std::string type;
         node->jjtChildAccept(0, this, &type);
@@ -1288,17 +1294,17 @@ namespace Pomme
         current_scopes--;
     }
 
-    void TypeCheckerVisitor::visit(ASTpommePrint *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommePrint *node, void * data)
     {
         std::string type;
         node->jjtChildrenAccept(this, &type);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeSwitch *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeSwitch *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTassignement *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAssign *node, void * data)
     {
         std::string leftType = "";
         node->jjtChildAccept(0, this, &leftType);
@@ -1328,90 +1334,90 @@ namespace Pomme
 
     }
 
-    void TypeCheckerVisitor::visit(ASTaddeq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAddEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator+=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTminuseq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeMinusEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator-=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTdiveq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDivEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator/=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTmulteq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeMultEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator*=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASToreq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeOrEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator|=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTandeq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAndEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator&=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTshiftleq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeShiftLEq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator<<=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTshiftreq *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeShiftREq *node, void * data)
     {
         std::array<std::string, 2> types;
         visitBinaryOperator(node, "operator>>=", nullptr, types);
     }
 
-    void TypeCheckerVisitor::visit(ASTincrementPost *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeIncrPost *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTdecrementPost *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDecrPost *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeCases *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeCases *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeDefault *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDefault *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTswinil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeSwinil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeCase *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeCase *node, void * data)
     {
         current_scopes++;
 
         current_scopes--;
     }
 
-    void TypeCheckerVisitor::visit(ASTlistexp *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeListExp *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTexnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeExnil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeConstant *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeConstant *node, void * data)
     {
         switch (path_number)
         {
@@ -1425,7 +1431,7 @@ namespace Pomme
             {
                 visiteVariable(node, false, {});
 
-                const std::string &leftType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+                const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
                 std::string rightType = "";
 
                 node->jjtChildAccept(2, this, &rightType);
@@ -1452,7 +1458,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTomega *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeOmega *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -1460,45 +1466,63 @@ namespace Pomme
         *variableType = "null";
     }
 
-    void TypeCheckerVisitor::visit(ASTheaders *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeHeaders *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void TypeCheckerVisitor::visit(ASTenil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeEnil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTheader *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeConstHeader *node, void * data)
     {
-        std::string &localType = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
-        std::string &localName = dynamic_cast<ASTident*>(node->jjtGetChild(1))->m_Identifier;
+        std::string &localType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
+        std::string &localName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(2))->m_Identifier;
 
         auto it = locals.find(current_scopes);
         if(it == locals.end())
         {
             std::vector<VariableClass> locals_current_scopes;
-            locals_current_scopes.emplace_back(localType, localName, -1 ,false); // todo const in header
+            locals_current_scopes.emplace_back(localType, localName, -1, true);
             locals.emplace(current_scopes, std::move(locals_current_scopes));
         }
         else
         {
-            it->second.emplace_back(localType, localName, -1 ,false);
+            it->second.emplace_back(localType, localName, -1, true);
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTvoidType *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeHeader *node, void * data)
+    {
+        std::string &localType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        std::string &localName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
+
+        auto it = locals.find(current_scopes);
+        if(it == locals.end())
+        {
+            std::vector<VariableClass> locals_current_scopes;
+            locals_current_scopes.emplace_back(localType, localName, -1, false);
+            locals.emplace(current_scopes, std::move(locals_current_scopes));
+        }
+        else
+        {
+            it->second.emplace_back(localType, localName, -1, false);
+        }
+    }
+
+    void TypeCheckerVisitor::visit(ASTPommeVoidType *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeConstructor *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeConstructor *node, void * data)
     {
         switch (path_number)
         {
             case 0u:
             {
                 std::string functionType = "void";
-                auto* name = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+                auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
                 std::string &functionName = name->m_Identifier;
                 const std::string &context = class_name;
 
@@ -1513,7 +1537,7 @@ namespace Pomme
                     return;
                 }
 
-                auto* headers = dynamic_cast<ASTheaders*>(node->jjtGetChild(1)); // headers
+                auto* headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(1)); // headers
                 std::unordered_set<std::string> parameters = buildSignature(headers);
                 std::string signatureParameter = CommonVisitorFunction::getParametersType(headers);
                 std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
@@ -1533,19 +1557,19 @@ namespace Pomme
 
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeDestructor *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDestructor *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeAnd *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAnd *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeOr *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeOr *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeEQ *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeEQ *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1553,7 +1577,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator==", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeNEQ *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeNEQ *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1561,7 +1585,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator!=", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeGT *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeGT *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1569,7 +1593,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator>", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeGET *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeGET *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1577,7 +1601,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator>=", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeLT *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeLT *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1612,7 +1636,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeLET *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeLET *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1620,7 +1644,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator<=", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeAdd *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAdd *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1655,7 +1679,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeMinus *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeMinus *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1690,7 +1714,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeShiftR *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeShiftR *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1698,7 +1722,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator>>", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeShiftL *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeShiftL *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1706,7 +1730,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator<<", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeMult *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeMult *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1714,7 +1738,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator*", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeDiv *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeDiv *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1722,7 +1746,7 @@ namespace Pomme
         visitBinaryOperator(node, "operator/", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeModulo *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeModulo *node, void * data)
     {
         assert(data != nullptr);
 
@@ -1730,22 +1754,22 @@ namespace Pomme
         visitBinaryOperator(node, "operator%", static_cast<std::string*>(data), types);
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeUnary *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeUnary *node, void * data)
     {
         visitUnaryOperator(node, "operator-", static_cast<std::string*>(data));
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeNot *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeNot *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeTilde *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeTilde *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeNew *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeNew *node, void * data)
     {
-        std::string& className = dynamic_cast<ASTident*>(node->jjtGetChild(0))->m_Identifier;
+        std::string& className = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
         if (CommonVisitorFunction::isNativeType(className))
         {
@@ -1772,7 +1796,7 @@ namespace Pomme
         *variableType = className;
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeTrue *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeTrue *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -1780,7 +1804,7 @@ namespace Pomme
         *variableType = "bool";
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeFalse *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeFalse *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -1788,7 +1812,7 @@ namespace Pomme
         *variableType = "bool";
     }
 
-    void TypeCheckerVisitor::visit(ASTpommeNull *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeNull *node, void * data)
     {
         if (data == nullptr) return;
         
@@ -1796,13 +1820,13 @@ namespace Pomme
         *variableType = "";
     }
 
-    void TypeCheckerVisitor::visit(ASTlistaccess *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeListAccess *node, void * data)
     {
         auto acceptListAccess = [&node, this] (void* dataPtr)
         {
             node->jjtChildAccept(0, this, dataPtr);
 
-            if (super_call && dynamic_cast<ASTaccessMethode*>(node->jjtGetChild(1)) == nullptr)
+            if (super_call && dynamic_cast<ASTPommeAccessMethode*>(node->jjtGetChild(1)) == nullptr)
             {
                 errors.push_back("Can't user super without a method after the '.'");
             }
@@ -1823,20 +1847,20 @@ namespace Pomme
         acceptListAccess(data);
     }
 
-    void TypeCheckerVisitor::visit(ASTlistaccessP *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeListAccessP *node, void * data)
     {
         node->jjtChildrenAccept(this, data);
     }
 
-    void TypeCheckerVisitor::visit(ASTacnil *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAcnil *node, void * data)
     {
     }
 
-    void TypeCheckerVisitor::visit(ASTaccessMethode *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAccessMethode *node, void * data)
     {
         auto* variableType = static_cast<std::string*>(data);
 
-        auto *identNode = dynamic_cast<ASTident*>(node->jjtGetChild(0));
+        auto *identNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
         std::string functionName = identNode->m_Identifier;
         std::string functionIdent = identNode->m_Identifier + NAME_FUNC_SEPARATOR;
 
@@ -1861,7 +1885,7 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::visit(ASTaccessTab *node, void * data)
+    void TypeCheckerVisitor::visit(ASTPommeAccessTab *node, void * data)
     {
         assert(data != nullptr);
 
