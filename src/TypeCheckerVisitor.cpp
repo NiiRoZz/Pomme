@@ -3,7 +3,6 @@
 #include "CommonVisitorFunction.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
-#include "VM/Memory.h"
 
 #include <iostream>
 #include <utility>

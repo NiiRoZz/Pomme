@@ -39,6 +39,7 @@ include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "i
 
 # Add source to this project's executable.
 add_library(${APP}
+  "src/VM/ObjectMemory.cpp"
   "src/VM/VirtualMachine.cpp"
   "src/VM/Chunk.cpp"
   "src/VM/Object.cpp"

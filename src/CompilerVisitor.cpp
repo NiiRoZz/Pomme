@@ -2,7 +2,6 @@
 #include "CommonVisitorFunction.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
-#include "VM/Memory.h"
 
 #include <iostream>
 #include <assert.h>
@@ -76,7 +75,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeString *node, void * data) 
     {
-        emitConstant(OBJ_VAL(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)));
+        emitConstant(OBJ_PTR_VAL(m_Vm.copyString(node->m_Value.c_str() + 1, node->m_Value.length() - 2)->pointer));
     }
 
     void CompilerVisitor::visit(ASTPommeScopes *node, void * data) 
@@ -480,7 +479,7 @@ namespace Pomme
     {
         const std::string& name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
 
-        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
+        uint8_t nameConstant = makeConstant(OBJ_PTR_VAL(m_Vm.copyString(name.c_str(), name.length())->pointer));
         uint8_t global = m_Vm.addGlobal(name);
 
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
@@ -504,7 +503,7 @@ namespace Pomme
 
         m_SuperClass = parentName;
 
-        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
+        uint8_t nameConstant = makeConstant(OBJ_PTR_VAL(m_Vm.copyString(name.c_str(), name.length())->pointer));
         std::optional<std::size_t> parentClass = m_Vm.getGlobal(parentName);
         assert(parentClass.has_value());
 
@@ -535,7 +534,7 @@ namespace Pomme
 
         m_SuperClass = parentName;
 
-        uint8_t nameConstant = makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length())));
+        uint8_t nameConstant = makeConstant(OBJ_PTR_VAL(m_Vm.copyString(name.c_str(), name.length())->pointer));
         std::optional<std::size_t> parentClass = m_Vm.getGlobal(parentName);
         assert(parentClass.has_value());
 
@@ -575,15 +574,15 @@ namespace Pomme
         //1: name
         std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
 
-        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(identMethod.c_str(), identMethod.length())));
+        uint8_t identConstant = makeConstant(OBJ_PTR_VAL(m_Vm.copyString(identMethod.c_str(), identMethod.length())->pointer));
 
         if (m_InNativeClass)
         {
-            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodPrimitiveNative())));
+            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_PTR_VAL(m_Vm.newMethodPrimitiveNative()->pointer)));
         }
         else
         {
-            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newMethodNative())));
+            emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_PTR_VAL(m_Vm.newMethodNative()->pointer)));
         }
         
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
@@ -655,7 +654,7 @@ namespace Pomme
         ObjFunction* compiledFunction = function;
         function = currentFunction;
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_PTR_VAL(compiledFunction->pointer)));
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
@@ -667,7 +666,7 @@ namespace Pomme
 
         uint8_t global = m_Vm.addGlobal(nameFunc);
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(m_Vm.newGlobalNative())));
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_PTR_VAL(m_Vm.newGlobalNative()->pointer)));
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
     }
 
@@ -706,7 +705,7 @@ namespace Pomme
         {
             emitByte(AS_OPCODE(OpCode::OP_FIELD));
             emit16Bits(node->index);
-            emitByte(makeConstant(OBJ_VAL(m_Vm.copyString(name.c_str(), name.length()))));
+            emitByte(makeConstant(OBJ_PTR_VAL(m_Vm.copyString(name.c_str(), name.length())->pointer)));
             emitByte(node->isStatic);
         }
     }
@@ -1022,7 +1021,7 @@ namespace Pomme
 
     void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor)
     {
-        uint8_t identConstant = makeConstant(OBJ_VAL(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())));
+        uint8_t identConstant = makeConstant(OBJ_PTR_VAL(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())->pointer));
 
         m_InMethod = true;
 
@@ -1056,7 +1055,7 @@ namespace Pomme
         ObjFunction* compiledFunction = function;
         function = currentFunction;
 
-        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_VAL(compiledFunction)));
+        emitBytes(AS_OPCODE(OpCode::OP_CONSTANT), makeConstant(OBJ_PTR_VAL(compiledFunction->pointer)));
 
         emitByte(AS_OPCODE(OpCode::OP_METHOD));
         emit16Bits(index);

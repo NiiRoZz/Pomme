@@ -15,11 +15,12 @@ namespace Pomme
     , frameCount(0u)
     , stackTop(stack)
     , globalsIndicesCount(0u)
-    , objects(nullptr)
-    , bytesAllocated(0u)
-    , nextGC(1024u * 1024u)
+    //, objects(nullptr)
+    //, bytesAllocated(0u)
+    //, nextGC(1024u * 1024u)
+    , objectMemory(1000000u * 10u)
     {
-        grayStack.reserve(GLOBALS_MAX + STACK_MAX);
+        //grayStack.reserve(GLOBALS_MAX + STACK_MAX);
         for (uint8_t i = 0; i < static_cast<uint8_t>(PrimitiveType::COUNT); ++i)
         {
             primitives[i] = nullptr;
@@ -28,18 +29,11 @@ namespace Pomme
 
     VirtualMachine::~VirtualMachine()
     {
-        Obj* object = objects;
-        while (object != NULL)
-        {
-            Obj* next = object->next;
-            freeObject(object);
-            object = next;
-        }
     }
 
 	InterpretResult VirtualMachine::interpret(ObjFunction* function)
     {
-        push(OBJ_VAL(static_cast<Obj*>(function)));
+        push(OBJ_PTR_VAL(function->pointer));
         call(function, 0);
 
         return run();
@@ -53,16 +47,16 @@ namespace Pomme
             return InterpretResult::INTERPRET_RUNTIME_ERROR;
         }
 
-        assert(IS_FUNCTION(globals[it->second]));
+        assert(IS_FUNCTION(*this, globals[it->second]));
 
-        ObjFunction* function = AS_FUNCTION(globals[it->second]);
+        ObjFunction* function = AS_FUNCTION(*this, globals[it->second]);
 
         if (function->arity != params.size())
         {
             return InterpretResult::INTERPRET_RUNTIME_ERROR; 
         }
 
-        ObjFunction callFunction;
+        ObjFunction& callFunction = *(allocateObject<ObjFunction>());
         callFunction.name = nullptr;
         callFunction.arity = 0u;
         callFunction.type = ObjType::OBJ_FUNCTION;
@@ -96,21 +90,21 @@ namespace Pomme
             return InterpretResult::INTERPRET_RUNTIME_ERROR;
         }
 
-        assert(IS_FUNCTION(instance->klass->methods[it->second]));
+        assert(IS_FUNCTION(*this, instance->klass->methods[it->second]));
 
-        ObjFunction* function = AS_FUNCTION(instance->klass->methods[it->second]);
+        ObjFunction* function = AS_FUNCTION(*this, instance->klass->methods[it->second]);
 
         if (function->arity != params.size())
         {
             return InterpretResult::INTERPRET_RUNTIME_ERROR; 
         }
 
-        ObjFunction callFunction;
+        ObjFunction& callFunction = *(allocateObject<ObjFunction>());
         callFunction.name = nullptr;
         callFunction.arity = 0u;
         callFunction.type = ObjType::OBJ_FUNCTION;
 
-        int id = callFunction.chunk.addConstant(OBJ_VAL(static_cast<Obj*>(instance)));
+        int id = callFunction.chunk.addConstant(OBJ_PTR_VAL(instance->pointer));
         callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CONSTANT), 1);
         callFunction.chunk.writeChunk(id, 1);
 
@@ -141,9 +135,9 @@ namespace Pomme
             return {};
         }
 
-        assert(IS_FUNCTION(globals[it->second]));
+        assert(IS_FUNCTION(*this, globals[it->second]));
 
-        ObjFunction* function = AS_FUNCTION(globals[it->second]);
+        ObjFunction* function = AS_FUNCTION(*this, globals[it->second]);
 
         if (function->arity != params.size())
         {
@@ -189,16 +183,16 @@ namespace Pomme
             return {};
         }
 
-        assert(IS_FUNCTION(instance->klass->methods[it->second]));
+        assert(IS_FUNCTION(*this, instance->klass->methods[it->second]));
 
-        ObjFunction* function = AS_FUNCTION(instance->klass->methods[it->second]);
+        ObjFunction* function = AS_FUNCTION(*this, instance->klass->methods[it->second]);
 
         if (function->arity != params.size())
         {
             return {};
         }
 
-        push(OBJ_VAL(static_cast<Obj*>(instance)));
+        push(OBJ_PTR_VAL(instance->pointer));
 
         for (int i = 0; i < params.size(); ++i)
         {
@@ -237,9 +231,9 @@ namespace Pomme
         auto it = globalsIndices.find(name);
         if (it == globalsIndices.end()) return false;
 
-        assert(IS_GLOBAL_NATIVE(globals[it->second]));
+        assert(IS_GLOBAL_NATIVE(*this, globals[it->second]));
  
-        AS_GLOBAL_NATIVE(globals[it->second]) = function;
+        AS_GLOBAL_NATIVE(*this, globals[it->second]) = function;
 
         return true;
     }
@@ -249,14 +243,14 @@ namespace Pomme
         auto it = globalsIndices.find(className);
         if (it == globalsIndices.end()) return false;
 
-        assert(IS_CLASS(globals[it->second]));
+        assert(IS_CLASS(*this, globals[it->second]));
 
-        ObjClass* klass = AS_CLASS(globals[it->second]);
+        ObjClass* klass = AS_CLASS(*this, globals[it->second]);
 
         auto ot = klass->nativeMethodsIndices.find(methodName);
         if (ot == klass->nativeMethodsIndices.end()) return false;
 
-        AS_METHOD_NATIVE(klass->nativeMethods[ot->second]) = function;
+        AS_METHOD_NATIVE(*this, klass->nativeMethods[ot->second]) = function;
 
         return true;
     }
@@ -268,14 +262,14 @@ namespace Pomme
         auto it = globalsIndices.find(className);
         if (it == globalsIndices.end()) return false;
 
-        assert(IS_CLASS(globals[it->second]));
+        assert(IS_CLASS(*this, globals[it->second]));
 
-        ObjClass* klass = AS_CLASS(globals[it->second]);
+        ObjClass* klass = AS_CLASS(*this, globals[it->second]);
 
         auto ot = klass->nativeMethodsIndices.find(methodName);
         if (ot == klass->nativeMethodsIndices.end()) return false;
 
-        AS_METHOD_PRIMITIVE_NATIVE(klass->nativeMethods[ot->second]) = function;
+        AS_METHOD_PRIMITIVE_NATIVE(*this, klass->nativeMethods[ot->second]) = function;
 
         return true;
     }
@@ -285,9 +279,9 @@ namespace Pomme
         auto it = globalsIndices.find(className);
         if (it == globalsIndices.end()) return nullptr;
 
-        assert(IS_CLASS(globals[it->second]));
+        assert(IS_CLASS(*this, globals[it->second]));
 
-        ObjClass* klass = AS_CLASS(globals[it->second]);
+        ObjClass* klass = AS_CLASS(*this, globals[it->second]);
 
         auto ot = klass->staticFieldsIndices.find(fieldName);
         if (ot == klass->staticFieldsIndices.end()) return nullptr;
@@ -339,7 +333,7 @@ namespace Pomme
 
     ObjString* VirtualMachine::newString()
     {
-        ObjString* string = allocateObject<ObjString>(ObjType::OBJ_STRING);
+        ObjString* string = allocateObject<ObjString>();
         return string;
     }
 
@@ -356,12 +350,12 @@ namespace Pomme
         auto it = globalsIndices.find(className);
         if (it == globalsIndices.end()) return nullptr;
 
-        return newInstance(AS_CLASS(globals[it->second]));
+        return newInstance(AS_CLASS(*this, globals[it->second]));
     }
 
     ObjFunction* VirtualMachine::newFunction()
     {
-        ObjFunction* function = allocateObject<ObjFunction>(ObjType::OBJ_FUNCTION);
+        ObjFunction* function = allocateObject<ObjFunction>();
         function->arity = 0;
         function->name = NULL;
         return function;
@@ -369,19 +363,19 @@ namespace Pomme
 
     ObjGlobalNative* VirtualMachine::newGlobalNative()
     {
-        ObjGlobalNative* native = allocateObject<ObjGlobalNative>(ObjType::OBJ_GLOBAL_NATIVE);
+        ObjGlobalNative* native = allocateObject<ObjGlobalNative>();
         return native;
     }
 
     ObjMethodNative* VirtualMachine::newMethodNative()
     {
-        ObjMethodNative* native = allocateObject<ObjMethodNative>(ObjType::OBJ_METHOD_NATIVE);
+        ObjMethodNative* native = allocateObject<ObjMethodNative>();
         return native;
     }
 
     ObjMethodPrimitiveNative* VirtualMachine::newMethodPrimitiveNative()
     {
-        ObjMethodPrimitiveNative* native = allocateObject<ObjMethodPrimitiveNative>(ObjType::OBJ_METHOD_PRIMITIVE_NATIVE);
+        ObjMethodPrimitiveNative* native = allocateObject<ObjMethodPrimitiveNative>();
         return native;
     }
 
@@ -474,7 +468,7 @@ namespace Pomme
 
         #define READ_BYTE() (*frame->ip++)
         #define READ_CONSTANT() (frame->function->chunk.constants[READ_BYTE()])
-		#define READ_STRING() AS_STRING(READ_CONSTANT())
+		#define READ_STRING() AS_STRING(*this, READ_CONSTANT())
         #define READ_UINT16() \
             (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
         #define READ_32BITS(type, name) \
@@ -499,8 +493,8 @@ namespace Pomme
         #endif
 
         #ifdef DEBUG_LOG
-        printStack();
-        disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
+        //printStack();
+        //disassembleInstruction(&frame->function->chunk, (int)(frame->ip - frame->function->chunk.code.data()));
         #endif
         
         #ifndef USE_COMPUTED_GOTO
@@ -581,20 +575,20 @@ namespace Pomme
 
             CASES(OP_GET_PROPERTY)
             {
-                assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
+                assert(IS_INSTANCE(*this, peek(0)) || IS_CLASS(*this, peek(0)));
 
                 uint16_t slot = READ_UINT16();
 
                 Value* value = nullptr;
 
-                if (IS_INSTANCE(peek(0)))
+                if (IS_INSTANCE(*this, peek(0)))
                 {
-                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    ObjInstance* instance = AS_INSTANCE(*this, peek(0));
                     value = &instance->fields[slot];
                 }
                 else
                 {
-                    ObjClass* klass = AS_CLASS(peek(0));
+                    ObjClass* klass = AS_CLASS(*this, peek(0));
                     value = &klass->staticFields[slot];
                 }
 
@@ -606,18 +600,18 @@ namespace Pomme
 
             CASES(OP_SET_PROPERTY)
             {
-                assert(IS_INSTANCE(peek(0)) || IS_CLASS(peek(0)));
+                assert(IS_INSTANCE(*this, peek(0)) || IS_CLASS(*this, peek(0)));
 
                 uint16_t slot = READ_UINT16();
 
-                if (IS_INSTANCE(peek(0)))
+                if (IS_INSTANCE(*this, peek(0)))
                 {
-                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    ObjInstance* instance = AS_INSTANCE(*this, peek(0));
                     instance->fields[slot] = peek(1);
                 }
                 else
                 {
-                    ObjClass* klass = AS_CLASS(peek(0));
+                    ObjClass* klass = AS_CLASS(*this, peek(0));
                     klass->staticFields[slot] = peek(1);
                 }
 
@@ -669,7 +663,7 @@ namespace Pomme
             CASES(OP_CALL_NATIVE)
             {
                 uint16_t argCount = READ_UINT16();
-                if (!callNative(AS_GLOBAL_NATIVE(peek(argCount)), argCount))
+                if (!callNative(AS_GLOBAL_NATIVE(*this, peek(argCount)), argCount))
                 {
                     return InterpretResult::INTERPRET_RUNTIME_ERROR;
                 }
@@ -682,7 +676,7 @@ namespace Pomme
             CASES(OP_CALL_GLOBAL)
             {
                 uint16_t argCount = READ_UINT16();
-                if (!call(AS_FUNCTION(peek(argCount)), argCount))
+                if (!call(AS_FUNCTION(*this, peek(argCount)), argCount))
                 {
                     return InterpretResult::INTERPRET_RUNTIME_ERROR;
                 }
@@ -728,10 +722,10 @@ namespace Pomme
 
             CASES(OP_INHERIT)
             {
-                assert(IS_CLASS(peek(1)) && IS_CLASS(peek(0)));
+                assert(IS_CLASS(*this, peek(1)) && IS_CLASS(*this, peek(0)));
 
-                ObjClass* klass = AS_CLASS(peek(1));
-                ObjClass* superclass = AS_CLASS(peek(0));
+                ObjClass* klass = AS_CLASS(*this, peek(1));
+                ObjClass* superclass = AS_CLASS(*this, peek(0));
 
                 std::memcpy(klass->staticFields, superclass->staticFields, sizeof(klass->staticFields));
                 klass->staticFieldsIndices = superclass->staticFieldsIndices;
@@ -776,11 +770,10 @@ namespace Pomme
             {
                 uint16_t slot = READ_UINT16();
                 bool native = READ_BYTE();
-                assert(!native); //Temp
                 uint16_t argCount = READ_UINT16();
 
-                assert(IS_CLASS(peek(0)));
-                ObjClass* superclass = AS_CLASS(pop());
+                assert(IS_CLASS(*this, peek(0)));
+                ObjClass* superclass = AS_CLASS(*this, pop());
 
                 ObjBoundMethod bound(peek(argCount), (native) ? &superclass->nativeMethods[slot] : &superclass->methods[slot]);
 
@@ -804,7 +797,7 @@ namespace Pomme
 
             CASES(OP_CLASS)
             {
-                push(OBJ_VAL(static_cast<Obj*>(newClass(READ_STRING()))));
+                push(OBJ_PTR_VAL(newClass(READ_STRING())->pointer));
 
                 DISPATCH();
             }
@@ -815,17 +808,17 @@ namespace Pomme
                 bool foundConstructor = READ_BYTE();
                 uint16_t slot = READ_UINT16();
 
-                assert(IS_CLASS(peek(argCount)));
+                assert(IS_CLASS(*this, peek(argCount)));
 
-                ObjClass* klass = AS_CLASS(peek(argCount));
-                stackTop[-argCount - 1] = OBJ_VAL(static_cast<Obj*>(newInstance(klass)));
+                ObjClass* klass = AS_CLASS(*this, peek(argCount));
+                stackTop[-argCount - 1] = OBJ_PTR_VAL(newInstance(klass)->pointer);
 
                 if (foundConstructor)
                 {
                     assert(slot >= 0u && slot < METHODS_MAX);
-                    assert(IS_FUNCTION(klass->methods[slot]));
+                    assert(IS_FUNCTION(*this, klass->methods[slot]));
 
-                    if (!call(AS_FUNCTION(klass->methods[slot]), argCount))
+                    if (!call(AS_FUNCTION(*this, klass->methods[slot]), argCount))
                     {
                         return InterpretResult::INTERPRET_RUNTIME_ERROR;
                     }
@@ -1005,80 +998,6 @@ namespace Pomme
         return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
 
-    void VirtualMachine::freeObject(Obj* object)
-    {
-        #ifdef DEBUG_LOG_GC
-        std::cout << object << " free type " << ObjTypeToCStr(object->type) << std::endl;
-        #endif
-
-        switch (object->type)
-        {
-            case ObjType::OBJ_FUNCTION:
-            {
-                ObjFunction* function = static_cast<ObjFunction*>(object);
-                bytesAllocated -= sizeof(ObjFunction);
-                delete function;
-                break;
-            }
-
-            case ObjType::OBJ_CLASS:
-            {
-                ObjClass* klass = static_cast<ObjClass*>(object);
-                bytesAllocated -= sizeof(ObjClass);
-                delete klass;
-                break;
-            } 
-
-            case ObjType::OBJ_GLOBAL_NATIVE:
-            {
-                ObjGlobalNative* method = static_cast<ObjGlobalNative*>(object);
-                bytesAllocated -= sizeof(ObjGlobalNative);
-                delete method;
-                break;
-            }
-
-            case ObjType::OBJ_METHOD_NATIVE:
-            {
-                ObjMethodNative* method = static_cast<ObjMethodNative*>(object);
-                bytesAllocated -= sizeof(ObjMethodNative);
-                delete method;
-                break;
-            }
-
-            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE:
-            {
-                ObjMethodPrimitiveNative* method = static_cast<ObjMethodPrimitiveNative*>(object);
-                bytesAllocated -= sizeof(ObjMethodPrimitiveNative);
-                delete method;
-                break;
-            }
-
-            case ObjType::OBJ_STRING:
-            {
-                ObjString* string = static_cast<ObjString*>(object);
-                bytesAllocated -= sizeof(ObjString);
-                delete string;
-                break;
-            }
-
-            case ObjType::OBJ_INSTANCE:
-            {
-                ObjInstance* instance = static_cast<ObjInstance*>(object);
-                bytesAllocated -= sizeof(ObjInstance);
-                delete instance;
-                break;
-            }
-
-            case ObjType::OBJ_BOUND_METHOD:
-            {
-                ObjBoundMethod* method = static_cast<ObjBoundMethod*>(object);
-                bytesAllocated -= sizeof(ObjBoundMethod);
-                delete method;
-                break;
-            }
-        }
-    }
-
     bool VirtualMachine::isFalsey(const Value& value)
     {
         if (IS_NULL(value)) return true;
@@ -1093,17 +1012,17 @@ namespace Pomme
         Value& parent = peek(argCount);
 
         ObjBoundMethod bound(parent, [&] () -> Value* {
-            if (!IS_OBJ(parent))
+            if (!IS_OBJ_PTR(parent))
                 return (native) ? &primitives[static_cast<uint8_t>(getPrimitiveTypeFromValue(parent))]->nativeMethods[slot] : &primitives[static_cast<uint8_t>(getPrimitiveTypeFromValue(parent))]->methods[slot];
 
-            if (IS_INSTANCE(parent))
+            if (IS_INSTANCE(*this, parent))
             {
-                ObjInstance* instance = AS_INSTANCE(parent);
+                ObjInstance* instance = AS_INSTANCE(*this, parent);
                 return (native) ? &instance->nativeMethods[slot] : &instance->klass->methods[slot];
             }
 
-            assert(IS_CLASS(parent));
-            ObjClass* klass = AS_CLASS(parent);
+            assert(IS_CLASS(*this, parent));
+            ObjClass* klass = AS_CLASS(*this, parent);
             return (native) ? &klass->nativeMethods[slot] : &klass->methods[slot];
         }());
 
@@ -1122,24 +1041,24 @@ namespace Pomme
 
     bool VirtualMachine::callBoundMethod(ObjBoundMethod& bound, uint16_t argCount)
     {
-        if (IS_FUNCTION(*bound.method))
+        if (IS_FUNCTION(*this, *bound.method))
         {
             stackTop[-argCount - 1] = bound.receiver;
-            return call(AS_FUNCTION(*bound.method), argCount);
+            return call(AS_FUNCTION(*this, *bound.method), argCount);
         }
 
         Value result = [&] () {
-            if (!IS_OBJ(bound.receiver))
+            if (!IS_OBJ_PTR(bound.receiver))
             {
-                MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*bound.method);
+                MethodPrimitiveNativeFn& native = AS_METHOD_PRIMITIVE_NATIVE(*this, *bound.method);
                 assert(native);
 
                 return native(*this, argCount, &bound.receiver, stackTop - argCount);
             }
 
-            MethodNativeFn native = AS_METHOD_NATIVE(*bound.method);
+            MethodNativeFn& native = AS_METHOD_NATIVE(*this, *bound.method);
             assert(native);
-            return native(*this, argCount, AS_INSTANCE(bound.receiver), stackTop - argCount);
+            return native(*this, argCount, AS_INSTANCE(*this, bound.receiver), stackTop - argCount);
         }();
 
         stackTop -= argCount + 1;
@@ -1191,7 +1110,7 @@ namespace Pomme
         {
             std::cout << AS_FLOAT(value);
         }
-        else if (IS_OBJ(value))
+        else if (IS_OBJ_PTR(value))
         {
             printObject(value);
         }
@@ -1239,19 +1158,19 @@ namespace Pomme
 
     void VirtualMachine::printObject(const Value& value)
     {
-        switch (OBJ_TYPE(value))
+        switch (OBJ_TYPE(*this, value))
         {
             case ObjType::OBJ_BOUND_METHOD:
-                printObject(*AS_BOUND_METHOD(value)->method);
+                printObject(*AS_BOUND_METHOD(*this, value)->method);
                 break;
             case ObjType::OBJ_CLASS:
-                std::cout << "class " << AS_CLASS(value)->name->chars.c_str();
+                std::cout << "class " << AS_CLASS(*this, value)->name->chars.c_str();
                 break;
             case ObjType::OBJ_FUNCTION:
-                printFunction(AS_FUNCTION(value));
+                printFunction(AS_FUNCTION(*this, value));
                 break;
             case ObjType::OBJ_INSTANCE:
-                std::cout << AS_INSTANCE(value)->klass->name->chars.c_str() << " instance";
+                std::cout << AS_INSTANCE(*this, value)->klass->name->chars.c_str() << " instance";
                 break;
             case ObjType::OBJ_GLOBAL_NATIVE:
                 std::cout << "<global native fn>";
@@ -1263,7 +1182,7 @@ namespace Pomme
                 std::cout << "<method primitive native fn>";
                 break;
             case ObjType::OBJ_STRING:
-                std::cout << AS_CSTRING(value);
+                std::cout << AS_CSTRING(*this, value);
                 break;
         }
     }
@@ -1287,9 +1206,9 @@ namespace Pomme
 
         Value& method = peek(0);
 
-        assert(IS_CLASS(peek(1)));
+        assert(IS_CLASS(*this, peek(1)));
 
-        ObjClass* klass = AS_CLASS(peek(1));
+        ObjClass* klass = AS_CLASS(*this, peek(1));
 
         if (isNative)
         {
@@ -1312,9 +1231,9 @@ namespace Pomme
         #endif
 
         Value& value = peek(0);
-        assert(IS_CLASS(peek(1)));
+        assert(IS_CLASS(*this, peek(1)));
 
-        ObjClass* klass = AS_CLASS(peek(1));
+        ObjClass* klass = AS_CLASS(*this, peek(1));
 
         if (isStatic)
         {
@@ -1332,7 +1251,7 @@ namespace Pomme
 
     ObjClass* VirtualMachine::newClass(ObjString* name)
     {
-        ObjClass* klass = allocateObject<ObjClass>(ObjType::OBJ_CLASS);
+        ObjClass* klass = allocateObject<ObjClass>();
         klass->name = name;
 
         if (name->chars == "int")
@@ -1353,7 +1272,7 @@ namespace Pomme
 
     ObjInstance* VirtualMachine::newInstance(ObjClass* klass)
     {
-        ObjInstance* instance = allocateObject<ObjInstance>(ObjType::OBJ_INSTANCE);
+        ObjInstance* instance = allocateObject<ObjInstance>();
         instance->klass = klass;
         std::memcpy(instance->fields, klass->defaultFields, sizeof(Value) * FIELDS_MAX);
         std::memcpy(instance->nativeMethods, klass->nativeMethods, sizeof(Value) * METHODS_MAX);
@@ -1362,7 +1281,7 @@ namespace Pomme
 
     ObjBoundMethod* VirtualMachine::newBoundMethod(const Value& receiver, Value* method)
     {
-        ObjBoundMethod* bound = allocateObject<ObjBoundMethod>(ObjType::OBJ_BOUND_METHOD);
+        ObjBoundMethod* bound = allocateObject<ObjBoundMethod>();
         bound->receiver = receiver;
         bound->method = method;
         return bound;
@@ -1457,171 +1376,5 @@ namespace Pomme
         jump |= chunk->code[offset + 2];
         printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
         return offset + 3;
-    }
-
-    void VirtualMachine::collectGarbage()
-    {
-        #ifdef DEBUG_LOG_GC
-        std::cout << "-- gc begin\n";
-        std::size_t before = bytesAllocated;
-        #endif
-
-        markRoots();
-        traceReferences();
-        sweep();
-
-        #ifndef DEBUG_STRESS_GC
-        nextGC = bytesAllocated * GC_HEAP_GROW_FACTOR;
-        #endif
-
-        grayStack.clear();
-
-        #ifdef DEBUG_LOG_GC
-        std::cout << "-- gc end\n";
-        std::cout << "   collected " << unsigned(before - bytesAllocated) << " bytes (from " << unsigned(before) << " to " << unsigned(bytesAllocated) << ") next at " << nextGC << std::endl;
-        #endif
-    }
-
-    void VirtualMachine::markRoots()
-    {
-        for (Value* slot = stack; slot < stackTop; ++slot)
-        {
-            markValue(*slot);
-        }
-
-        for (std::size_t i = 0; i < frameCount; i++)
-        {
-            markObject(static_cast<Obj*>(frames[i].function));
-        }
-
-        for (std::size_t i = 0; i < globalsIndicesCount; i++)
-        {
-            markValue(globals[i]);
-        }
-    }
-
-    void VirtualMachine::markValue(Value& value)
-    {
-        if (IS_OBJ(value)) markObject(AS_OBJ(value));
-    }
-
-    void VirtualMachine::markObject(Obj* object)
-    {
-        if (object == nullptr || object->isMarked) return;
-
-        #ifdef DEBUG_LOG_GC
-        std::cout << object << " mark ";
-        printObject(object);
-        std::cout << std::endl;
-        #endif
-
-        object->isMarked = true;
-
-        grayStack.push_back(object);
-    }
-
-    void VirtualMachine::markArray(Value* array, std::size_t count)
-    {
-        for (std::size_t i = 0; i < count; ++i)
-        {
-            markValue(array[i]);
-        }
-    }
-
-    void VirtualMachine::traceReferences()
-    {
-        #ifdef DEBUG_LOG_GC
-        std::cout << "grayStack.size() : " << grayStack.size() << std::endl;
-        #endif
-
-        for (std::size_t i = 0; i < grayStack.size(); ++i)
-        {
-            blackenObject(grayStack[i]);
-        }
-    }
-
-    void VirtualMachine::blackenObject(Obj* object)
-    {
-        #ifdef DEBUG_LOG_GC
-        std::cout << object << " blacken ";
-        printObject(object);
-        std::cout << std::endl;
-        #endif
-
-        switch (object->type)
-        {
-            case ObjType::OBJ_BOUND_METHOD:
-            {
-                ObjBoundMethod* bound = static_cast<ObjBoundMethod*>(object);
-                markValue(bound->receiver);
-                markValue(*bound->method);
-                break;
-            }
-
-            case ObjType::OBJ_CLASS:
-            {
-                ObjClass* klass = static_cast<ObjClass*>(object);
-                markObject(static_cast<Obj*>(klass->name));
-                markArray(klass->methods, METHODS_MAX);
-                markArray(klass->nativeMethods, METHODS_MAX);
-                markArray(klass->staticFields, FIELDS_MAX);
-                markArray(klass->defaultFields, FIELDS_MAX);
-                break;
-            }
-            
-            case ObjType::OBJ_FUNCTION:
-            {
-                ObjFunction* function = static_cast<ObjFunction*>(object);
-                markObject(static_cast<Obj*>(function->name));
-                markArray(function->chunk.constants.data(), function->chunk.constants.size());
-                break;
-            }
-
-            case ObjType::OBJ_INSTANCE:
-            {
-                ObjInstance* instance = static_cast<ObjInstance*>(object);
-                markObject(static_cast<Obj*>(instance->klass));
-                markArray(instance->fields, FIELDS_MAX);
-                markArray(instance->nativeMethods, METHODS_MAX);
-                break;
-            }
-
-            case ObjType::OBJ_GLOBAL_NATIVE:
-            case ObjType::OBJ_METHOD_NATIVE:
-            case ObjType::OBJ_METHOD_PRIMITIVE_NATIVE:
-            case ObjType::OBJ_STRING:
-            break;
-        }
-    }
-
-    void VirtualMachine::sweep()
-    {
-        Obj* previous = nullptr;
-        Obj* object = objects;
-        while (object != nullptr)
-        {
-            if (object->isMarked)
-            {
-                object->isMarked = false;
-                previous = object;
-                object = object->next;
-            }
-            else
-            {
-                Obj* unreached = object;
-                object = object->next;
-
-                if (previous != nullptr)
-                {
-                    previous->next = object;
-                }
-                else
-                {
-                    objects = object;
-                }
-
-                freeObject(unreached);
-            }
-        }
     }
 }

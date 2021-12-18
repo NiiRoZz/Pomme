@@ -1,5 +1,4 @@
 #include "Value.h"
-#include "Memory.h"
 
 namespace Pomme
 {
@@ -14,7 +13,7 @@ namespace Pomme
     {
     }
 
-    Value::Value(Obj* val)
+    Value::Value(Pointer val)
     : Value(ValueType::VAL_OBJ)
     {
         as.obj = val;

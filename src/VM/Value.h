@@ -20,6 +20,8 @@ namespace Pomme
         COUNT,
     };
 
+    using Pointer = uint32_t;
+
     #ifndef NAN_BOXING
 
     struct ObjPrimitive
@@ -48,7 +50,7 @@ namespace Pomme
     public:
         Value();
         Value(ValueType val);
-        Value(Obj* val);
+        Value(Pointer val);
         Value(int32_t val);
         Value(double val);
         Value(bool val);
@@ -59,14 +61,14 @@ namespace Pomme
 
         ObjPrimitive& asPrimitive() {return as.primitive;}
         const ObjPrimitive& asPrimitive() const {return as.primitive;}
-        Obj* asObj() const {return as.obj;}
+        Pointer asObj() const {return as.obj;}
 
     private:
         ValueType type;
 
         union
         {
-            Obj* obj;
+            Pointer obj;
             ObjPrimitive primitive;
         } as;
     };
@@ -95,7 +97,7 @@ namespace Pomme
     #define _MASK_SIGN              ((uint64_t)0x8000000000000000)
     #define _MASK_QNAN              ((uint64_t)0x7ffc000000000000)
     #define _MASK_INTEGER           (_MASK_QNAN | (uint64_t)0x0002000000000000)
-    #define _MASK_OBJECT            (_MASK_QNAN | (uint64_t)0x8000000000000000)
+    #define _MASK_OBJECT_PTR        (_MASK_QNAN | (uint64_t)0x8000000000000000)
 
     #define _PAYLOAD_INTEGER        ((uint64_t)0x00000000ffffffff)
     #define _PAYLOAD_OBJECT         ((uint64_t)0x0000ffffffffffff)
@@ -110,7 +112,7 @@ namespace Pomme
     #define IS_NULL(value)          ((value) == NULL_VAL)
     #define IS_FLOAT(value)         (((value) & _MASK_QNAN) != _MASK_QNAN)
     #define IS_INT(value)           ((value & _MASK_INTEGER) == _MASK_INTEGER)
-    #define IS_OBJ(value)           ((value & _MASK_OBJECT) == _MASK_OBJECT)
+    #define IS_OBJ_PTR(value)       ((value & _MASK_OBJECT_PTR) == _MASK_OBJECT_PTR)
 
     #define BOOL_VAL(b)             ((b) ? TRUE_VAL : FALSE_VAL)
     #define FALSE_VAL               ((Value)(uint64_t)(_MASK_QNAN | TAG_FALSE))
@@ -118,7 +120,7 @@ namespace Pomme
     #define NULL_VAL                ((Value)(uint64_t)(_MASK_QNAN | TAG_NULL))
     #define INT_VAL(value)          (_MASK_INTEGER | (uint32_t)(int32_t)(value))
     #define FLOAT_VAL(num)          doubleToValue(num)
-    #define OBJ_VAL(obj)            ((Value)(_MASK_OBJECT | (uint64_t)(uintptr_t)(obj)))
+    #define OBJ_PTR_VAL(obj)        (_MASK_OBJECT_PTR | (uint32_t)(int32_t)(obj))
 
     static inline Value doubleToValue(double num)
     {
@@ -130,7 +132,8 @@ namespace Pomme
     #define AS_BOOL(value)          ((value) == TRUE_VAL)
     #define AS_FLOAT(value)         doubleToNum(value)
     #define AS_INT(value)           ((int32_t)((value) & _PAYLOAD_INTEGER))
-    #define AS_OBJ(value)           ((Obj*)(value & _PAYLOAD_OBJECT))
+    #define AS_OBJ_PTR(value)       ((uint32_t)((value) & _PAYLOAD_INTEGER))
+    #define AS_OBJ(vm, value)       ((vm).getObject<Obj>(AS_OBJ_PTR(value)))
 
     static inline double doubleToNum(Value value)
     {
