@@ -36,7 +36,11 @@ namespace Pomme
         {
             static_assert(std::is_base_of<Obj, T>::value, "You should allocate something that inherit from Obj class");
 
-            Pointer p = malloc(sizeof(T));
+            Pointer pHeader = malloc(HEADER_SIZE + sizeof(T));
+            Pointer p = pHeader + HEADER_SIZE;
+
+            ObjectHeader* header = new (&m_Memory[pHeader]) ObjectHeader();
+            header->refCount = 1u;
 
             T* obj = new (&m_Memory[p]) T(std::forward<Args>(args)...);
             obj->type = getObjType<T>();
@@ -51,13 +55,14 @@ namespace Pomme
             return reinterpret_cast<T*>(&m_Memory[alloc<T>(std::forward<Args>(args)...)]);
         }
 
+        Pointer malloc(std::size_t size);
+
         void free(Pointer p);
         void incRefCount(Pointer p);
 
         template<typename T>
         inline T* get(Pointer p)
         {
-            static_assert(std::is_base_of<Obj, T>::value, "You should get something that inherit from Obj class");
             return reinterpret_cast<T*>(&m_Memory[p]);
         }
 
@@ -72,9 +77,6 @@ namespace Pomme
         {
             return reinterpret_cast<ObjectHeader*>(&m_Memory[p] - HEADER_SIZE);
         }
-
-    private:
-        Pointer malloc(std::size_t size);
 
     private:
         uint8_t* m_Memory;

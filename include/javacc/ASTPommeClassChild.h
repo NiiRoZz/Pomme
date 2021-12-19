@@ -16,6 +16,11 @@ public:
 
   /** Accept the visitor. **/
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
+
+  uint64_t nmbMethods = 0;
+  uint64_t nmbNativeMethods = 0;
+  uint64_t nmbStaticFields = 0;
+  uint64_t nmbFields = 0;
 };
 
 }

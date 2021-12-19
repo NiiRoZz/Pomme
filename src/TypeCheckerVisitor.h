@@ -39,7 +39,7 @@ namespace Pomme
             friend std::ostream & operator<<(std::ostream & str, const EnumClass & klass)
             {
                 str << "Enum " << klass.enumName << " {" << std::endl;
-                for(int index = 0; index < klass.members.size(); index++)
+                for(std::size_t index = 0; index < klass.members.size(); index++)
                 {
                     str << "\t" << klass.members.at(index) << "," << std::endl;
                 }
@@ -335,6 +335,7 @@ namespace Pomme
         std::string getVariableType(const std::string& type);
 
         bool checkAccessMethod(ASTPommeAccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
+        void checkVariable(ASTPommeVariable* node, bool initialization);
 
         friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass)
         {

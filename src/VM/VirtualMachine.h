@@ -128,7 +128,7 @@ namespace Pomme
 		void defineMethod(uint16_t slot, ObjString* name, bool isNative);
 		void defineField(uint16_t slot, ObjString* name, bool isStatic);
 
-		ObjClass* newClass(ObjString* name);
+		ObjClass* newClass(ObjString* name, uint64_t nmbMethods, uint64_t nmbNativeMethods, uint64_t nmbStaticFields, uint64_t nmbFields);
 		ObjInstance* newInstance(ObjClass* klass);
 		ObjBoundMethod* newBoundMethod(const Value& receiver, Value* method);
 

@@ -19,6 +19,11 @@ public:
 
   std::string defaultClassName;
   std::string parentName;
+
+  uint64_t nmbMethods = 0;
+  uint64_t nmbNativeMethods = 0;
+  uint64_t nmbStaticFields = 0;
+  uint64_t nmbFields = 0;
 };
 
 }

@@ -610,6 +610,14 @@ namespace Pomme
 
             case 1u:
             {
+                auto it = classMap.find(moddedMap[context]);
+                assert(it != classMap.end());
+                
+                node->nmbMethods = it->second.methods.size();
+                node->nmbNativeMethods = it->second.nativeMethods.size();
+                node->nmbStaticFields = it->second.staticAttributes.size();
+                node->nmbFields = it->second.attributes.size();
+
                 node->jjtChildAccept(1, this, data);
                 break;
             }
@@ -668,6 +676,14 @@ namespace Pomme
 
             case 1u:
             {
+                auto it = classMap.find(moddedMap[class_name]);
+                assert(it != classMap.end());
+                
+                node->nmbMethods = it->second.methods.size();
+                node->nmbNativeMethods = it->second.nativeMethods.size();
+                node->nmbStaticFields = it->second.staticAttributes.size();
+                node->nmbFields = it->second.attributes.size();
+
                 node->jjtChildAccept(2, this, data);
                 break;
             }
@@ -750,6 +766,14 @@ namespace Pomme
 
             case 1u:
             {
+                auto it = classMap.find(moddedMap[node->defaultClassName]);
+                assert(it != classMap.end());
+                
+                node->nmbMethods = it->second.methods.size();
+                node->nmbNativeMethods = it->second.nativeMethods.size();
+                node->nmbStaticFields = it->second.staticAttributes.size();
+                node->nmbFields = it->second.attributes.size();
+
                 node->jjtChildAccept(1, this, data);
                 break;
             }
@@ -774,6 +798,13 @@ namespace Pomme
                 visiteVariable(node->jjtGetChild(1), dynamic_cast<ASTPommeConstant*>(node->jjtGetChild(1)) != nullptr, keywords);
                 break;
             }
+
+            case 1u:
+            case 2u:
+            {
+                std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTPommeIdentFuncs*>(node->jjtGetChild(0)));
+                checkVariable(dynamic_cast<ASTPommeVariable*>(node->jjtGetChild(1)), !keywords.count("static"));
+            }
         }
     }
     void TypeCheckerVisitor::visit(ASTPommeVariable *node, void * data)
@@ -791,30 +822,7 @@ namespace Pomme
             {
                 visiteVariable(node, false, {});
 
-                const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-                std::string rightType = "";
-
-                node->jjtChildAccept(2, this, &rightType);
-
-                bool isNull = rightType == "null";
-
-                if (leftType == "")
-                {
-                    errors.push_back("Can't find variable type of left expression");
-                    return;
-                }
-
-                if (rightType == "" && !isNull)
-                {
-                    errors.push_back("Can't find variable type of right expression");
-                    return;
-                }
-
-                if (!isNull && leftType != rightType)
-                {
-                    errors.push_back("Can't assign class " + rightType + " to class " + leftType);
-                    return;
-                }
+                checkVariable(node, false);
                 break;
             }
         }
@@ -1769,6 +1777,7 @@ namespace Pomme
     void TypeCheckerVisitor::visit(ASTPommeNew *node, void * data)
     {
         std::string& className = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        std::string defaultName = className;
 
         if (CommonVisitorFunction::isNativeType(className))
         {
@@ -1785,9 +1794,17 @@ namespace Pomme
             return;
         }
 
-        node->foundConstructor = false;
-
-        //TODO: find constructor
+        std::string constructorName = defaultName + NAME_FUNC_SEPARATOR;
+        auto ot = it->second.methods.find(constructorName);
+        if (ot != it->second.methods.end())
+        {
+            node->foundConstructor = true;
+            node->index = ot->second.index;
+        }
+        else
+        {
+            node->foundConstructor = false;
+        }
 
         if (data == nullptr) return;
             
@@ -1897,5 +1914,39 @@ namespace Pomme
     std::string TypeCheckerVisitor::getVariableType(const std::string& type)
     {
         return moddedMap[type];
+    }
+
+    void TypeCheckerVisitor::checkVariable(ASTPommeVariable* node, bool initialization)
+    {
+        const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        std::string rightType = "";
+
+        node->jjtChildAccept(2, this, &rightType);
+
+        bool isNull = rightType == "null";
+
+        if (leftType == "")
+        {
+            errors.push_back("Can't find variable type of left expression");
+            return;
+        }
+
+        if (rightType == "" && !isNull)
+        {
+            errors.push_back("Can't find variable type of right expression");
+            return;
+        }
+
+        if (!isNull && leftType != rightType)
+        {
+            errors.push_back("Can't assign class " + rightType + " to class " + leftType);
+            return;
+        }
+
+        if (initialization && class_context && !instrs_context && !isNull)
+        {
+            errors.push_back("Can't assign default value directly on the same line, use constructor instead");
+            return;
+        }
     }
 }

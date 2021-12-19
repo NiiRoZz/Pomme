@@ -483,6 +483,11 @@ namespace Pomme
         uint8_t global = m_Vm.addGlobal(name);
 
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbMethods)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbNativeMethods)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbStaticFields)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbFields)));
+        
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
 
@@ -510,6 +515,11 @@ namespace Pomme
         uint8_t global = m_Vm.addGlobal(name);
 
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbMethods)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbNativeMethods)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbStaticFields)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbFields)));
+
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
 
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
@@ -539,6 +549,11 @@ namespace Pomme
         uint8_t global = m_Vm.addGlobal(name);
 
         emitBytes(AS_OPCODE(OpCode::OP_CLASS), nameConstant);
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbMethods)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbNativeMethods)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbStaticFields)));
+        emit64Bits(reinterpret_cast<uint8_t*>(&(node->nmbFields)));
+
         emitBytes(AS_OPCODE(OpCode::OP_SET_GLOBAL), global);
 
         emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), global);
@@ -696,21 +711,39 @@ namespace Pomme
 
         if (!m_InClass || (m_InClass && m_InMethod)) addLocal(name);
 
-        if (defaultValue != nullptr)
-        {
-            emitDefaultValue(typeName);
-        }
-        else
-        {
-            node->jjtGetChild(2)->jjtAccept(this, data);
-        }
-
         if (m_InClass && !m_InMethod)
         {
+            if (node->isStatic)
+            {
+                if (defaultValue != nullptr)
+                {
+                    emitDefaultValue(typeName);
+                }
+                else
+                {
+                    node->jjtGetChild(2)->jjtAccept(this, data);
+                }
+            }
+            else
+            {
+                emitDefaultValue(typeName);
+            }
+
             emitByte(AS_OPCODE(OpCode::OP_FIELD));
             emit16Bits(node->index);
             emitByte(makeConstant(OBJ_PTR_VAL(m_Vm.copyString(name.c_str(), name.length())->pointer)));
             emitByte(node->isStatic);
+        }
+        else
+        {
+            if (defaultValue != nullptr)
+            {
+                emitDefaultValue(typeName);
+            }
+            else
+            {
+                node->jjtGetChild(2)->jjtAccept(this, data);
+            }
         }
     }
 
@@ -1054,7 +1087,7 @@ namespace Pomme
 
         if (constructor)
         {
-            emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), 0);
+            emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), 0u);
             emitByte(AS_OPCODE(OpCode::OP_RETURN));
         }
         else

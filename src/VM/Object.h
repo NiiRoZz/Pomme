@@ -10,11 +10,10 @@
 #include "Value.h"
 #include "Chunk.h"
 
-#define FIELDS_MAX 256
-#define METHODS_MAX 256
-
 namespace Pomme
 {
+    class VirtualMachine;
+
     #define OBJ_TYPE(vm, value)                     (AS_OBJ(vm, value)->type)
 
     #define IS_BOUND_METHOD(vm, value)              isObjType(vm, value, ObjType::OBJ_BOUND_METHOD)
@@ -110,14 +109,28 @@ namespace Pomme
 
         //Runtime
         ObjString* name;
-        Value methods[METHODS_MAX]; 
-        Value nativeMethods[METHODS_MAX];
-        Value staticFields[FIELDS_MAX]; 
-        Value defaultFields[FIELDS_MAX];
+
+        Pointer methods;
+        uint64_t nmbMethods;
+
+        Pointer nativeMethods;
+        uint64_t nmbNativeMethods;
+
+        Pointer staticFields;
+        uint64_t nmbStaticFields;
+
+        uint64_t nmbFields;
         
         int deconstructorIdx = -1;
 
-        Value* getStaticField(const std::string& name);
+        Value* getMethod(VirtualMachine& vm, uint16_t slot);
+        Value* getMethod(VirtualMachine& vm, const std::string& name);
+
+        Value* getNativeMethod(VirtualMachine& vm, uint16_t slot);
+        Value* getNativeMethod(VirtualMachine& vm, const std::string& name);
+
+        Value* getStaticField(VirtualMachine& vm, uint16_t slot);
+        Value* getStaticField(VirtualMachine& vm, const std::string& name);
 
         //Used for C++->Pomme call
         std::unordered_map<std::string, uint16_t> methodsIndices;
@@ -131,13 +144,17 @@ namespace Pomme
         virtual ~ObjInstance() = default;
 
         ObjClass* klass;
-        Value fields[FIELDS_MAX];
-        Value nativeMethods[METHODS_MAX];
 
-        Value* getField(const std::string& name);
-        Value* getStaticField(const std::string& name);
+        Pointer fields;
+        Pointer nativeMethods;
 
-        bool linkMethodNative(const std::string& methodName, MethodNativeFn function);
+        Value* getNativeMethod(VirtualMachine& vm, uint16_t slot);
+        Value* getNativeMethod(VirtualMachine& vm, const std::string& name);
+
+        Value* getField(VirtualMachine& vm, uint16_t slot);
+        Value* getField(VirtualMachine& vm, const std::string& name);
+
+        bool linkMethodNative(VirtualMachine& vm, const std::string& methodName, MethodNativeFn function);
     };
 
     struct ObjBoundMethod: public Obj
@@ -155,8 +172,6 @@ namespace Pomme
         Value receiver;
         Value* method;
     };
-    
-    class VirtualMachine;
 
     bool isObjType(const VirtualMachine& vm, const Value& value, ObjType type);
 

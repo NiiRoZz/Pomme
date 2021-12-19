@@ -166,7 +166,7 @@ TEST(TEST_VM, GlobalNativeTest)
 
 TEST(TEST_VM, ClassTest)
 {
-	TEST_VM_TEST("class TestClass { int k = 0; int g = 5; public void t() {int f = 50; print(f);}; }; void f() { int a = 10; TestClass oui = new TestClass(); TestClass non = new TestClass(); oui.t(); a = 25; oui.g = 35; non.g = 700; print(a); print(oui.g); print(non.g); };\n");
+	TEST_VM_TEST("class TestClass { int k; int g; TestClass() { k = 0; g = 5; }; public void t() {int f = 50; print(f);}; }; void f() { int a = 10; TestClass oui = new TestClass(); TestClass non = new TestClass(); oui.t(); a = 25; oui.g = 35; non.g = 700; print(a); print(oui.g); print(non.g); };\n");
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -177,7 +177,7 @@ TEST(TEST_VM, ClassTest)
 
 TEST(TEST_VM, ClassMethodTest)
 {
-	TEST_VM_TEST("class StructClass { int x = 0; int h = 10; public int y(int a) {print(a);}; };  class TestClass { StructClass z = new StructClass(); public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.z.y(25); oui.z.x = 5; print(oui.z); print(oui.z.h); print(oui.z.x);  };\n");
+	TEST_VM_TEST("class StructClass { int x; int h; StructClass() { x = 0; h = 10; }; public int y(int a) {print(a);}; };  class TestClass { StructClass z; TestClass() { z = new StructClass(); }; public int g(int a) {print(a);}; }; void f() { TestClass oui = new TestClass(); oui.g(50); oui.z.y(25); oui.z.x = 5; print(oui.z); print(oui.z.h); print(oui.z.x);  };\n");
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -230,7 +230,7 @@ TEST(TEST_VM, ClassStaticMethodTest)
 
 TEST(TEST_VM, ClassStaticVarTest)
 {
-	TEST_VM_TEST("class TestClass { int x = 0; static int y = 587; }; void f() { print(TestClass.y); };\n");
+	TEST_VM_TEST("class TestClass { int x; static int y = 587; }; void f() { print(TestClass.y); };\n");
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -241,12 +241,12 @@ TEST(TEST_VM, ClassStaticVarTest)
 
 TEST(TEST_VM, ClassNativeMethodTest)
 {
-	TEST_VM_TEST("class Other { static int t = 5; }; class TestClass { int z = 10; int x = 0; static int y = 23; native void meth(int a); }; void f() { TestClass oui = new TestClass(); oui.meth(573); print(oui.x); print(Other.t); };\n");
+	TEST_VM_TEST("class Other { static int t = 5; }; class TestClass { int z; int x; static int y = 23; TestClass() {z = 10; x = 0;}; native void meth(int a); }; void f() { TestClass oui = new TestClass(); oui.meth(573); print(oui.x); print(Other.t); };\n");
 
 	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 
-		Value* x = instance->getField("x");
+		Value* x = instance->getField(vm, "x");
 		EXPECT_TRUE(x != nullptr);
 
 		if (x != nullptr)
@@ -254,7 +254,7 @@ TEST(TEST_VM, ClassNativeMethodTest)
 			*x = args[0];
 		}
 
-		Value* y = instance->getStaticField("y");
+		Value* y = instance->klass->getStaticField(vm, "y");
 		EXPECT_TRUE(y != nullptr);
 		EXPECT_TRUE(IS_INT(*y));
 
@@ -330,8 +330,7 @@ TEST(TEST_VM, ClassCallMethodFromCPPTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
-/*
-TODO: fix issue with linking instance method
+
 TEST(TEST_VM, ClassLinkMethodInstanceTest)
 {
 	TEST_VM_TEST("class TestClass { native void method(float a); void update(float t) {method(t);}; };\n");
@@ -339,7 +338,7 @@ TEST(TEST_VM, ClassLinkMethodInstanceTest)
 	ObjInstance* instance = vm.newInstance("TestClass");
 	EXPECT_TRUE(instance != nullptr);
 
-	EXPECT_TRUE(instance->linkMethodNative(vm.getFunctionName("method", "float"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
+	EXPECT_TRUE(instance->linkMethodNative(vm, vm.getFunctionName("method", "float"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 
 		std::cout << "parameter : ";
@@ -357,7 +356,6 @@ TEST(TEST_VM, ClassLinkMethodInstanceTest)
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
 }
-*/
 
 TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
 {
@@ -382,7 +380,7 @@ TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
 
 TEST(TEST_VM, CustomOperatorPlusTest)
 {
-	TEST_VM_TEST("native void t(float a); class Test { int x = 20; float operator+(float y) {return x + y;}; }; void f() {Test oui = new Test(); t(oui + 10.0); };\n");
+	TEST_VM_TEST("native void t(float a); class Test { int x; Test() {x = 20;}; float operator+(float y) {return x + y;}; }; void f() {Test oui = new Test(); t(oui + 10.0); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
@@ -554,7 +552,7 @@ TEST(TEST_VM, inheritTest)
 
 TEST(TEST_VM, inherit2Test)
 {
-	TEST_VM_TEST("native void t(int a); class TestClass {int a = 10;}; class Jui extends TestClass { int mass() { return a; }; }; void f() { Jui oui = new Jui(); t(oui.mass()); };\n");
+	TEST_VM_TEST("native void t(int a); class TestClass {int a; TestClass() {a = 10;};}; class Jui extends TestClass { int mass() { return a; }; }; void f() { Jui oui = new Jui(); t(oui.mass()); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
@@ -762,6 +760,16 @@ TEST(TEST_VM, FreeNotUsedClass)
 	TEST_VM_TEST("class TestClass { }; void f() { TestClass oui = new TestClass(); };\n");
  
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, FreeNotUsedClassAfterAnotherFree)
+{
+	TEST_VM_TEST("class OtherClass {TestClass other;}; class TestClass { }; void f(OtherClass b) { TestClass oui = new TestClass(); b.other = oui; }; void t() {OtherClass other = new OtherClass(); f(other); };\n");
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("t"), {});
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
