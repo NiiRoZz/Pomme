@@ -12,6 +12,7 @@ namespace Pomme
     {
     public:
         static std::string getParametersType(Pomme::Node* node);
+        static std::string getMethodeIdentFromListAccess(Pomme::Node* node);
         static std::string getTypeName(Pomme::Node* node);
 
         static bool isNativeType(const std::string& name);

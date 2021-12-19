@@ -17,6 +17,8 @@ namespace Pomme
         std::unordered_map<std::string, int> lastDefinedModdedClassStateNumber;
         std::string currentClassName;
 
+        bool access_context;
+
         void classToResolveCheck(const std::string &className, const std::string& classToResolve);
         void moddedClassToResolveCheck(const std::string &className, Node* node);
         void addState(Node* node);
@@ -27,8 +29,36 @@ namespace Pomme
         void checkGlobalDependance(Node* node);
         void checkHeaderDependance(Node* node, const std::string& functionCompleteName);
 
+
+
         void findDependingObject(Node* node);
         bool resolved(Node* node, bool isClass);
+
+        template<typename T>
+        void visitBinaryOperator(T* node, std::array<std::string, 2>& array)
+        {
+            std::string leftType;
+            node->jjtChildAccept(0, this, &leftType);
+
+            std::string rightType;
+            node->jjtChildAccept(1, this, &rightType);
+
+            array[0] = leftType;
+            array[1] = rightType;
+        }
+
+        void getExpType(ASTPommeListExp* node, std::string& current)
+        {
+            if(node != nullptr)
+            {
+                std::string type;
+                node->jjtGetChild(0)->jjtAccept(this, &type);
+                current += type + HEADER_FUNC_SEPARATOR;
+                std::cout << " CURRENT +  " << current << std::endl;
+                getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), current);
+            }
+        }
+
         void visit(SimpleNode *node, void * data);
         void visit(ASTPommeInput *node, void * data);
         void visit(ASTPommeIdent *node, void * data);
