@@ -12,10 +12,13 @@ namespace Pomme
     public:
         Automaton dependanceGraph;
         int nbState = 0;
-        std::unordered_map<std::string,std::unordered_set<std::string>> classToBeResolved;
+        std::unordered_map<std::string, std::unordered_set<std::string>> classToBeResolved;
+        std::unordered_map<std::string, std::vector<Node*>> moddedClassToBeResolved;
+        std::unordered_map<std::string, int> lastDefinedModdedClassStateNumber;
         std::string currentClassName;
 
-        void classToResolveCheck(std::string className, std::string classToResolve);
+        void classToResolveCheck(const std::string &className, const std::string& classToResolve);
+        void moddedClassToResolveCheck(const std::string &className, Node* node);
         void addState(Node* node);
         void addEnum(Node* node);
         void addGlobal(Node* node);
