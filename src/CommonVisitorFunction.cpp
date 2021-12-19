@@ -38,4 +38,16 @@ namespace Pomme
         static std::unordered_set<std::string> nativeTypes = {"int", "float", "bool", "string"};
         return nativeTypes.count(name);
     }
+
+    std::string CommonVisitorFunction::getMethodeIdentFromListAccess(Pomme::Node *node) {
+
+        auto* accessMethodeNode = dynamic_cast<Pomme::ASTPommeAccessMethode*>(node);
+        std::string methodeIdent = dynamic_cast<Pomme::ASTPommeIdent*>(accessMethodeNode->jjtGetChild(0))->m_Identifier;
+
+        auto* ListExpNode = dynamic_cast<Pomme::ASTPommeListExp*>(accessMethodeNode->jjtGetChild(1));
+
+
+
+        return methodeIdent;
+    }
 }

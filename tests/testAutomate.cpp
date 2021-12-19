@@ -784,6 +784,80 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalExp)
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
 }
 
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExp)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = func((8+3), (1-2), (6*4), (9/9)); }; int func(int w, int x, int z, int om){};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = func((8 > 3), (1>=2), (6<=4), (9<9)); }; int func(bool w, bool x, bool z, bool om){};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool2)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = func((8 == 3), (1!=2)); }; int func(bool w, bool x){};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithOtherDependance)
+{
+    TEST_AUTOMATE_TEST("class test{}; class test2{ test f; int j = func2(f); }; int func2(test k){};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,1), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFund)
+{
+    TEST_AUTOMATE_TEST("class test2{ int j = func(func2()); }; int func2(){}; int func(bool w, bool x){};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,0), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+
 TEST(TEST_AUTOMATE, Graph_GlobalDependanceOverloading)
 {
     TEST_AUTOMATE_TEST("int func(int j){}; int func(int j, int k){}; class test{ int z = func(7); int k = func(8,7); };\n");
