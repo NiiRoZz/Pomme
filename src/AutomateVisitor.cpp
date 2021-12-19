@@ -914,7 +914,18 @@ namespace Pomme
 
     void AutomateVisitor::visit(ASTPommeVarDecls *node, void *data)
     {
-        node->jjtChildrenAccept(this, data);
+        auto identFuncs = dynamic_cast<ASTPommeIdentFuncs*>(node->jjtGetChild(0));
+        if( identFuncs != nullptr)
+        {
+            auto staticIdent = dynamic_cast<ASTPommeStatic*>(identFuncs->jjtGetChild(0));
+            if(staticIdent != nullptr)
+            {
+                node->jjtChildAccept(1,this,data);
+            }else
+            {
+                // not static
+            }
+        }
     }
 
     void AutomateVisitor::visit(ASTPommeListAccessP *node, void *data)

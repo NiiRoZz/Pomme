@@ -202,7 +202,7 @@ TEST(TEST_AUTOMATE, Graph_Basic) {
 }
 
 TEST(TEST_AUTOMATE, Graph_Attribute) {
-    TEST_AUTOMATE_TEST("class test2{}; class test{ int x; test2 y; };\n");
+    TEST_AUTOMATE_TEST("class test2{}; class test{ int x; static test2 y; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -213,7 +213,7 @@ TEST(TEST_AUTOMATE, Graph_Attribute) {
 }
 
 TEST(TEST_AUTOMATE, Graph_SelfLoop) {
-    TEST_AUTOMATE_TEST("class test{ test y; };\n");
+    TEST_AUTOMATE_TEST("class test{ static test y; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -223,7 +223,7 @@ TEST(TEST_AUTOMATE, Graph_SelfLoop) {
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,0));
 }
 TEST(TEST_AUTOMATE, Graph_3Loop) {
-    TEST_AUTOMATE_TEST("class test{ test1 y; }; class test1{ test2 y; }; class test2{ test y; };\n");
+    TEST_AUTOMATE_TEST("class test{ static test1 y; }; class test1{ static test2 y; }; class test2{ static test y; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -236,7 +236,7 @@ TEST(TEST_AUTOMATE, Graph_3Loop) {
 }
 
 TEST(TEST_AUTOMATE, Graph_DefinedAfter) {
-    TEST_AUTOMATE_TEST("class test{ test2 y; }; class test2{};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 y; }; class test2{};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -270,9 +270,9 @@ TEST(TEST_AUTOMATE, Graph_Extends) {
 
 TEST(TEST_AUTOMATE, Graph_Complex) {
     TEST_AUTOMATE_TEST("class test5{}; " // 0
-                       "class test2{ test3 y; }; " // 1
+                       "class test2{ static test3 y; }; " // 1
                        "class test extends test2 {}; " // 2
-                       "class test3 extends test5{ test2 x;};\n"); // 3
+                       "class test3 extends test5{ static test2 x;};\n"); // 3
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -286,7 +286,7 @@ TEST(TEST_AUTOMATE, Graph_Complex) {
 }
 
 TEST(TEST_AUTOMATE, Graph_Multiple) {
-    TEST_AUTOMATE_TEST("class test2{}; class test3{}; class test{ test2 x; test3 y; };\n");
+    TEST_AUTOMATE_TEST("class test2{}; class test3{}; class test{ static test2 x; static test3 y; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -298,7 +298,7 @@ TEST(TEST_AUTOMATE, Graph_Multiple) {
 }
 
 TEST(TEST_AUTOMATE, Graph_MultipleAfter) {
-    TEST_AUTOMATE_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 x; static test3 y; }; class test2{}; class test3{};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -330,7 +330,7 @@ TEST(TEST_AUTOMATE, Graph_Loop1) {
 }
 
 TEST(TEST_AUTOMATE, Graph_Loop2) {
-    TEST_AUTOMATE_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 x; static test3 y; }; class test2{}; class test3{};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -339,7 +339,7 @@ TEST(TEST_AUTOMATE, Graph_Loop2) {
 }
 
 TEST(TEST_AUTOMATE, Graph_Loop3) {
-    TEST_AUTOMATE_TEST("class test{ test2 x;}; class test2{ test x;};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 x;}; class test2{ static test x;};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -348,7 +348,7 @@ TEST(TEST_AUTOMATE, Graph_Loop3) {
 }
 
 TEST(TEST_AUTOMATE, Graph_Loop4) {
-    TEST_AUTOMATE_TEST("class test{ test2 x;}; class test2{ test3 x;}; class test3{ test x;};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 x;}; class test2{ static test3 x;}; class test3{ static test x;};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -392,7 +392,7 @@ TEST(TEST_AUTOMATE, Graph_Loop6) {
 
 TEST(TEST_AUTOMATE, Graph_Sort) {
 
-    TEST_AUTOMATE_TEST("class test{ test2 x; test3 y; }; class test2{}; class test3{};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 x; static test3 y; }; class test2{}; class test3{};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -415,7 +415,7 @@ TEST(TEST_AUTOMATE, Graph_Sort) {
 
 TEST(TEST_AUTOMATE, Graph_Sort2) {
 
-    TEST_AUTOMATE_TEST("class test{ test2 x; }; class test2{};\n");
+    TEST_AUTOMATE_TEST("class test{ static test2 x; }; class test2{};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -438,7 +438,7 @@ TEST(TEST_AUTOMATE, Graph_Sort3) {
     TEST_AUTOMATE_TEST("class test5{}; " // 0
                        "class test2{}; " // 1
                        "class test extends test3 {}; " // 2
-                       "class test3 extends test5{ test2 x;};\n"); // 3
+                       "class test3 extends test5{ static test2 x;};\n"); // 3
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -582,7 +582,7 @@ TEST(TEST_AUTOMATE, Graph_Enum3) {
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
 }
 TEST(TEST_AUTOMATE, Graph_ClassEnum) {
-    TEST_AUTOMATE_TEST("enum test{}; class depend{ test x;};\n");
+    TEST_AUTOMATE_TEST("enum test{}; class depend{ static test x;};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -594,7 +594,7 @@ TEST(TEST_AUTOMATE, Graph_ClassEnum) {
 }
 
 TEST(TEST_AUTOMATE, Graph_ClassEnum2) {
-    TEST_AUTOMATE_TEST("enum test extends test2{}; enum test2{}; class depend{ test x;};  class depend2 extends depend{};\n");
+    TEST_AUTOMATE_TEST("enum test extends test2{}; enum test2{}; class depend{ static test x;};  class depend2 extends depend{};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -620,7 +620,7 @@ TEST(TEST_AUTOMATE, Graph_LoopEnum) {
 
 
 TEST(TEST_AUTOMATE, Graph_EnumClass) {
-    TEST_AUTOMATE_TEST("enum testEnum{ a }; class test{ testEnum x; };\n");
+    TEST_AUTOMATE_TEST("enum testEnum{ a }; class test{ static testEnum x; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -633,7 +633,7 @@ TEST(TEST_AUTOMATE, Graph_EnumClass) {
 }
 
 TEST(TEST_AUTOMATE, Graph_EnumExtendsClass) {
-    TEST_AUTOMATE_TEST("enum testEnum extends testEnum2{ a }; class test{ testEnum x; }; enum testEnum2{ a };\n");
+    TEST_AUTOMATE_TEST("enum testEnum extends testEnum2{ a }; class test{ static testEnum x; }; enum testEnum2{ a };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -648,7 +648,7 @@ TEST(TEST_AUTOMATE, Graph_EnumExtendsClass) {
 
 
 TEST(TEST_AUTOMATE, Graph_Assignement) {
-    TEST_AUTOMATE_TEST("class test{ int x = 8; };\n");
+    TEST_AUTOMATE_TEST("class test{ static int x = 8; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -715,7 +715,7 @@ TEST(TEST_AUTOMATE, Graph_GlobalOverloadDependanceParam) {
 }
 
 TEST(TEST_AUTOMATE, Graph_DoubleDependance) {
-    TEST_AUTOMATE_TEST("class c2{}; class c1{ c2 x; c2 y;};\n");
+    TEST_AUTOMATE_TEST("class c2{}; class c1{ static c2 x; static c2 y;};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -730,7 +730,7 @@ TEST(TEST_AUTOMATE, Graph_DoubleDependance) {
 
 TEST(TEST_AUTOMATE, Graph_AssignementVarDependanceToResolve)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = test.k(); int k = test.a; }; class test{ static int a = 8; static int k(){}; };\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = test.k(); static int k = test.a; }; class test{ static int a = 8; static int k(){}; };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -744,7 +744,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementVarDependanceToResolve)
 
 TEST(TEST_AUTOMATE, Graph_AssignementVarDependance)
 {
-    TEST_AUTOMATE_TEST("class test{ static int k(){}; }; class test2{ int j = test.k(); };\n");
+    TEST_AUTOMATE_TEST("class test{ static int k(){}; }; class test2{ static int j = test.k(); };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -758,7 +758,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementVarDependance)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = func(8); }; int func(int w){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(8); }; int func(int w){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -772,7 +772,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalExp)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = func(8 + 3); }; int func(int w){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(8 + 3); }; int func(int w){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -786,7 +786,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalExp)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExp)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = func((8+3), (1-2), (6*4), (9/9)); }; int func(int w, int x, int z, int om){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func((8+3), (1-2), (6*4), (9/9)); }; int func(int w, int x, int z, int om){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -800,7 +800,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExp)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = func((8 > 3), (1>=2), (6<=4), (9<9)); }; int func(bool w, bool x, bool z, bool om){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func((8 > 3), (1>=2), (6<=4), (9<9)); }; int func(bool w, bool x, bool z, bool om){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -814,7 +814,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool2)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = func((8 == 3), (1!=2)); }; int func(bool w, bool x){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func((8 == 3), (1!=2)); }; int func(bool w, bool x){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -828,7 +828,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool2)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithOtherDependance)
 {
-    TEST_AUTOMATE_TEST("class test{}; class test2{ test f; int j = func2(f); }; int func2(test k){};\n");
+    TEST_AUTOMATE_TEST("class test{}; class test2{ static test f; static int j = func2(f); }; int func2(test k){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -844,7 +844,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithOtherDependance)
 
 TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFund)
 {
-    TEST_AUTOMATE_TEST("class test2{ int j = func(func2()); }; int func2(){}; int func(bool w, bool x){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(func2()); }; int func2(){}; int func(bool w, bool x){};\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -860,7 +860,7 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFund)
 
 TEST(TEST_AUTOMATE, Graph_GlobalDependanceOverloading)
 {
-    TEST_AUTOMATE_TEST("int func(int j){}; int func(int j, int k){}; class test{ int z = func(7); int k = func(8,7); };\n");
+    TEST_AUTOMATE_TEST("int func(int j){}; int func(int j, int k){}; class test{ static int z = func(7); static int k = func(8,7); };\n");
     std::cout << text << std::endl;
 
     AutomateVisitor visitor;
@@ -952,6 +952,19 @@ TEST(TEST_AUTOMATE, Graph_ModdedChain)
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(4,5), true);
 }
 
+
+TEST(TEST_AUTOMATE, Graph_Static)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int k = 8; }; \n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 0);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 1);
+}
 
 
 
