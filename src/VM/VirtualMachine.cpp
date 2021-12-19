@@ -20,6 +20,7 @@ namespace Pomme
     //, nextGC(1024u * 1024u)
     , objectMemory(1000000u * 10u)
     {
+        std::memset(globals, 0, sizeof(Value) * GLOBALS_MAX);
         //grayStack.reserve(GLOBALS_MAX + STACK_MAX);
         for (uint8_t i = 0; i < static_cast<uint8_t>(PrimitiveType::COUNT); ++i)
         {
@@ -75,7 +76,7 @@ namespace Pomme
         callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
         callFunction.chunk.writeChunk(params.size() & 0xff, 1);
 
-        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_RETURN), 2);
         
         return interpret(&callFunction);
     }
@@ -122,7 +123,7 @@ namespace Pomme
         callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
         callFunction.chunk.writeChunk(params.size() & 0xff, 1);
 
-        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 0);
+        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_RETURN), 2);
         
         return interpret(&callFunction);
     }
@@ -136,6 +137,8 @@ namespace Pomme
         }
 
         assert(IS_FUNCTION(*this, globals[it->second]));
+
+        //TODO: call native global function
 
         ObjFunction* function = AS_FUNCTION(*this, globals[it->second]);
 
@@ -151,23 +154,12 @@ namespace Pomme
             push(params[i]);
         }
 
-        ObjFunction callFunction;
-        callFunction.name = function->name;
-        callFunction.arity = function->arity;
-        callFunction.type = ObjType::OBJ_FUNCTION;
-
-        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_CALL_GLOBAL), 1);
-        callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
-        callFunction.chunk.writeChunk(params.size() & 0xff, 1);
-
-        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
-
-        if (!call(&callFunction, params.size()))
+        if (!call(function, params.size()))
         {
             return {};
         }
 
-        if (run() != InterpretResult::INTERPRET_OK)
+        if (run(true) != InterpretResult::INTERPRET_OK)
         {
             return {};
         }
@@ -180,6 +172,13 @@ namespace Pomme
         auto it = instance->klass->methodsIndices.find(methodName);
         if (it == instance->klass->methodsIndices.end())
         {
+            auto ot = instance->klass->nativeMethodsIndices.find(methodName);
+            if (ot == instance->klass->nativeMethodsIndices.end())
+            {
+                return {};
+            }
+
+            //TODO: call native method
             return {};
         }
 
@@ -199,26 +198,12 @@ namespace Pomme
             push(params[i]);
         }
 
-        ObjFunction callFunction;
-        callFunction.name = function->name;
-        callFunction.arity = function->arity;
-        callFunction.type = ObjType::OBJ_FUNCTION;
-
-        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_INVOKE), 1);
-        callFunction.chunk.writeChunk((it->second >> 8) & 0xff, 1);
-        callFunction.chunk.writeChunk(it->second & 0xff, 1);
-        callFunction.chunk.writeChunk(0u, 1);
-        callFunction.chunk.writeChunk((params.size() >> 8) & 0xff, 1);
-        callFunction.chunk.writeChunk(params.size() & 0xff, 1);
-
-        callFunction.chunk.writeChunk(AS_OPCODE(OpCode::OP_FINISH), 1);
-
-        if (!call(&callFunction, params.size()))
+        if (!call(function, params.size()))
         {
             return {};
         }
 
-        if (run() != InterpretResult::INTERPRET_OK)
+        if (run(true) != InterpretResult::INTERPRET_OK)
         {
             return {};
         }
@@ -415,7 +400,7 @@ namespace Pomme
         return stackTop - stack;
     }
 
-    InterpretResult VirtualMachine::run()
+    InterpretResult VirtualMachine::run(bool exitAtFirstReturn)
     {
         CallFrame* frame = &frames[frameCount - 1];
 
@@ -530,6 +515,28 @@ namespace Pomme
 
             CASES(OP_POP)
             {
+                Value& top = peek(0);
+
+                if (IS_OBJ_PTR(top))
+                {
+                    #ifdef DEBUG_LOG
+                    std::cout << "Poping OBJ ptr : ";
+                    printObject(top);
+                    std::cout << std::endl;
+
+                    std::cout << "refCount : " << unsigned(objectMemory.getHeader(AS_OBJ_PTR(top))->refCount) << std::endl;
+                    #endif
+
+                    objectMemory.free(AS_OBJ_PTR(top));
+                }
+
+                pop(1u);
+
+                DISPATCH();
+            }
+
+            CASES(OP_NR_POP)
+            {
                 pop(1u);
 
                 DISPATCH();
@@ -552,7 +559,7 @@ namespace Pomme
 
             CASES(OP_SET_GLOBAL)
             {
-                globals[READ_BYTE()] = peek(0);
+                setValue(&(globals[READ_BYTE()]), peek(0));
                 pop(1u);
 
                 DISPATCH();
@@ -567,7 +574,7 @@ namespace Pomme
 
             CASES(OP_SET_LOCAL)
             {
-                frame->slots[READ_BYTE()] = peek(0);
+                setValue(&(frame->slots[READ_BYTE()]), peek(0));
                 pop(1u);
 
                 DISPATCH();
@@ -700,24 +707,14 @@ namespace Pomme
                 stackTop = frame->slots;
                 push(result);
 
+                if (exitAtFirstReturn)
+                {
+                    return InterpretResult::INTERPRET_OK;
+                }
+
                 frame = &frames[frameCount - 1];
 
                 DISPATCH();
-            }
-
-            CASES(OP_FINISH)
-            {
-                Value result = pop();
-                frameCount--;
-
-                pop(1u);
-
-                if (frameCount > 0)
-                {
-                    push(result);
-                }
-
-                return InterpretResult::INTERPRET_OK; 
             }
 
             CASES(OP_INHERIT)
@@ -1204,6 +1201,8 @@ namespace Pomme
         std::cout << "VirtualMachine::defineMethod(" << slot << ", " << name->chars << ", " << isNative << ")" << std::endl;
         #endif
 
+        assert(IS_OBJ_PTR(peek(0)));
+
         Value& method = peek(0);
 
         assert(IS_CLASS(*this, peek(1)));
@@ -1221,7 +1220,7 @@ namespace Pomme
             klass->methodsIndices.emplace(name->chars, slot);
         }
 
-        pop();
+        pop(1u);
     }
 
     void VirtualMachine::defineField(uint16_t slot, ObjString* name, bool isStatic)
@@ -1246,7 +1245,7 @@ namespace Pomme
             klass->fieldsIndices.emplace(name->chars, slot);
         }
         
-        pop();
+        pop(1u);
     }
 
     ObjClass* VirtualMachine::newClass(ObjString* name)
@@ -1316,6 +1315,8 @@ namespace Pomme
                 return simpleInstruction("OP_PRINT", offset);
             case AS_OPCODE(OpCode::OP_POP):
                 return simpleInstruction("OP_POP", offset);
+            case AS_OPCODE(OpCode::OP_NR_POP):
+                return simpleInstruction("OP_NR_POP", offset);
             /*case AS_OPCODE(OpCode::OP_GET_GLOBAL):
                 return constantInstruction("OP_GET_GLOBAL", chunk, offset);
             
@@ -1376,5 +1377,28 @@ namespace Pomme
         jump |= chunk->code[offset + 2];
         printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
         return offset + 3;
+    }
+
+    void VirtualMachine::setValue(Value* dest, const Value& src)
+    {
+        #ifdef DEBUG_LOG
+        std::cout << "VirtualMachine::setValue" << std::endl;
+        #endif
+
+        if (IS_OBJ_PTR(*dest))
+        {
+            objectMemory.free(AS_OBJ_PTR(*dest));
+        }
+
+        *dest = src;
+
+        if (IS_OBJ_PTR(src))
+        {
+            objectMemory.incRefCount(AS_OBJ_PTR(src));
+        }
+
+        #ifdef DEBUG_LOG
+        std::cout << "End VirtualMachine::setValue" << std::endl;
+        #endif
     }
 }

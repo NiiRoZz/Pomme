@@ -52,7 +52,7 @@ void defineStdNative(VirtualMachine& vm)
 
 TEST(TEST_VM, BasicTest)
 {
-    TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; print(a + 20.0 + b); \n };\n");
+    TEST_VM_TEST("void f() { float a = 5.0 + 5.0; float b = 5.0; b = 10.0; print(a + 20.0 + b); \n };\n");
 
 	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 
@@ -282,6 +282,7 @@ TEST(TEST_VM, ClassNativeMethodCallGlobalTest)
 		std::optional<Value> val = vm.callGlobalFunction(vm.getFunctionName("g", "int"), {args[0]});
 
 		EXPECT_TRUE(val.has_value());
+		EXPECT_EQ(AS_INT(*val), 583);
 
 		return *val;
 	}));
@@ -303,6 +304,7 @@ TEST(TEST_VM, ClassNativeMethodCallMethodTest)
 		std::optional<Value> val = vm.callMethodFunction(instance, vm.getFunctionName("update", "float"), {args[0]});
 
 		EXPECT_TRUE(val.has_value());
+		EXPECT_TRUE(IS_NULL(*val));
 
 		return *val;
 	}));
@@ -755,6 +757,16 @@ TEST(TEST_VM, OverridingModdedClassTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, FreeNotUsedClass)
+{
+	TEST_VM_TEST("class TestClass { }; void f() { TestClass oui = new TestClass(); };\n");
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");
@@ -841,7 +853,8 @@ static void fibNoNativeBench(benchmark::State& state)
 
 BENCHMARK(fibNoNativeBench)->Unit(benchmark::kSecond);
 
-/*TEST(TEST_VM, benchmarkTest)
+/*
+TEST(TEST_VM, benchmarkTest)
 {
 	::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
 	::benchmark::RunSpecifiedBenchmarks("fibNoNativeBench");

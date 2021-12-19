@@ -52,6 +52,7 @@ namespace Pomme
         }
 
         void free(Pointer p);
+        void incRefCount(Pointer p);
 
         template<typename T>
         inline T* get(Pointer p)

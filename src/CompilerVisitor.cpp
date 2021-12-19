@@ -493,7 +493,7 @@ namespace Pomme
 
         m_InNativeClass = m_InClass = false;
 
-        emitByte(AS_OPCODE(OpCode::OP_POP));
+        emitByte(AS_OPCODE(OpCode::OP_NR_POP));
     }
 
     void CompilerVisitor::visit(ASTPommeClassChild *node, void * data)
@@ -522,15 +522,13 @@ namespace Pomme
 
         m_InClass = false;
 
-        emitByte(AS_OPCODE(OpCode::OP_POP));
+        emitByte(AS_OPCODE(OpCode::OP_NR_POP));
     }
 
     void CompilerVisitor::visit(ASTPommeModdedClass *node, void * data)
     {
         const std::string& name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         const std::string& parentName = node->parentName;
-
-        std::cout << "ASTPommeModdedClass name : " << name << " parentName : " << parentName << std::endl;
 
         m_SuperClass = parentName;
 
@@ -553,7 +551,7 @@ namespace Pomme
 
         m_InClass = false;
 
-        emitByte(AS_OPCODE(OpCode::OP_POP));
+        emitByte(AS_OPCODE(OpCode::OP_NR_POP));
     }
 
     void CompilerVisitor::visit(ASTPommeMethode *node, void * data)
@@ -641,15 +639,21 @@ namespace Pomme
 
         addLocal("");
 
+        beginScope(); 
+
         //2: parameters
         node->jjtChildAccept(2, this, data);
 
         //3: instrs
         node->jjtChildAccept(3, this, data);
 
+        endScope();
+
         emitReturn();
 
-        endScope();
+        //Force end of begin scope without pop elements
+        scopeDepth--;
+        localCount--;
 
         ObjFunction* compiledFunction = function;
         function = currentFunction;
@@ -924,6 +928,10 @@ namespace Pomme
         {
             emitFloat(0.0);
         }
+        else if (typeName == "bool")
+        {
+            emitBytes(AS_OPCODE(OpCode::OP_BOOL), 0u);
+        }
         else
         {
             emitByte(AS_OPCODE(OpCode::OP_NULL));
@@ -1034,11 +1042,15 @@ namespace Pomme
 
         addLocal("this");
 
+        beginScope(); 
+
         //1 or 3: headers
         node->jjtChildAccept(constructor ? 1u : 3u, this, nullptr);
 
         //2 or 4: instrs
         node->jjtChildAccept(constructor ? 2u : 4u, this, nullptr);
+
+        endScope();
 
         if (constructor)
         {
@@ -1050,7 +1062,8 @@ namespace Pomme
             emitReturn();
         }
 
-        endScope();
+        scopeDepth--;
+        localCount--;
 
         ObjFunction* compiledFunction = function;
         function = currentFunction;

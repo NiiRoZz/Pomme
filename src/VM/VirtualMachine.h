@@ -102,7 +102,7 @@ namespace Pomme
 		bool started;
 		
 	private:
-		InterpretResult run();
+		InterpretResult run(bool exitAtFirstReturn = false);
 
 		std::string getParametersType()
 		{
@@ -137,6 +137,8 @@ namespace Pomme
 		int constantInstruction(const char* name, Chunk* chunk, int offset);
 		int byteInstruction(const char* name, Chunk* chunk, int offset);
 		int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset);
+
+		void setValue(Value* dest, const Value& src);
 
 	private:
 		CallFrame frames[FRAMES_MAX];

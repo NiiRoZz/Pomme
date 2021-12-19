@@ -1,5 +1,6 @@
 #include "ObjectMemory.h"
 #include "Object.h"
+#include "VirtualMachine.h"
 
 #include <cstdlib>
 #include <cstdint>
@@ -17,6 +18,7 @@ namespace Pomme
     ObjectMemory::~ObjectMemory()
     {
         std::free(m_Memory);
+        std::cout << "ObjectMemory::~ObjectMemory" << std::endl;
     }
 
     void ObjectMemory::free(Pointer p)
@@ -32,7 +34,18 @@ namespace Pomme
             header->~ObjectHeader();
 
             //TODO: delete from memory
+            #ifdef DEBUG_LOG
+            std::cout << "Removed object with pointer p : " << unsigned(p) << std::endl;
+            #endif
         }
+    }
+
+    void ObjectMemory::incRefCount(Pointer p)
+    {
+        getHeader(p)->refCount += 1;
+        #ifdef DEBUG_LOG
+        std::cout << "Increment ref to " << unsigned(getHeader(p)->refCount) << " on object with pointer p : " << unsigned(p) << std::endl;
+        #endif
     }
 
     Pointer ObjectMemory::malloc(std::size_t size)
