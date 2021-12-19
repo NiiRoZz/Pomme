@@ -46,11 +46,16 @@ namespace Pomme
 
     bool ObjInstance::linkMethodNative(const std::string& name, MethodNativeFn function)
     {
-        auto it = klass->nativeMethodsIndices.find(name);
+        /*auto it = klass->nativeMethodsIndices.find(name);
         if (it == klass->nativeMethodsIndices.end()) return false;
 
-        AS_METHOD_NATIVE(nativeMethods[it->second]) = function;
+        AS_METHOD_NATIVE(nativeMethods[it->second]) = function;*/
 
-        return true;
+        return false;
+    }
+
+    bool isObjType(const VirtualMachine& vm, const Value& value, ObjType type)
+    {
+        return IS_OBJ_PTR(value) && AS_OBJ(vm, value)->isType(type);
     }
 }

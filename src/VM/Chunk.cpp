@@ -1,5 +1,4 @@
 #include "Chunk.h"
-#include "Memory.h"
 #include "VirtualMachine.h"
 
 namespace Pomme

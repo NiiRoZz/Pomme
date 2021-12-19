@@ -2,7 +2,6 @@
 #include "CommonVisitorFunction.h"
 #include "VM/VirtualMachine.h"
 #include "VM/Chunk.h"
-#include "VM/Memory.h"
 #include "PommeLexerTree.h"
 
 #include <unordered_set>

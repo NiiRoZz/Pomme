@@ -1083,3 +1083,19 @@ TEST(TEST_TYPECHECKER, AssignementVarDependance)
     }
     EXPECT_EQ(visitor.errors.size(), 0);
 }
+
+TEST(TEST_TYPECHECKER, ConstAssign)
+{
+    TEST_TYPECHECKER_TEST("void f() {const int f = 5; f = 10; }; \n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_TRUE(visitor.errors.size() > 0);
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}
