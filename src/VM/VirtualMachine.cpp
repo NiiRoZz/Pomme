@@ -614,12 +614,12 @@ namespace Pomme
                 if (IS_INSTANCE(*this, peek(0)))
                 {
                     ObjInstance* instance = AS_INSTANCE(*this, peek(0));
-                    instance->fields[slot] = peek(1);
+                    setValue(&(instance->fields[slot]), peek(1));
                 }
                 else
                 {
                     ObjClass* klass = AS_CLASS(*this, peek(0));
-                    klass->staticFields[slot] = peek(1);
+                    setValue(&(klass->staticFields[slot]), peek(1));
                 }
 
                 pop(2u); // Instance or Class. and Value
