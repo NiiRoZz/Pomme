@@ -198,6 +198,15 @@ namespace Pomme {
         return -1;
     }
 
+    std::vector<Transition> Automaton::getTransitionsExiting(int state)
+    {
+        if(this->m_transition.find(state) != this->m_transition.end())
+        {
+            return this->m_transition.find(state)->second;
+        }
+        return {};
+    }
+
     std::vector<int> Automaton::topologicalSort()
     {
         const int nbState = this->countStates() - 1;

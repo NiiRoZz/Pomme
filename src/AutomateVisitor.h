@@ -17,8 +17,7 @@ namespace Pomme
         std::unordered_map<std::string, int> lastDefinedModdedClassStateNumber;
         std::string currentClassName;
 
-        bool access_context;
-
+        void processModded(Node* node);
         void classToResolveCheck(const std::string &className, const std::string& classToResolve);
         void moddedClassToResolveCheck(const std::string &className, Node* node);
         void addState(Node* node);
@@ -28,8 +27,6 @@ namespace Pomme
         void checkTypeDependance(Node* node);
         void checkGlobalDependance(Node* node);
         void checkHeaderDependance(Node* node, const std::string& functionCompleteName);
-
-
 
         void findDependingObject(Node* node);
         bool resolved(Node* node, bool isClass);

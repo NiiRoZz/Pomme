@@ -900,8 +900,8 @@ TEST(TEST_AUTOMATE, Graph_ModdedExtend)
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
-    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,3), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,2), true);
 }
 
 TEST(TEST_AUTOMATE, Graph_ModdedBeforeDeclaration)
@@ -966,6 +966,129 @@ TEST(TEST_AUTOMATE, Graph_Static)
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 1);
 }
 
+TEST(TEST_AUTOMATE, Graph_ModdedEnum)
+{
+    TEST_AUTOMATE_TEST("enum enum1{}; modded enum enum1{}; modded enum enum1{}; \n");
+    std::cout << text << std::endl;
 
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
 
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_ModdedEnumAfter)
+{
+    TEST_AUTOMATE_TEST("modded enum enum1{}; modded enum enum1{}; enum enum1{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_LastModdedDependance)
+{
+    TEST_AUTOMATE_TEST("class test2{}; modded class test2{}; modded class test2{};  class test{ static test2 k; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,3), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_LastModdedEnumDependance)
+{
+    TEST_AUTOMATE_TEST("enum test2{}; modded enum test2{}; modded enum test2{};  class test{ static test2 k; };\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,3), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_LastModdedDependanceAfter)
+{
+    TEST_AUTOMATE_TEST("class test{ static test2 k; }; class test2{}; modded class test2{}; modded class test2{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,3), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_LastModdedEnumDependanceAfter)
+{
+    TEST_AUTOMATE_TEST("class test{ static test2 k; }; enum test2{}; modded enum test2{}; modded enum test2{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,3), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_ModdedEnumInBetween)
+{
+    TEST_AUTOMATE_TEST("enum test{}; modded enum test{};  class x{ static test k; }; modded enum test{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,3), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_ModdedInBetween)
+{
+    TEST_AUTOMATE_TEST("class test{}; modded class test{};  class x{ static test k; }; modded class test{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,3), true);
+}
 
