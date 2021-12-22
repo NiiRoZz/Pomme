@@ -48,10 +48,7 @@ namespace Pomme
         }
 
         visitor.path_number++;
-        for(auto* klass : nodes)
-        {
-            klass->jjtAccept(&visitor,nullptr);
-        }
+        tree->jjtAccept(&visitor, nullptr);
 
         std::cout << visitor << std::endl;
 
