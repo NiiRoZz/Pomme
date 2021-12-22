@@ -620,12 +620,9 @@ namespace Pomme
             {
                 addClass(context);
                 moddedMap.emplace(context, context);
-                node->jjtChildAccept(1, this, data);
-                break;
-            }
 
-            case 1u:
-            {
+                node->jjtChildAccept(1, this, data);
+
                 auto it = classMap.find(context);
                 assert(it != classMap.end());
 
@@ -639,6 +636,13 @@ namespace Pomme
                     it->second.methods.emplace(constructorIdent, std::move(function));
                     node->constructorIdent = std::move(constructorIdent);
                 }
+                break;
+            }
+
+            case 1u:
+            {
+                auto it = classMap.find(context);
+                assert(it != classMap.end());
                 
                 node->nmbMethods = it->second.methods.size();
                 node->nmbNativeMethods = it->second.nativeMethods.size();
@@ -697,6 +701,20 @@ namespace Pomme
                 }
 
                 node->jjtChildAccept(2, this, data);
+
+                auto ot = classMap.find(class_name);
+                assert(ot != classMap.end());
+
+                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
+                node->generateDefaultConstructor = ot->second.methods.find(constructorIdent) == ot->second.methods.end();
+                std::cout << "generateDefaultConstructor : " << node->generateDefaultConstructor << std::endl;
+                if (node->generateDefaultConstructor)
+                {
+                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, ot->second.methods.size(), false);
+                    node->defaultConstructorIndex = function.index;
+                    ot->second.methods.emplace(constructorIdent, std::move(function));
+                    node->constructorIdent = std::move(constructorIdent);
+                }
                 break;
             }
 
@@ -704,16 +722,6 @@ namespace Pomme
             {
                 auto it = classMap.find(class_name);
                 assert(it != classMap.end());
-
-                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
-                node->generateDefaultConstructor = it->second.methods.find(constructorIdent) == it->second.methods.end();
-                if (node->generateDefaultConstructor)
-                {
-                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, it->second.methods.size(), false);
-                    node->defaultConstructorIndex = function.index;
-                    it->second.methods.emplace(constructorIdent, std::move(function));
-                    node->constructorIdent = std::move(constructorIdent);
-                }
 
                 auto& superClass = classMap[parent_name];
                 std::cout << "parent_name : " << parent_name << std::endl;
@@ -803,6 +811,20 @@ namespace Pomme
                 moddedMap[node->defaultClassName] = id;
 
                 node->jjtChildAccept(1, this, data);
+
+                auto kt = classMap.find(class_name);
+                assert(kt != classMap.end());
+
+                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
+                node->generateDefaultConstructor = kt->second.methods.find(constructorIdent) == kt->second.methods.end();
+                std::cout << "generateDefaultConstructor : " << node->generateDefaultConstructor << " constructorIdent : " << constructorIdent << std::endl;
+                if (node->generateDefaultConstructor)
+                {
+                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, kt->second.methods.size(), false);
+                    node->defaultConstructorIndex = function.index;
+                    kt->second.methods.emplace(constructorIdent, std::move(function));
+                    node->constructorIdent = std::move(constructorIdent);
+                }
                 break;
             }
 
@@ -810,16 +832,6 @@ namespace Pomme
             {
                 auto it = classMap.find(class_name);
                 assert(it != classMap.end());
-
-                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
-                node->generateDefaultConstructor = it->second.methods.find(constructorIdent) == it->second.methods.end();
-                if (node->generateDefaultConstructor)
-                {
-                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, it->second.methods.size(), false);
-                    node->defaultConstructorIndex = function.index;
-                    it->second.methods.emplace(constructorIdent, std::move(function));
-                    node->constructorIdent = std::move(constructorIdent);
-                }
 
                 auto& superClass = classMap[node->parentName];
                 std::cout << node->parentName << " : " << superClass << std::endl;
@@ -1848,11 +1860,16 @@ namespace Pomme
         std::string constructorName = className + NAME_FUNC_SEPARATOR;
         std::string parameters = "";
 
+        std::cout << "className aa : " << className << std::endl;
+        std::cout << it->second << std::endl;
+
         if (!getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), nullptr, nullptr, constructorName, parameters, className))
         {
             errors.push_back("Can't find constructor with correct parameters");
             return;
         }
+
+        std::cout << "constructorName : " << constructorName << std::endl;
 
         auto ot = it->second.methods.find(constructorName);
         if (ot != it->second.methods.end())
