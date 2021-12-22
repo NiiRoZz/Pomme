@@ -454,8 +454,6 @@ namespace Pomme
             exp = dynamic_cast<ASTPommeListExp*>(exp->jjtGetChild(1));
         }
 
-        std::cout << "pommeNew foundConstructor : " << node->foundConstructor << " index : " << node->index << std::endl;
-
         emitByte(AS_OPCODE(OpCode::OP_NEW));
         emit16Bits(argCount);
         emitByte(node->foundConstructor);
@@ -819,7 +817,7 @@ namespace Pomme
             emitByte(node->isStatic);
 
             //Add set value into constructor
-            if (!node->isStatic)
+            if (!node->isStatic && defaultValue == nullptr)
             {
                 m_ConstructorInit = true;
 

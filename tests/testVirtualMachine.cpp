@@ -655,7 +655,7 @@ TEST(TEST_VM, IntOperatorPlusMinusFloatTest)
 
 TEST(TEST_VM, CustomOperatorPlusTest)
 {
-	TEST_VM_TEST("native void t(float a); class Test { int x = 20; float operator+(float y) {return x + y;}; }; void f() {Test oui = new Test(); t(oui + 10.0); };\n");
+	TEST_VM_TEST("native void t(float a); class Test { int x; Test() {x = 20;}; float operator+(float y) {return x + y;}; }; void f() {Test oui = new Test(); t(oui + 10.0); };\n");
 
 	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "float"), [] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);

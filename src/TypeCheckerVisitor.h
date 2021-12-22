@@ -335,7 +335,35 @@ namespace Pomme
         std::string getVariableType(const std::string& type);
 
         bool checkAccessMethod(ASTPommeAccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
-        void checkVariable(ASTPommeVariable* node);
+        
+        template<typename T>
+        void checkVariable(T* node)
+        {
+            const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+            std::string rightType = "";
+
+            node->jjtChildAccept(2, this, &rightType);
+
+            bool isNull = rightType == "null";
+
+            if (leftType == "")
+            {
+                errors.push_back("Can't find variable type of left expression");
+                return;
+            }
+
+            if (rightType == "" && !isNull)
+            {
+                errors.push_back("Can't find variable type of right expression");
+                return;
+            }
+
+            if (!isNull && leftType != rightType)
+            {
+                errors.push_back("Can't assign class " + rightType + " to class " + leftType);
+                return;
+            }
+        }
 
         friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass)
         {

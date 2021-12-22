@@ -26,7 +26,7 @@ namespace Pomme
         }
 
         std::vector<int> state_order = visitorAutomate.dependanceGraph.topologicalSort();
-        std::vector<Node*> class_to_define = visitorAutomate.dependanceGraph.getClassNode(&state_order);
+        std::vector<Node*> nodes = visitorAutomate.dependanceGraph.getClassNode(&state_order);
 
         /*for(int path_number= 0; path_number < 3; path_number++)
         {
@@ -37,13 +37,21 @@ namespace Pomme
             visitor.path_number++;
         }*/
 
-        for(auto it : class_to_define)
+        for(auto* klass : nodes)
         {
-            it->jjtAccept(&visitor,nullptr);
+            klass->jjtAccept(&visitor,nullptr);
+        }
+
+        if (visitor.errors.size() > 0)
+        {
+            return visitor;
         }
 
         visitor.path_number++;
-        tree->jjtAccept(&visitor, nullptr);
+        for(auto* klass : nodes)
+        {
+            klass->jjtAccept(&visitor,nullptr);
+        }
 
         std::cout << visitor << std::endl;
 

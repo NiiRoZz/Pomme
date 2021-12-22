@@ -673,6 +673,12 @@ namespace Pomme
                     return;
                 }
 
+                if (classMap.find(extendedClass) == classMap.end())
+                {
+                    errors.push_back(context + " is extending a non existing class " + extendedClass);
+                    return;
+                }
+
                 extendedClass = getVariableType(extendedClass);
                 parent_name = extendedClass;
 
@@ -688,11 +694,6 @@ namespace Pomme
                     classClass.attributes = it->second.attributes;
                     classClass.staticAttributes = it->second.staticAttributes;
                     classClass.keywords.emplace("extends");
-                }
-                else
-                {
-                    errors.push_back(context + " is extending a non existing class " + extendedClass);
-                    return;
                 }
 
                 node->jjtChildAccept(2, this, data);
@@ -858,7 +859,15 @@ namespace Pomme
             case 2u:
             {
                 std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTPommeIdentFuncs*>(node->jjtGetChild(0)));
-                checkVariable(dynamic_cast<ASTPommeVariable*>(node->jjtGetChild(1)));
+                
+                if (dynamic_cast<ASTPommeVariable*>(node->jjtGetChild(1)) != nullptr)
+                {
+                    checkVariable(dynamic_cast<ASTPommeVariable*>(node->jjtGetChild(1)));
+                }
+                else
+                {
+                    checkVariable(dynamic_cast<ASTPommeConstant*>(node->jjtGetChild(1)));
+                }
             }
         }
     }
@@ -1493,28 +1502,7 @@ namespace Pomme
             {
                 visiteVariable(node, false, {});
 
-                const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-                std::string rightType = "";
-
-                node->jjtChildAccept(2, this, &rightType);
-
-                if (leftType == "")
-                {
-                    errors.push_back("Can't find variable type of left expression");
-                    return;
-                }
-
-                if (rightType == "")
-                {
-                    errors.push_back("Can't find variable type of right expression");
-                    return;
-                }
-
-                if (leftType != rightType)
-                {
-                    errors.push_back("Can't assign class " + rightType + " to class " + leftType);
-                    return;
-                }
+                checkVariable(node);
                 break;
             }
         }
@@ -1980,33 +1968,5 @@ namespace Pomme
     std::string TypeCheckerVisitor::getVariableType(const std::string& type)
     {
         return moddedMap[type];
-    }
-
-    void TypeCheckerVisitor::checkVariable(ASTPommeVariable* node)
-    {
-        const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-        std::string rightType = "";
-
-        node->jjtChildAccept(2, this, &rightType);
-
-        bool isNull = rightType == "null";
-
-        if (leftType == "")
-        {
-            errors.push_back("Can't find variable type of left expression");
-            return;
-        }
-
-        if (rightType == "" && !isNull)
-        {
-            errors.push_back("Can't find variable type of right expression");
-            return;
-        }
-
-        if (!isNull && leftType != rightType)
-        {
-            errors.push_back("Can't assign class " + rightType + " to class " + leftType);
-            return;
-        }
     }
 }
