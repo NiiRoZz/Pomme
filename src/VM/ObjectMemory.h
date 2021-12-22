@@ -61,16 +61,9 @@ namespace Pomme
         void incRefCount(Pointer p);
 
         template<typename T>
-        inline T* get(Pointer p)
+        inline T* get(Pointer p) const
         {
             return reinterpret_cast<T*>(&m_Memory[p]);
-        }
-
-        template<typename T>
-        inline const T* get(Pointer p) const
-        {
-            static_assert(std::is_base_of<Obj, T>::value, "You should get something that inherit from Obj class");
-            return reinterpret_cast<const T*>(&m_Memory[p]);
         }
 
         inline ObjectHeader* getHeader(Pointer p) const

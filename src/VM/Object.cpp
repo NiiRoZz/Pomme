@@ -23,12 +23,12 @@ namespace Pomme
         return "";
     }
 
-    Value* ObjClass::getMethod(VirtualMachine& vm, uint16_t slot)
+    Value* ObjClass::getMethod(const VirtualMachine& vm, uint16_t slot) const
     {
         return vm.getObject<Value>(methods + (sizeof(Value) * slot));
     }
 
-    Value* ObjClass::getMethod(VirtualMachine& vm, const std::string& name)
+    Value* ObjClass::getMethod(const VirtualMachine& vm, const std::string& name) const
     {
         auto it = methodsIndices.find(name);
         if (it == methodsIndices.end()) return nullptr;
@@ -36,12 +36,12 @@ namespace Pomme
         return getMethod(vm, it->second);
     }
 
-    Value* ObjClass::getNativeMethod(VirtualMachine& vm, uint16_t slot)
+    Value* ObjClass::getNativeMethod(const VirtualMachine& vm, uint16_t slot) const
     {
         return vm.getObject<Value>(nativeMethods + (sizeof(Value) * slot));
     }
 
-    Value* ObjClass::getNativeMethod(VirtualMachine& vm, const std::string& name)
+    Value* ObjClass::getNativeMethod(const VirtualMachine& vm, const std::string& name) const
     {
         auto it = nativeMethodsIndices.find(name);
         if (it == nativeMethodsIndices.end()) return nullptr;
@@ -49,12 +49,12 @@ namespace Pomme
         return getNativeMethod(vm, it->second);
     }
 
-    Value* ObjClass::getStaticField(VirtualMachine& vm, uint16_t slot)
+    Value* ObjClass::getStaticField(const VirtualMachine& vm, uint16_t slot) const
     {
         return vm.getObject<Value>(staticFields + (sizeof(Value) * slot));
     }
 
-    Value* ObjClass::getStaticField(VirtualMachine& vm, const std::string& name)
+    Value* ObjClass::getStaticField(const VirtualMachine& vm, const std::string& name) const
     {
         auto it = staticFieldsIndices.find(name);
         if (it == staticFieldsIndices.end()) return nullptr;
@@ -64,12 +64,12 @@ namespace Pomme
         return getStaticField(vm, it->second);
     }
 
-    Value* ObjInstance::getNativeMethod(VirtualMachine& vm, uint16_t slot)
+    Value* ObjInstance::getNativeMethod(const VirtualMachine& vm, uint16_t slot) const
     {
         return vm.getObject<Value>(nativeMethods + (sizeof(Value) * slot));
     }
 
-    Value* ObjInstance::getNativeMethod(VirtualMachine& vm, const std::string& name)
+    Value* ObjInstance::getNativeMethod(const VirtualMachine& vm, const std::string& name) const
     {
         auto it = klass->nativeMethodsIndices.find(name);
         if (it == klass->nativeMethodsIndices.end()) return nullptr;
@@ -77,12 +77,12 @@ namespace Pomme
         return getNativeMethod(vm, it->second);
     }
 
-    Value* ObjInstance::getField(VirtualMachine& vm, uint16_t slot)
+    Value* ObjInstance::getField(const VirtualMachine& vm, uint16_t slot) const
     {
         return vm.getObject<Value>(fields + (sizeof(Value) * slot));
     }
 
-    Value* ObjInstance::getField(VirtualMachine& vm, const std::string& name)
+    Value* ObjInstance::getField(const VirtualMachine& vm, const std::string& name) const
     {
         auto it = klass->fieldsIndices.find(name);
         if (it == klass->fieldsIndices.end()) return nullptr;

@@ -129,11 +129,12 @@ namespace Pomme
         return value;
     }
 
-    #define AS_BOOL(value)          ((value) == TRUE_VAL)
-    #define AS_FLOAT(value)         doubleToNum(value)
-    #define AS_INT(value)           ((int32_t)((value) & _PAYLOAD_INTEGER))
-    #define AS_OBJ_PTR(value)       ((uint32_t)((value) & _PAYLOAD_INTEGER))
-    #define AS_OBJ(vm, value)       ((vm).getObject<Obj>(AS_OBJ_PTR(value)))
+    #define AS_BOOL(value)                          ((value) == TRUE_VAL)
+    #define AS_FLOAT(value)                         doubleToNum(value)
+    #define AS_INT(value)                           ((int32_t)((value) & _PAYLOAD_INTEGER))
+    #define AS_OBJ_PTR(value)                       ((uint32_t)((value) & _PAYLOAD_INTEGER))
+    #define AS_OBJ(vm, value)                       ((vm).getObject<Obj>(AS_OBJ_PTR(value)))
+    #define AS_OBJ_CLASS(vm, class, value)          ((vm).getObject<class>(AS_OBJ_PTR(value)))
 
     static inline double doubleToNum(Value value)
     {

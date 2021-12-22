@@ -11,8 +11,7 @@
 namespace Pomme
 {
     VirtualMachine::VirtualMachine()
-    : started(false)
-    , frameCount(0u)
+    : frameCount(0u)
     , stackTop(stack)
     , globalsIndicesCount(0u)
     //, objects(nullptr)
@@ -259,7 +258,7 @@ namespace Pomme
         return true;
     }
 
-    Value* VirtualMachine::getStaticField(const std::string& className, const std::string& fieldName)
+    Value* VirtualMachine::getStaticField(const std::string& className, const std::string& fieldName) const
     {
         auto it = globalsIndices.find(className);
         if (it == globalsIndices.end()) return nullptr;
@@ -311,7 +310,7 @@ namespace Pomme
 		stackTop -= depth;
     }
 
-	Value& VirtualMachine::peek(int depth)
+	Value& VirtualMachine::peek(int depth) const
 	{
 		return stackTop[-1 - depth];
 	}
@@ -372,7 +371,7 @@ namespace Pomme
         return idx;
     }
 
-    std::optional<std::size_t> VirtualMachine::getGlobal(const std::string& name)
+    std::optional<std::size_t> VirtualMachine::getGlobal(const std::string& name) const
     {
         auto it = globalsIndices.find(name);
         if (it == globalsIndices.end())
@@ -395,7 +394,7 @@ namespace Pomme
         std::cout << std::endl;
     }
 
-    int VirtualMachine::stackSize()
+    int VirtualMachine::stackSize() const
     {
         return stackTop - stack;
     }
@@ -1001,7 +1000,7 @@ namespace Pomme
         return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
 
-    bool VirtualMachine::isFalsey(const Value& value)
+    bool VirtualMachine::isFalsey(const Value& value) const
     {
         if (IS_NULL(value)) return true;
 
@@ -1093,7 +1092,7 @@ namespace Pomme
         return true;
     }
 
-    void VirtualMachine::printValue(const Value& value)
+    void VirtualMachine::printValue(const Value& value) const
     {
         #ifdef NAN_BOXING
 
@@ -1159,7 +1158,7 @@ namespace Pomme
         #endif
     }
 
-    void VirtualMachine::printObject(const Value& value)
+    void VirtualMachine::printObject(const Value& value) const
     {
         switch (OBJ_TYPE(*this, value))
         {
@@ -1190,7 +1189,7 @@ namespace Pomme
         }
     }
 
-    void VirtualMachine::printFunction(ObjFunction* function)
+    void VirtualMachine::printFunction(const ObjFunction* function) const
     {
         if (function->name == nullptr)
         {

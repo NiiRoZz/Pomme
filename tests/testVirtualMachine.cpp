@@ -20,7 +20,6 @@ using namespace Pomme;
 	compiler.addString(s);\
 	ObjFunction *function = compiler.compile(true);\
 	EXPECT_TRUE(function != nullptr);\
-	vm.started = true;\
 	InterpretResult result = vm.interpret(function);\
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);\
 	defineStdNative(vm);\
