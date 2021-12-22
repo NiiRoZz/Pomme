@@ -19,6 +19,13 @@ namespace Pomme
 
 	class CompilerVisitor : public PommeLexerVisitor
 	{
+	private:
+		struct Constructor
+		{
+			bool generateSuperCall;
+			ObjFunction* function;
+		};
+
 	public:
 		CompilerVisitor(VirtualMachine &vm);
 
@@ -130,10 +137,19 @@ namespace Pomme
 
 	private:
 
+		void emitByte(Chunk* chunk, uint8_t byte);
 		void emitByte(uint8_t byte);
+
+		void emitBytes(Chunk* chunk, uint8_t byte1, uint8_t byte2);
 		void emitBytes(uint8_t byte1, uint8_t byte2);
+
+		void emit16Bits(Chunk* chunk, uint16_t val);
 		void emit16Bits(uint16_t val);
+
+		void emit32Bits(Chunk* chunk, uint8_t* val);
 		void emit32Bits(uint8_t* val);
+
+		void emit64Bits(Chunk* chunk, uint8_t* val);
 		void emit64Bits(uint8_t* val);
 
 		void emitInt(uint64_t val);
@@ -156,7 +172,7 @@ namespace Pomme
 		void endScope();
 
 		void accessProperty(Node* left, Node* middle, Node* right, void * data);
-		void method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor);
+		void method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor, bool generateSuperCall);
 		
 		void unaryOperator(SimpleNode *node, uint16_t index, bool native);
 		void binaryOperator(SimpleNode *node, uint16_t index, bool native);
@@ -179,5 +195,9 @@ namespace Pomme
 		bool m_InMethod;
 
 		std::string m_SuperClass;
+
+		Chunk m_ConstructorChunk;
+		bool m_ConstructorInit;
+		std::vector<Constructor> m_ConstructorFunctions;
 	};
 }

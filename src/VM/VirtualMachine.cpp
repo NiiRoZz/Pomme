@@ -818,6 +818,7 @@ namespace Pomme
 
                 if (foundConstructor)
                 {
+                    std::cout << "slot : " << unsigned(slot) << std::endl;
                     assert(IS_FUNCTION(*this, *(klass->getMethod(*this, slot))));
 
                     if (!call(AS_FUNCTION(*this, *(klass->getMethod(*this, slot))), argCount))

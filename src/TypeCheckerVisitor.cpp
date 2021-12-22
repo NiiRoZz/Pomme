@@ -286,10 +286,15 @@ namespace Pomme
                 if (ut != globalFunctionsMap.end())
                 {
                     functionIdent += current;
-                    accessNode->name = functionIdent;
-                    accessNode->global = true;
-                    accessNode->native = ut->second.native;
-                    accessNode->index = ut->second.index;
+
+                    if (accessNode != nullptr)
+                    {
+                        accessNode->name = functionIdent;
+                        accessNode->global = true;
+                        accessNode->native = ut->second.native;
+                        accessNode->index = ut->second.index;
+                    }
+                    
                     if (variableType != nullptr) *variableType = ut->second.returnType;
                     return true;
                 }
@@ -303,11 +308,16 @@ namespace Pomme
                     if (function != nullptr)
                     {
                         functionIdent += current;
-                        accessNode->global = false;
-                        accessNode->native = function->native;
-                        accessNode->index = function->index;
-                        accessNode->methodCall = variableType == nullptr || *variableType == "";
-                        accessNode->superCall = super_call;
+
+                        if (accessNode != nullptr)
+                        {
+                            accessNode->global = false;
+                            accessNode->native = function->native;
+                            accessNode->index = function->index;
+                            accessNode->methodCall = variableType == nullptr || *variableType == "";
+                            accessNode->superCall = super_call;
+                        }
+                        
                         if (variableType != nullptr) *variableType = function->returnType;
                         return true;
                     }
@@ -317,10 +327,16 @@ namespace Pomme
                         if (ut != globalFunctionsMap.end())
                         {
                             functionIdent += current;
-                            accessNode->global = true;
-                            accessNode->native = ut->second.native;
-                            accessNode->index = ut->second.index;
-                            *variableType = ut->second.returnType;
+
+                            if (accessNode != nullptr)
+                            {
+                                accessNode->name = functionIdent;
+                                accessNode->global = true;
+                                accessNode->native = ut->second.native;
+                                accessNode->index = ut->second.index;
+                            }
+                            
+                            if (variableType != nullptr) *variableType = ut->second.returnType;
                             return true;
                         }
                     }
@@ -475,7 +491,7 @@ namespace Pomme
                                 return;
                             }
 
-                            errors.emplace_back("Can't user super in not extended class");
+                            errors.emplace_back("Can't user super in not extended/modded class");
                             return;
                         }
 
@@ -610,8 +626,19 @@ namespace Pomme
 
             case 1u:
             {
-                auto it = classMap.find(moddedMap[context]);
+                auto it = classMap.find(context);
                 assert(it != classMap.end());
+
+                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
+                node->generateDefaultConstructor = it->second.methods.find(constructorIdent) == it->second.methods.end();
+                std::cout << "generateDefaultConstructor : " << node->generateDefaultConstructor << std::endl;
+                if (node->generateDefaultConstructor)
+                {
+                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, it->second.methods.size(), false);
+                    node->defaultConstructorIndex = function.index;
+                    it->second.methods.emplace(constructorIdent, std::move(function));
+                    node->constructorIdent = std::move(constructorIdent);
+                }
                 
                 node->nmbMethods = it->second.methods.size();
                 node->nmbNativeMethods = it->second.nativeMethods.size();
@@ -647,14 +674,12 @@ namespace Pomme
                 }
 
                 extendedClass = getVariableType(extendedClass);
-
-                std::cout << "extendedClass childClass : " << extendedClass << std::endl;
+                parent_name = extendedClass;
 
                 auto it = classMap.find(extendedClass);
                 if(it != classMap.end())
                 {
                     addClass(context);
-                    std::cout << "context childClass : " << context << std::endl;
                     moddedMap.emplace(class_name, class_name);
                     ClassClass& classClass = classMap.find(context)->second;
                     classClass.parent = extendedClass;
@@ -676,8 +701,22 @@ namespace Pomme
 
             case 1u:
             {
-                auto it = classMap.find(moddedMap[class_name]);
+                auto it = classMap.find(class_name);
                 assert(it != classMap.end());
+
+                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
+                node->generateDefaultConstructor = it->second.methods.find(constructorIdent) == it->second.methods.end();
+                if (node->generateDefaultConstructor)
+                {
+                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, it->second.methods.size(), false);
+                    node->defaultConstructorIndex = function.index;
+                    it->second.methods.emplace(constructorIdent, std::move(function));
+                    node->constructorIdent = std::move(constructorIdent);
+                }
+
+                auto& superClass = classMap[parent_name];
+                std::cout << "parent_name : " << parent_name << std::endl;
+                node->defaultSuperConstructorIndex = superClass.methods.find(parent_name + NAME_FUNC_SEPARATOR)->second.index;
                 
                 node->nmbMethods = it->second.methods.size();
                 node->nmbNativeMethods = it->second.nativeMethods.size();
@@ -701,6 +740,7 @@ namespace Pomme
         class_name = context;
         child_context = true;
         parent_name = node->parentName;
+        modded_context = true;
 
         switch (path_number)
         {
@@ -766,8 +806,22 @@ namespace Pomme
 
             case 1u:
             {
-                auto it = classMap.find(moddedMap[node->defaultClassName]);
+                auto it = classMap.find(class_name);
                 assert(it != classMap.end());
+
+                std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
+                node->generateDefaultConstructor = it->second.methods.find(constructorIdent) == it->second.methods.end();
+                if (node->generateDefaultConstructor)
+                {
+                    FunctionClass function("void", constructorIdent, std::string(), {}, {}, it->second.methods.size(), false);
+                    node->defaultConstructorIndex = function.index;
+                    it->second.methods.emplace(constructorIdent, std::move(function));
+                    node->constructorIdent = std::move(constructorIdent);
+                }
+
+                auto& superClass = classMap[node->parentName];
+                std::cout << node->parentName << " : " << superClass << std::endl;
+                node->defaultSuperConstructorIndex = superClass.methods.find(node->parentName + NAME_FUNC_SEPARATOR)->second.index;
                 
                 node->nmbMethods = it->second.methods.size();
                 node->nmbNativeMethods = it->second.nativeMethods.size();
@@ -781,6 +835,7 @@ namespace Pomme
 
         class_context = false;
         child_context = false;
+        modded_context = false;
     }
 
     void TypeCheckerVisitor::visit(ASTPommeDecls *node, void * data)
@@ -803,7 +858,7 @@ namespace Pomme
             case 2u:
             {
                 std::unordered_set<std::string> keywords = buildKeyword(dynamic_cast<ASTPommeIdentFuncs*>(node->jjtGetChild(0)));
-                checkVariable(dynamic_cast<ASTPommeVariable*>(node->jjtGetChild(1)), !keywords.count("static"));
+                checkVariable(dynamic_cast<ASTPommeVariable*>(node->jjtGetChild(1)));
             }
         }
     }
@@ -822,7 +877,7 @@ namespace Pomme
             {
                 visiteVariable(node, false, {});
 
-                checkVariable(node, false);
+                checkVariable(node);
                 break;
             }
         }
@@ -1531,6 +1586,11 @@ namespace Pomme
                 std::string functionType = "void";
                 auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
                 std::string &functionName = name->m_Identifier;
+                if (modded_context)
+                {
+                    functionName = class_name;
+                }
+
                 const std::string &context = class_name;
 
                 auto it = classMap.find(context);
@@ -1551,6 +1611,8 @@ namespace Pomme
 
                 it->second.addFunction(node, functionType, functionIdent, parameters, {}, false, false, this);
                 name->m_MethodIdentifier = functionIdent;
+                node->generateSuperCall = child_context && functionIdent == (class_name + NAME_FUNC_SEPARATOR);
+                std::cout << "generateSuperCall " << node->generateSuperCall << " for " << functionIdent << std::endl;
                 break;
             }
 
@@ -1794,16 +1856,20 @@ namespace Pomme
             return;
         }
 
-        std::string constructorName = defaultName + NAME_FUNC_SEPARATOR;
+        std::string constructorName = className + NAME_FUNC_SEPARATOR;
+        std::string parameters = "";
+
+        if (!getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), nullptr, nullptr, constructorName, parameters, className))
+        {
+            errors.push_back("Can't find constructor with correct parameters");
+            return;
+        }
+
         auto ot = it->second.methods.find(constructorName);
         if (ot != it->second.methods.end())
         {
             node->foundConstructor = true;
             node->index = ot->second.index;
-        }
-        else
-        {
-            node->foundConstructor = false;
         }
 
         if (data == nullptr) return;
@@ -1916,7 +1982,7 @@ namespace Pomme
         return moddedMap[type];
     }
 
-    void TypeCheckerVisitor::checkVariable(ASTPommeVariable* node, bool initialization)
+    void TypeCheckerVisitor::checkVariable(ASTPommeVariable* node)
     {
         const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         std::string rightType = "";
@@ -1940,12 +2006,6 @@ namespace Pomme
         if (!isNull && leftType != rightType)
         {
             errors.push_back("Can't assign class " + rightType + " to class " + leftType);
-            return;
-        }
-
-        if (initialization && class_context && !instrs_context && !isNull)
-        {
-            errors.push_back("Can't assign default value directly on the same line, use constructor instead");
             return;
         }
     }

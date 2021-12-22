@@ -16,12 +16,16 @@ namespace Pomme
     , m_InClass(false)
     , m_InNativeClass(false)
     , m_InMethod(false)
+    , m_ConstructorInit(false)
 	{
 	}
 
     Chunk* CompilerVisitor::currentChunk()
     {
-	  return &function->chunk;
+        if (m_ConstructorInit)
+            return &m_ConstructorChunk;
+        
+	    return &function->chunk;
 	}
 
     void CompilerVisitor::visit(SimpleNode *node, void * data) 
@@ -450,6 +454,8 @@ namespace Pomme
             exp = dynamic_cast<ASTPommeListExp*>(exp->jjtGetChild(1));
         }
 
+        std::cout << "pommeNew foundConstructor : " << node->foundConstructor << " index : " << node->index << std::endl;
+
         emitByte(AS_OPCODE(OpCode::OP_NEW));
         emit16Bits(argCount);
         emitByte(node->foundConstructor);
@@ -493,8 +499,23 @@ namespace Pomme
 
         m_InClass = true;
         m_InNativeClass = CommonVisitorFunction::isNativeType(name);
+        m_ConstructorChunk.clear();
+        m_ConstructorFunctions.clear();
 
         node->jjtChildAccept(1, this, nullptr);
+
+        if (node->generateDefaultConstructor)
+        {
+            method(nullptr, name, node->constructorIdent, node->defaultConstructorIndex, true, false);
+        }
+
+        if (m_ConstructorFunctions.size() > 0)
+        {
+            for (Constructor& currConstructor: m_ConstructorFunctions)
+            {
+                currConstructor.function->chunk.writeBeginChunk(m_ConstructorChunk);
+            }
+        }
 
         m_InNativeClass = m_InClass = false;
 
@@ -527,8 +548,39 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_INHERIT));
 
         m_InClass = true;
+        m_ConstructorChunk.clear();
+        m_ConstructorFunctions.clear();
 
         node->jjtChildAccept(2, this, nullptr);
+
+        if (node->generateDefaultConstructor)
+        {
+            method(nullptr, name, node->constructorIdent, node->defaultConstructorIndex, true, true);
+        }
+
+        if (m_ConstructorFunctions.size() > 0)
+        {
+            for (Constructor& currConstructor: m_ConstructorFunctions)
+            {
+                currConstructor.function->chunk.writeBeginChunk(m_ConstructorChunk);
+
+                if (currConstructor.generateSuperCall)
+                {
+                    Chunk tempChunk;
+
+                    emitBytes(&tempChunk, AS_OPCODE(OpCode::OP_GET_LOCAL), 0u);
+                    std::optional<std::size_t> superIndex = m_Vm.getGlobal(m_SuperClass);
+                    assert(superIndex.has_value());
+                    emitBytes(&tempChunk, AS_OPCODE(OpCode::OP_GET_GLOBAL), *superIndex);
+                    emitByte(&tempChunk, AS_OPCODE(OpCode::OP_INVOKE_SUPER));
+                    emit16Bits(&tempChunk, node->defaultSuperConstructorIndex);
+                    emitByte(&tempChunk, false);
+                    emit16Bits(&tempChunk, 0u);
+
+                    currConstructor.function->chunk.writeBeginChunk(tempChunk);
+                }
+            }
+        }
 
         m_InClass = false;
 
@@ -561,8 +613,40 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_INHERIT));
 
         m_InClass = true;
+        m_ConstructorChunk.clear();
+        m_ConstructorFunctions.clear();
 
         node->jjtChildAccept(1, this, nullptr);
+
+        if (node->generateDefaultConstructor)
+        {
+            std::cout << "generateDefaultConstructor" << std::endl;
+            method(nullptr, name, node->constructorIdent, node->defaultConstructorIndex, true, true);
+        }
+
+        if (m_ConstructorFunctions.size() > 0)
+        {
+            for (Constructor& currConstructor: m_ConstructorFunctions)
+            {
+                currConstructor.function->chunk.writeBeginChunk(m_ConstructorChunk);
+
+                if (currConstructor.generateSuperCall)
+                {
+                    Chunk tempChunk;
+
+                    emitBytes(&tempChunk, AS_OPCODE(OpCode::OP_GET_LOCAL), 0u);
+                    std::optional<std::size_t> superIndex = m_Vm.getGlobal(m_SuperClass);
+                    assert(superIndex.has_value());
+                    emitBytes(&tempChunk, AS_OPCODE(OpCode::OP_GET_GLOBAL), *superIndex);
+                    emitByte(&tempChunk, AS_OPCODE(OpCode::OP_INVOKE_SUPER));
+                    emit16Bits(&tempChunk, node->defaultSuperConstructorIndex);
+                    emitByte(&tempChunk, false);
+                    emit16Bits(&tempChunk, 0u);
+
+                    currConstructor.function->chunk.writeBeginChunk(tempChunk);
+                }
+            }
+        }
 
         m_InClass = false;
 
@@ -577,7 +661,7 @@ namespace Pomme
         std::string ident = (identFunc != nullptr) ? identFunc->m_Identifier : identOp->m_Identifier;
         std::string identMethod = (identFunc != nullptr) ? identFunc->m_MethodIdentifier : identOp->m_MethodIdentifier;
         
-        method(node, ident, identMethod, node->index, false);
+        method(node, ident, identMethod, node->index, false, false);
     }
 
     void CompilerVisitor::visit(ASTPommeMethodeNative *node, void * data)
@@ -733,6 +817,26 @@ namespace Pomme
             emit16Bits(node->index);
             emitByte(makeConstant(OBJ_PTR_VAL(m_Vm.copyString(name.c_str(), name.length())->pointer)));
             emitByte(node->isStatic);
+
+            //Add set value into constructor
+            if (!node->isStatic)
+            {
+                m_ConstructorInit = true;
+
+                addLocal("this");
+
+                node->jjtGetChild(2)->jjtAccept(this, data);
+
+                namedVariable("this", false);
+
+                emitByte(AS_OPCODE(OpCode::OP_SET_PROPERTY));
+                emit16Bits(node->index);
+
+                scopeDepth--;
+                localCount--;
+
+                m_ConstructorInit = false;
+            }
         }
         else
         {
@@ -776,7 +880,7 @@ namespace Pomme
     {
         auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
         
-        method(node, name->m_Identifier, name->m_MethodIdentifier, node->index, true);
+        method(node, name->m_Identifier, name->m_MethodIdentifier, node->index, true, node->generateSuperCall);
     }
 
     void CompilerVisitor::visit(ASTPommeDestructor *node, void * data)
@@ -863,15 +967,32 @@ namespace Pomme
         *static_cast<uint16_t*>(data) = argCount;
     }
 
+    void CompilerVisitor::emitByte(Chunk* chunk, uint8_t byte)
+    {
+        chunk->writeChunk(byte, line);
+    }
+
 	void CompilerVisitor::emitByte(uint8_t byte)
     {
-	    currentChunk()->writeChunk(byte, line);
+        emitByte(currentChunk(), byte);
 	}
+
+    void CompilerVisitor::emitBytes(Chunk* chunk, uint8_t byte1, uint8_t byte2)
+    {
+        emitByte(chunk, byte1);
+        emitByte(chunk, byte2);
+    }
 
     void CompilerVisitor::emitBytes(uint8_t byte1, uint8_t byte2)
     {
         emitByte(byte1);
         emitByte(byte2);
+    }
+
+    void CompilerVisitor::emit16Bits(Chunk* chunk, uint16_t val)
+    {
+        emitByte(chunk, (val >> 8) & 0xff);
+        emitByte(chunk, val & 0xff);
     }
 
     void CompilerVisitor::emit16Bits(uint16_t val)
@@ -880,11 +1001,27 @@ namespace Pomme
         emitByte(val & 0xff);
     }
 
+    void CompilerVisitor::emit32Bits(Chunk* chunk, uint8_t* val)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            emitByte(chunk, val[i]);
+        }
+    }
+
     void CompilerVisitor::emit32Bits(uint8_t* val)
     {
         for (int i = 0; i < 4; ++i)
         {
             emitByte(val[i]);
+        }
+    }
+
+    void CompilerVisitor::emit64Bits(Chunk* chunk, uint8_t* val)
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            emitByte(chunk, val[i]);
         }
     }
 
@@ -1060,7 +1197,7 @@ namespace Pomme
         emitMethod(dynamic_cast<ASTPommeAccessMethode*>(right)) || emitIdent(dynamic_cast<ASTPommeIdent*>(right), false, true);
     }
 
-    void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor)
+    void CompilerVisitor::method(SimpleNode *node, const std::string& ident, const std::string& methodIdent, uint16_t index, bool constructor, bool generateSuperCall)
     {
         uint8_t identConstant = makeConstant(OBJ_PTR_VAL(m_Vm.copyString(methodIdent.c_str(), methodIdent.length())->pointer));
 
@@ -1078,15 +1215,16 @@ namespace Pomme
         beginScope(); 
 
         //1 or 3: headers
-        node->jjtChildAccept(constructor ? 1u : 3u, this, nullptr);
+        if (node != nullptr) node->jjtChildAccept(constructor ? 1u : 3u, this, nullptr);
 
         //2 or 4: instrs
-        node->jjtChildAccept(constructor ? 2u : 4u, this, nullptr);
+        if (node != nullptr) node->jjtChildAccept(constructor ? 2u : 4u, this, nullptr);
 
         endScope();
 
         if (constructor)
         {
+            m_ConstructorFunctions.push_back(Constructor {generateSuperCall, function});
             emitBytes(AS_OPCODE(OpCode::OP_GET_LOCAL), 0u);
             emitByte(AS_OPCODE(OpCode::OP_RETURN));
         }

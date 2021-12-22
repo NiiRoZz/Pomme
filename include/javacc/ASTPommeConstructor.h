@@ -18,6 +18,7 @@ public:
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
 
   uint16_t index;
+  bool generateSuperCall = false;
 };
 
 }

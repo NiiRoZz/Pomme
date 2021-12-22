@@ -21,6 +21,10 @@ public:
   uint64_t nmbNativeMethods = 0;
   uint64_t nmbStaticFields = 0;
   uint64_t nmbFields = 0;
+  bool generateDefaultConstructor = false;
+  uint16_t defaultConstructorIndex = 0u;
+  std::string constructorIdent = "";
+  uint16_t defaultSuperConstructorIndex = 0u;
 };
 
 }
