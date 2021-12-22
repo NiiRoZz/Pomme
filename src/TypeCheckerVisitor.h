@@ -141,9 +141,9 @@ namespace Pomme
                     {
                         FunctionClass function(functionType, functionName, std::string(), std::move(parameters),
                                         std::move(keywords), methods.size(), isNative);
-                        methods.emplace(functionName, function);
-                        std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
                         node->index = function.index;
+                        methods.emplace(functionName, std::move(function));
+                        std::cout << "inserted " << functionName << " with type " << functionType << std::endl;
                     }
                     else if (overriding)
                     {
@@ -230,7 +230,7 @@ namespace Pomme
         std::string class_name;
         bool child_context = false;
         std::string parent_name;
-        bool child_extend_context = false;
+        bool modded_context = false;
 
         bool instrs_context = false;
         uint8_t path_number = 0;
@@ -335,7 +335,35 @@ namespace Pomme
         std::string getVariableType(const std::string& type);
 
         bool checkAccessMethod(ASTPommeAccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
-        void checkVariable(ASTPommeVariable* node, bool initialization);
+        
+        template<typename T>
+        void checkVariable(T* node)
+        {
+            const std::string &leftType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+            std::string rightType = "";
+
+            node->jjtChildAccept(2, this, &rightType);
+
+            bool isNull = rightType == "null";
+
+            if (leftType == "")
+            {
+                errors.push_back("Can't find variable type of left expression");
+                return;
+            }
+
+            if (rightType == "" && !isNull)
+            {
+                errors.push_back("Can't find variable type of right expression");
+                return;
+            }
+
+            if (!isNull && leftType != rightType)
+            {
+                errors.push_back("Can't assign class " + rightType + " to class " + leftType);
+                return;
+            }
+        }
 
         friend std::ostream & operator<<(std::ostream & str, const TypeCheckerVisitor & klass)
         {

@@ -62,7 +62,11 @@ namespace Pomme
     {
     public:
         void writeChunk(uint8_t byte, int line);
+        void writeBeginChunk(uint8_t byte, int line);
+        void writeBeginChunk(const Chunk& other);
         int addConstant(const Value& value);
+
+        void clear();
 
     public:
         uint64_t count;
