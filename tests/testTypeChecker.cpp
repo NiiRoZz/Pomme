@@ -30,7 +30,7 @@ using namespace Pomme;
 
 TEST(TEST_TYPECHECKER, ClassComplete)
 {
-    TEST_TYPECHECKER_TEST("class test { int a = 8;  boolean b = 8; void meth(){ int b = 7; }; }; \n");
+    TEST_TYPECHECKER_TEST("class test { int a = 8;  bool b = true; void meth(){ int b = 7; }; }; \n");
     std::cout << text << std::endl;
 
     TypeChecker typeChecker;
