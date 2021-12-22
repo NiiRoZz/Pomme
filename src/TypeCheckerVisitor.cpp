@@ -717,6 +717,7 @@ namespace Pomme
 
                 auto& superClass = classMap[parent_name];
                 std::cout << "parent_name : " << parent_name << std::endl;
+                assert(superClass.methods.find(parent_name + NAME_FUNC_SEPARATOR) != superClass.methods.end());
                 node->defaultSuperConstructorIndex = superClass.methods.find(parent_name + NAME_FUNC_SEPARATOR)->second.index;
                 
                 node->nmbMethods = it->second.methods.size();
