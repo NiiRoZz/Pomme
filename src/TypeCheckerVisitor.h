@@ -236,6 +236,7 @@ namespace Pomme
         uint8_t path_number = 0;
         int current_scopes = 0;
         bool super_call = false;
+        bool firstInstrConstructor = false;
 
         template<typename T>
         void visitUnaryOperator(T* node, const std::string& name, std::string* returnType)

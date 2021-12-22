@@ -199,5 +199,10 @@ TEST(TEST_LEXER_PARSER, TestConstHeaders)
 	TEST_PARSER_FILE("class Array{ int b; int test(const int a, int c, const int d){}; }; void global(int a, const int b){};\n", "tests/TestConstHeaders.txt");
 }
 
+TEST(TEST_LEXER_PARSER, TestConstructorCall)
+{
+	TEST_PARSER_FILE("class Test { Test() {super(20, 10);}; };\n", "tests/TestConstructorCall.txt");
+}
+
 
 #undef TEST_PARSER_FILE

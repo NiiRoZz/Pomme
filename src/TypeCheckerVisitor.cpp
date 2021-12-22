@@ -1302,6 +1302,7 @@ namespace Pomme
     {
         instrs_context = true;
         node->jjtChildrenAccept(this, data);
+        firstInstrConstructor = false;
         instrs_context = false;
     }
 
@@ -1620,6 +1621,28 @@ namespace Pomme
             case 1u:
             {
                 node->jjtChildAccept(1, this, data); // headers
+
+                if (child_context)
+                {
+                    ASTPommeInstrs* instrs = dynamic_cast<ASTPommeInstrs*>(node->jjtGetChild(2));
+                    if (instrs != nullptr)
+                    {
+                        ASTPommeAccessMethode* accessMethode = dynamic_cast<ASTPommeAccessMethode*>(instrs->jjtGetChild(0));
+                        if (accessMethode != nullptr)
+                        {
+                            ASTPommeIdent* ident = dynamic_cast<ASTPommeIdent*>(accessMethode->jjtGetChild(0));
+                            if (ident != nullptr && ident->m_Identifier == "super")
+                            {
+                                //Call first instruction of constructor
+                                firstInstrConstructor = true;
+
+                                ident->m_Identifier = parent_name;
+                                node->generateSuperCall = false;
+                            }
+                        }
+                    }
+                }
+
                 node->jjtChildAccept(2, this, data); // instrs
                 break;
             }
@@ -1949,8 +1972,13 @@ namespace Pomme
         auto* variableType = static_cast<std::string*>(data);
 
         auto *identNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
-        std::string functionName = identNode->m_Identifier;
         std::string functionIdent = identNode->m_Identifier + NAME_FUNC_SEPARATOR;
+
+        if (identNode->m_Identifier == "super")
+        {
+            errors.push_back("Can't use super call other than the first instruction in constructor");
+            return;
+        }
 
         std::string className = [&] () {
             if(variableType != nullptr && *variableType != "")
@@ -1968,8 +1996,14 @@ namespace Pomme
 
         if (!getMethodType(node, variableType, functionIdent, className))
         {
-            //TODO: error
-            errors.push_back("can't find method");
+            errors.push_back("can't find method : " + functionIdent);
+        }
+
+        if (firstInstrConstructor)
+        {
+            node->superConstructorCall = true;
+            node->superCall = false;
+            node->methodCall = false;
         }
     }
 

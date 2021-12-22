@@ -21,6 +21,7 @@ public:
   bool native = false;
   bool methodCall = false;
   bool superCall = false;
+  bool superConstructorCall = false;
   std::string name;
 };
 

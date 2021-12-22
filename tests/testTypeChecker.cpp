@@ -1099,3 +1099,83 @@ TEST(TEST_TYPECHECKER, ConstAssign)
         std::cout << error << std::endl;
     }
 }
+
+TEST(TEST_TYPECHECKER, SuperCall)
+{
+    TEST_TYPECHECKER_TEST("void f() { super(); }; \n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_TRUE(visitor.errors.size() > 0);
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, SuperCallConstructor)
+{
+    TEST_TYPECHECKER_TEST("class TestClass { TestClass() { super(); }; }; \n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_TRUE(visitor.errors.size() > 0);
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, SuperCallConstructorExtendsIncorrect)
+{
+    TEST_TYPECHECKER_TEST("class TestClass {}; class OtherClass extends TestClass { OtherClass() {print(10); super(); }; }; \n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_TRUE(visitor.errors.size() > 0);
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, SuperCallConstructorExtendsCorrect)
+{
+    TEST_TYPECHECKER_TEST("class TestClass {}; class OtherClass extends TestClass { OtherClass() {super(); print(10); }; }; \n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_EQ(visitor.errors.size(), 0u);
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}
+
+TEST(TEST_TYPECHECKER, SuperCallConstructorExtendsIncorrectParameters)
+{
+    TEST_TYPECHECKER_TEST("class TestClass {}; class OtherClass extends TestClass { OtherClass() {super(10); print(10); }; }; \n");
+    std::cout << text << std::endl;
+
+    TypeChecker typeChecker;
+
+    TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);
+
+    EXPECT_TRUE(visitor.errors.size() > 0);
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+}

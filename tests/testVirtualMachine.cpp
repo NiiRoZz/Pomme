@@ -284,6 +284,43 @@ TEST(TEST_VM, ModdedClassCallSuperConstructorTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ModdedClassCallOtherSuperConstructorTest)
+{
+	TEST_VM_TEST("native void t(int a); native void h(int a); class TestClass { int a = 10; TestClass(int z) {a = z;}; }; modded class TestClass { int b = 50; TestClass() {super(20);}; }; void f() { TestClass oui = new TestClass(); t(oui.a); h(oui.b); };\n");
+
+	bool calledT = false;
+	bool calledH = false;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_EQ(argCount, 1);
+
+		EXPECT_TRUE(IS_INT(args[0]));
+		EXPECT_EQ(AS_INT(args[0]), 20);
+
+		calledT = true;
+	
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_EQ(argCount, 1);
+
+		EXPECT_TRUE(IS_INT(args[0]));
+		EXPECT_EQ(AS_INT(args[0]), 50);
+
+		calledH = true;
+	
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_TRUE(calledT && calledH);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, ModdedClassCallGeneratedSuperConstructorTest)
 {
 	TEST_VM_TEST("native void t(int a); native void h(int a); class TestClass { int a = 10; TestClass() {t(a);}; }; modded class TestClass { int b = 50; }; void f() { TestClass oui = new TestClass(); h(oui.b); };\n");
@@ -469,6 +506,42 @@ TEST(TEST_VM, ChildClassGeneratedConstructorCallSuperConstructorTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, ChildClassCallOtherSuperConstructorTest)
+{
+	TEST_VM_TEST("native void t(int a); native void h(int a); class TestClass { int a = 10; TestClass(int z) {a = z;}; }; class OtherClass extends TestClass { int b = 50; OtherClass() {super(20);}; }; void f() { OtherClass oui = new OtherClass(); t(oui.a); h(oui.b); };\n");
+
+	bool calledT = false;
+	bool calledH = false;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_EQ(argCount, 1);
+
+		EXPECT_TRUE(IS_INT(args[0]));
+		EXPECT_EQ(AS_INT(args[0]), 20);
+
+		calledT = true;
+	
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("h", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_EQ(argCount, 1);
+
+		EXPECT_TRUE(IS_INT(args[0]));
+		EXPECT_EQ(AS_INT(args[0]), 50);
+
+		calledH = true;
+	
+		return NULL_VAL;
+	}));
+
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_TRUE(calledT && calledH);
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
 
 TEST(TEST_VM, AttributeMethodTest)
 {

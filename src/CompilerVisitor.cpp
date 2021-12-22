@@ -914,6 +914,10 @@ namespace Pomme
         {
             namedVariable("this", false);
         }
+        else if (node->superConstructorCall)
+        {
+            namedVariable("this", false);
+        }
 
         uint16_t argCount = 0;
 
@@ -938,17 +942,17 @@ namespace Pomme
             exp = dynamic_cast<ASTPommeListExp*>(exp->jjtGetChild(1));
         }
 
-        if (node->superCall)
+        if (node->superCall || node->superConstructorCall)
         {
             std::optional<std::size_t> superIndex = m_Vm.getGlobal(m_SuperClass);
             assert(superIndex.has_value());
             emitBytes(AS_OPCODE(OpCode::OP_GET_GLOBAL), *superIndex);
-            return;
+            if (node->superCall) return;
         }
 
-        if (node->methodCall)
+        if (node->methodCall || node->superConstructorCall)
         {
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(node->methodCall ? OpCode::OP_INVOKE : OpCode::OP_INVOKE_SUPER));
             emit16Bits(node->index);
             emitByte(node->native);
             emit16Bits(argCount);
