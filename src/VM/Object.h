@@ -25,14 +25,14 @@ namespace Pomme
     #define IS_METHOD_PRIMITIVE_NATIVE(vm, value)   isObjType(vm, value, ObjType::OBJ_METHOD_PRIMITIVE_NATIVE)
     #define IS_STRING(vm, value)                    isObjType(vm, value, ObjType::OBJ_STRING)
 
-    #define AS_BOUND_METHOD(vm, value)                  (static_cast<ObjBoundMethod*>(AS_OBJ(vm, value)))
-    #define AS_CLASS(vm, value)                         (static_cast<ObjClass*>(AS_OBJ(vm, value)))
-    #define AS_FUNCTION(vm, value)                      (static_cast<ObjFunction*>(AS_OBJ(vm, value)))
-    #define AS_INSTANCE(vm, value)                      (static_cast<ObjInstance*>(AS_OBJ(vm, value)))
-    #define AS_GLOBAL_NATIVE(vm, value)                 (static_cast<ObjGlobalNative*>(AS_OBJ(vm, value))->function)
-    #define AS_METHOD_NATIVE(vm, value)                 (static_cast<ObjMethodNative*>(AS_OBJ(vm, value))->function)
-    #define AS_METHOD_PRIMITIVE_NATIVE(vm, value)       (static_cast<ObjMethodPrimitiveNative*>(AS_OBJ(vm, value))->function)
-    #define AS_STRING(vm, value)                        (static_cast<ObjString*>(AS_OBJ(vm, value)))
+    #define AS_BOUND_METHOD(vm, value)                  (AS_OBJ_CLASS(vm, ObjBoundMethod, value))
+    #define AS_CLASS(vm, value)                         (AS_OBJ_CLASS(vm, ObjClass, value))
+    #define AS_FUNCTION(vm, value)                      (AS_OBJ_CLASS(vm, ObjFunction, value))
+    #define AS_INSTANCE(vm, value)                      (AS_OBJ_CLASS(vm, ObjInstance, value))
+    #define AS_GLOBAL_NATIVE(vm, value)                 ((AS_OBJ_CLASS(vm, ObjGlobalNative, value))->function)
+    #define AS_METHOD_NATIVE(vm, value)                 ((AS_OBJ_CLASS(vm, ObjMethodNative, value))->function)
+    #define AS_METHOD_PRIMITIVE_NATIVE(vm, value)       ((AS_OBJ_CLASS(vm, ObjMethodPrimitiveNative, value))->function)
+    #define AS_STRING(vm, value)                        (AS_OBJ_CLASS(vm, ObjString, value))
     #define AS_CSTRING(vm, value)                       (AS_STRING(vm, value)->chars.c_str())
 
     enum class ObjType: uint8_t
@@ -123,14 +123,14 @@ namespace Pomme
         
         int deconstructorIdx = -1;
 
-        Value* getMethod(VirtualMachine& vm, uint16_t slot);
-        Value* getMethod(VirtualMachine& vm, const std::string& name);
+        Value* getMethod(const VirtualMachine& vm, uint16_t slot) const;
+        Value* getMethod(const VirtualMachine& vm, const std::string& name) const;
 
-        Value* getNativeMethod(VirtualMachine& vm, uint16_t slot);
-        Value* getNativeMethod(VirtualMachine& vm, const std::string& name);
+        Value* getNativeMethod(const VirtualMachine& vm, uint16_t slot) const;
+        Value* getNativeMethod(const VirtualMachine& vm, const std::string& name) const;
 
-        Value* getStaticField(VirtualMachine& vm, uint16_t slot);
-        Value* getStaticField(VirtualMachine& vm, const std::string& name);
+        Value* getStaticField(const VirtualMachine& vm, uint16_t slot) const;
+        Value* getStaticField(const VirtualMachine& vm, const std::string& name) const;
 
         //Used for C++->Pomme call
         std::unordered_map<std::string, uint16_t> methodsIndices;
@@ -148,11 +148,11 @@ namespace Pomme
         Pointer fields;
         Pointer nativeMethods;
 
-        Value* getNativeMethod(VirtualMachine& vm, uint16_t slot);
-        Value* getNativeMethod(VirtualMachine& vm, const std::string& name);
+        Value* getNativeMethod(const VirtualMachine& vm, uint16_t slot) const;
+        Value* getNativeMethod(const VirtualMachine& vm, const std::string& name) const;
 
-        Value* getField(VirtualMachine& vm, uint16_t slot);
-        Value* getField(VirtualMachine& vm, const std::string& name);
+        Value* getField(const VirtualMachine& vm, uint16_t slot) const;
+        Value* getField(const VirtualMachine& vm, const std::string& name) const;
 
         bool linkMethodNative(VirtualMachine& vm, const std::string& methodName, MethodNativeFn function);
     };

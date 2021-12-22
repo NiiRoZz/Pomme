@@ -47,19 +47,13 @@ namespace Pomme
 		bool linkMethodNative(const std::string& className, const std::string& methodName, MethodNativeFn function);
 		bool linkMethodNative(const std::string& className, const std::string& methodName, MethodPrimitiveNativeFn function);
 
-		Value* getStaticField(const std::string& className, const std::string& fieldName);
+		Value* getStaticField(const std::string& className, const std::string& fieldName) const;
 
 		template<typename ... Strings>
-		std::string getFunctionName(std::string name, const Strings&... rest)
+		std::string getFunctionName(std::string name, const Strings&... rest) const
 		{
 			return name + NAME_FUNC_SEPARATOR + getParametersType(rest...);
 		}
-
-		void push(const Value& value);
-		void push(Value&& value);
-		Value pop();
-		void pop(int depth);
-		Value& peek(int depth);
 
 		template<typename T, typename ...Args>
 		inline T* allocateObject(Args&& ...args)
@@ -69,13 +63,7 @@ namespace Pomme
 		}
 
 		template<typename T>
-        inline T* getObject(Pointer p)
-        {
-            return objectMemory.get<T>(p);
-        }
-
-		template<typename T>
-        inline const T* getObject(Pointer p) const
+        inline T* getObject(Pointer p) const
         {
             return objectMemory.get<T>(p);
         }
@@ -92,38 +80,36 @@ namespace Pomme
 		ObjMethodPrimitiveNative* newMethodPrimitiveNative();
 
 		std::size_t addGlobal(const std::string& name);
-		std::optional<std::size_t> getGlobal(const std::string& name);
+		std::optional<std::size_t> getGlobal(const std::string& name) const;
 
 		void printStack();
-		int stackSize();
+		int stackSize() const;
 
-		void printValue(const Value& value);
-
-		bool started;
+		void printValue(const Value& value) const;
 		
 	private:
 		InterpretResult run(bool exitAtFirstReturn = false);
 
-		std::string getParametersType()
+		std::string getParametersType() const
 		{
 			return "";
 		}
 
 		template<typename ... Strings>
-		std::string getParametersType(std::string first, const Strings&... rest)
+		std::string getParametersType(std::string first, const Strings&... rest) const
 		{
 			return first + HEADER_FUNC_SEPARATOR + getParametersType(rest...);
 		}
 
-		bool isFalsey(const Value& value);
+		bool isFalsey(const Value& value) const;
 
 		bool invoke(uint16_t argCount, uint16_t slot, bool native);
 		bool callNative(GlobalNativeFn& nativeFn, uint16_t argCount);
 		bool callBoundMethod(ObjBoundMethod& bound, uint16_t argCount);
 		bool call(ObjFunction* function, uint16_t argCount);
 
-		void printObject(const Value& value);
-		void printFunction(ObjFunction* function);
+		void printObject(const Value& value) const;
+		void printFunction(const ObjFunction* function) const;
 
 		void defineMethod(uint16_t slot, ObjString* name, bool isNative);
 		void defineField(uint16_t slot, ObjString* name, bool isStatic);
@@ -139,6 +125,12 @@ namespace Pomme
 		int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset);
 
 		void setValue(Value* dest, const Value& src);
+
+		void push(const Value& value);
+		void push(Value&& value);
+		Value pop();
+		void pop(int depth);
+		Value& peek(int depth) const;
 
 	private:
 		CallFrame frames[FRAMES_MAX];
