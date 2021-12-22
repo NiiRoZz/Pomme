@@ -4,9 +4,53 @@
 namespace Pomme
 {
     /**
-     * todo modded Enum
      * todo accessmethode
      */
+
+    void AutomateVisitor::processModded(Node* node)
+    {
+        std::string ident = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(0))->m_Identifier;
+
+        auto lastStateModded = lastDefinedModdedClassStateNumber.find(ident);
+        int moddedClassIndex = dependanceGraph.getState(ident);
+        if (lastStateModded != lastDefinedModdedClassStateNumber.end() || moddedClassIndex != -1)
+        {
+            dependanceGraph.addState(nbState);
+            dependanceGraph.getState(nbState)->node = node;
+            std::vector<int> transitionToDelete;
+
+            int stateToUse;
+            if (lastStateModded != lastDefinedModdedClassStateNumber.end())
+            {
+                stateToUse = lastStateModded->second;
+            }else
+            {
+                stateToUse = moddedClassIndex;
+            }
+
+            for(auto it : dependanceGraph.getTransitionsExiting(stateToUse))
+            {
+                std::cout << it << std::endl;
+                dependanceGraph.addTransition(nbState, it.to);
+                dependanceGraph.removeTransition(it.from, it.to);
+            }
+
+            dependanceGraph.addTransition(stateToUse, nbState);
+
+            if (lastStateModded != lastDefinedModdedClassStateNumber.end())
+            {
+                lastDefinedModdedClassStateNumber.find(ident)->second = nbState;
+            }else
+            {
+                lastDefinedModdedClassStateNumber.emplace(ident, nbState);
+            }
+
+            nbState++;
+        }else
+        {
+            moddedClassToResolveCheck(ident, node);
+        }
+    }
 
     void AutomateVisitor::classToResolveCheck(const std::string &className, const std::string& classToResolve)
     {
@@ -38,6 +82,7 @@ namespace Pomme
         bool resolvedModded = false;
         std::string ident = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         std::vector<std::string> toDelete;
+
         for(const auto& it : classToBeResolved)
         {
             for(const auto& ot : it.second)
@@ -51,8 +96,6 @@ namespace Pomme
                     {
                         addEnum(node);
                     }
-
-                    std::cout << " looking for " << it.first << std::endl;
                     int stateNumber = dependanceGraph.getState(it.first);
                     auto casting = dynamic_cast<ASTPommeIdent*>(dependanceGraph.getState(stateNumber)->node->jjtGetChild(0));
                     if(casting != nullptr)
@@ -76,8 +119,6 @@ namespace Pomme
             dependanceGraph.addState(nbState);
             dependanceGraph.getState(nbState)->node = node;
             lastDefinedModdedClassStateNumber.emplace(ident,nbState);
-            std::cout << "lastDefinedModdedClassStateNumber : " << nbState <<std::endl;
-            std::cout << " new modded classdected insrrted at " << nbState << std::endl;
             nbState++;
 
             for(auto ot : it->second)
@@ -85,9 +126,7 @@ namespace Pomme
                 dependanceGraph.addState(nbState);
                 dependanceGraph.getState(nbState)->node = ot;
                 dependanceGraph.addTransition(lastDefinedModdedClassStateNumber.find(ident)->second, nbState);
-                std::cout << lastDefinedModdedClassStateNumber.find(ident)->second << " -> " << nbState << std::endl;
                 lastDefinedModdedClassStateNumber.find(ident)->second = nbState;
-                std::cout << "lastDefinedModdedClassStateNumber : " << nbState <<std::endl;
                 nbState++;
             }
             moddedClassToBeResolved.erase(ident);
@@ -119,7 +158,14 @@ namespace Pomme
         int dependingStateNumber = dependanceGraph.getState(dependingClassName);
         if(dependingStateNumber != -1)
         {
-           dependanceGraph.addTransition(dependingStateNumber, nbState);
+            auto isModded = lastDefinedModdedClassStateNumber.find(dependingClassName);
+            if(isModded != lastDefinedModdedClassStateNumber.end())
+            {
+                dependanceGraph.addTransition(isModded->second, nbState);
+            }else
+            {
+                dependanceGraph.addTransition(dependingStateNumber, nbState);
+            }
         }else
         {
             std::string className = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
@@ -354,10 +400,11 @@ namespace Pomme
                     }
                 }else
                 {
-                    if(dynamic_cast<ASTPommeIdent*>(state->node->jjtGetChild(0))->m_Identifier == typeIdent)
+                   if(dynamic_cast<ASTPommeIdent*>(state->node->jjtGetChild(0))->m_Identifier == typeIdent)
                     {
                         depandanceNodeAlreadyDefined = true;
                         numStateDepandance = i;
+                        break;
                     }
                 }
             }
@@ -367,7 +414,14 @@ namespace Pomme
                 std::cout << "Adding Transition between " << nbState - 1 << " -> "<<  numStateDepandance << std::endl;
                 if(!dependanceGraph.hasTransition(numStateDepandance, nbState - 1))
                 {
-                    dependanceGraph.addTransition(numStateDepandance, nbState - 1);
+                    auto isModded = lastDefinedModdedClassStateNumber.find(typeIdent);
+                    if(isModded != lastDefinedModdedClassStateNumber.end())
+                    {
+                        dependanceGraph.addTransition(isModded->second, nbState - 1);
+                    }else
+                    {
+                        dependanceGraph.addTransition(numStateDepandance, nbState - 1);
+                    }
                 }
             }else
             {
@@ -434,32 +488,10 @@ namespace Pomme
         std::string ident = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
         node->jjtChildrenAccept(this, &ident);
     }
-    void AutomateVisitor::visit(ASTPommeModdedClass *node, void * data) {
-
+    void AutomateVisitor::visit(ASTPommeModdedClass *node, void * data)
+    {
+        processModded(node);
         std::string ident = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(0))->m_Identifier;
-
-        auto lastStateModded = lastDefinedModdedClassStateNumber.find(ident);
-        int moddedClassIndex = dependanceGraph.getState(ident);
-
-        if (lastStateModded != lastDefinedModdedClassStateNumber.end())
-        {
-            dependanceGraph.addState(nbState);
-            dependanceGraph.getState(nbState)->node = node;
-            dependanceGraph.addTransition(lastStateModded->second, nbState);
-            lastDefinedModdedClassStateNumber.find(ident)->second = nbState;
-            nbState++;
-
-        }else if(moddedClassIndex != -1)
-        {
-            dependanceGraph.addState(nbState);
-            dependanceGraph.getState(nbState)->node = node;
-            dependanceGraph.addTransition(moddedClassIndex, nbState);
-            lastDefinedModdedClassStateNumber.emplace(ident, nbState);
-            nbState++;
-        }else
-        {
-            moddedClassToResolveCheck(ident, node);
-        }
         node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTPommeDecls *node, void * data)
@@ -551,12 +583,8 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeModdedEnum *node, void * data)
     {
-        if(!resolved(node, false))
-        {
-            addEnum(node);
-        }
-        std::string ident = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-        std::cout << "ASTPommeModdedEnum " << ident << std::endl;
+        processModded(node);
+        std::string ident = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(0))->m_Identifier;
         node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTPommeDeclEnums *node, void * data)

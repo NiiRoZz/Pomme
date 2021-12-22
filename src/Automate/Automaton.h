@@ -31,6 +31,7 @@ namespace Pomme {
         bool isStateFinal(int state) const ;
         State * getState(int state);
         int getState(const std::string& name);
+        std::vector<Transition> getTransitionsExiting(int state);
 
         bool addTransition(int from, int to);
         bool removeTransition(int from, int to );
