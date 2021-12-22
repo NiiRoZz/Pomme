@@ -18,7 +18,7 @@ namespace Pomme {
 
     std::size_t Automaton::countTransitions() const
     {
-        int result = 0;
+        std::size_t result = 0;
         for(const auto& it : this->m_transition)
         {
             result += it.second.size();

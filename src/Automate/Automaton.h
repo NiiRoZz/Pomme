@@ -23,18 +23,18 @@ namespace Pomme {
         std::string loop;
         bool addState(int state);
         bool removeState(int state);
-        bool hasState(int state) const ;
+        bool hasState(int state) const;
         std::size_t countStates() const;
-        void setStateInitial(int state) ;
-        bool isStateInitial(int state) const ;
-        void setStateFinal(int state) ;
-        bool isStateFinal(int state) const ;
+        void setStateInitial(int state);
+        bool isStateInitial(int state) const;
+        void setStateFinal(int state);
+        bool isStateFinal(int state) const;
         State * getState(int state);
         int getState(const std::string& name);
         std::vector<Transition> getTransitionsExiting(int state);
 
         bool addTransition(int from, int to);
-        bool removeTransition(int from, int to );
+        bool removeTransition(int from, int to);
         bool hasTransition(int from, int to) const;
         std::size_t countTransitions() const;
 

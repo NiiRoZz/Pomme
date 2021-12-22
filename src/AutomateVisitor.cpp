@@ -607,7 +607,9 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeGlobalFunctionNative *node, void * data)
     {
-        // todo visit header to check dependance
+        this->currentClassName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
+        addGlobal(node);
+        checkGlobalDependance(node);
     }
     void AutomateVisitor::visit(ASTPommeInstrs *node, void * data)
     {

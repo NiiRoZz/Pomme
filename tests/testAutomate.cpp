@@ -1092,3 +1092,20 @@ TEST(TEST_AUTOMATE, Graph_ModdedInBetween)
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,3), true);
 }
 
+TEST(TEST_AUTOMATE, Graph_NativeGlobal)
+{
+    TEST_AUTOMATE_TEST("class transition{}; native transition test2(int k); native void test3(transition k, transition2 x); class transition2{};\n");
+    std::cout << text << std::endl;
+
+    AutomateVisitor visitor;
+    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,2), true);
+}
