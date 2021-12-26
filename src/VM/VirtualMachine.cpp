@@ -441,10 +441,10 @@ namespace Pomme
             #define CASES(name) case AS_OPCODE(OpCode::name):
         #endif
 
-        #ifndef USE_COMPUTED_GOTO
-        POMME_vm_main_loop:
-        #else
+        #ifdef USE_COMPUTED_GOTO
         DISPATCH();
+        #else
+        POMME_vm_main_loop:
         #endif
 
         #ifdef DEBUG_LOG
@@ -1174,8 +1174,6 @@ namespace Pomme
         }
         else
         {
-            //TODO: default fields
-            //klass->defaultFields[slot] = value;
             klass->fieldsIndices.emplace(name->chars, slot);
         }
         
