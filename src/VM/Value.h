@@ -20,79 +20,8 @@ namespace Pomme
         COUNT,
     };
 
+    //0 means nullptr
     using Pointer = uint32_t;
-
-    #ifndef NAN_BOXING
-
-    struct ObjPrimitive
-    {
-        PrimitiveType type;
-
-        union
-        {
-            int32_t number;
-            double numberFloat;
-            bool boolean;
-        } as;
-
-        inline bool isType(PrimitiveType primitiveType) const {return type == primitiveType;}
-    };
-
-    enum class ValueType: uint8_t
-    {
-        VAL_NULL,
-        VAL_OBJ,
-        VAL_PRIMITIVE,
-    };
-
-    class Value
-    {
-    public:
-        Value();
-        Value(ValueType val);
-        Value(Pointer val);
-        Value(int32_t val);
-        Value(double val);
-        Value(bool val);
-
-        bool isNull() const {return type == ValueType::VAL_NULL;}
-        bool isObj() const {return type == ValueType::VAL_OBJ;}
-        bool isPrimitive() const {return type == ValueType::VAL_PRIMITIVE;}
-
-        ObjPrimitive& asPrimitive() {return as.primitive;}
-        const ObjPrimitive& asPrimitive() const {return as.primitive;}
-        Pointer asObj() const {return as.obj;}
-
-    private:
-        ValueType type;
-
-        union
-        {
-            Pointer obj;
-            ObjPrimitive primitive;
-        } as;
-    };
-
-    #define IS_BOOL(value)          ((value).isPrimitive() && (value).asPrimitive().isType(PrimitiveType::BOOL))
-    #define IS_NULL(value)          ((value).isNull())
-    #define IS_INT(value)           ((value).isPrimitive() && (value).asPrimitive().isType(PrimitiveType::INT))
-    #define IS_FLOAT(value)         ((value).isPrimitive() && (value).asPrimitive().isType(PrimitiveType::FLOAT))
-    #define IS_OBJ(value)           ((value).isObj())
-
-    #define NULL_VAL                (Value())
-    #define OBJ_VAL(obj)            (Value(obj))
-    #define BOOL_VAL(b)             (Value(b))
-    #define FALSE_VAL               (Value(false))
-    #define TRUE_VAL                (Value(true))
-    #define INT_VAL(value)          (Value(value))
-    #define FLOAT_VAL(num)          (Value(num))
-
-    #define AS_OBJ(value)           ((value).asObj())
-    #define AS_BOOL(value)          ((value).asPrimitive().as.boolean)
-    #define AS_INT(value)           ((value).asPrimitive().as.number)
-    #define AS_FLOAT(value)         ((value).asPrimitive().as.numberFloat)
-
-    #else
 
     #define _MASK_SIGN              ((uint64_t)0x8000000000000000)
     #define _MASK_QNAN              ((uint64_t)0x7ffc000000000000)
@@ -163,6 +92,4 @@ namespace Pomme
         assert(false);
         return PrimitiveType::COUNT;
     }
-
-    #endif
 }

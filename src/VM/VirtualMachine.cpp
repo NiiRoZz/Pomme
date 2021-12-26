@@ -1064,8 +1064,6 @@ namespace Pomme
 
     void VirtualMachine::printValue(const Value& value) const
     {
-        #ifdef NAN_BOXING
-
         if (IS_BOOL(value))
         {
             std::cout << AS_BOOL(value);
@@ -1086,46 +1084,6 @@ namespace Pomme
         {
             printObject(value);
         }
-
-        #else
-
-        if (value.isNull())
-        {
-            std::cout << "null";
-            return;
-        }
-
-        if (value.isPrimitive())
-        {
-            const ObjPrimitive& primitive = value.asPrimitive();
-            switch (primitive.type)
-            {
-                case PrimitiveType::INT:
-                {
-                    std::cout << primitive.as.number;
-                    break;
-                }
-
-                
-                case PrimitiveType::FLOAT:
-                {
-                    std::cout << primitive.as.numberFloat;
-                    break;
-                }
-
-                
-                case PrimitiveType::BOOL:
-                {
-                    std::cout << primitive.as.boolean;
-                    break;
-                }
-            }
-            return;
-        }
-
-        printObject(value);
-
-        #endif
     }
 
     void VirtualMachine::printObject(const Value& value) const

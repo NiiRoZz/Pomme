@@ -5,5 +5,3 @@
 
 #define NAME_FUNC_SEPARATOR "!"
 #define HEADER_FUNC_SEPARATOR ";"
-
-#define NAN_BOXING

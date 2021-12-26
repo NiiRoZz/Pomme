@@ -21,7 +21,7 @@ namespace Pomme
             uint8_t refCount;
 
             //Point to objects
-            std::array<uint8_t*, NUMBER_MAX_REF_COUNT> refs;
+            std::array<Pointer, NUMBER_MAX_REF_COUNT> refs;
         };
 
         static constexpr std::size_t HEADER_SIZE = sizeof(ObjectHeader);
@@ -52,7 +52,7 @@ namespace Pomme
         template<typename T, typename ...Args>
         inline T* allocObject(Args&& ...args)
         {
-            return reinterpret_cast<T*>(&m_Memory[alloc<T>(std::forward<Args>(args)...)]);
+            return get<T>(alloc<T>(std::forward<Args>(args)...));
         }
 
         Pointer malloc(std::size_t size);
