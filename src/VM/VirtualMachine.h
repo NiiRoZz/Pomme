@@ -158,7 +158,7 @@ namespace Pomme
   			return *stackTop;
 		}
 
-		inline void pop(int depth)
+		inline void drop(int depth)
 		{
 			stackTop -= depth;
 		}

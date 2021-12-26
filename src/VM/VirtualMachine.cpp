@@ -477,7 +477,7 @@ namespace Pomme
                 bool isNull = IS_NULL(peek(0));
                 Value value = BOOL_VAL(!isNull);
 
-                pop(1u); //pop obj/null value
+                drop(1u); //pop obj/null value
                 push(value);
 
                 DISPATCH();
@@ -500,7 +500,7 @@ namespace Pomme
                     objectMemory.free(AS_OBJ_PTR(top));
                 }
 
-                pop(1u);
+                drop(1u);
 
                 DISPATCH();
             }
@@ -508,7 +508,7 @@ namespace Pomme
             //TODO: remove this when static memory will be available
             CASES(OP_NR_POP)
             {
-                pop(1u);
+                drop(1u);
 
                 DISPATCH();
             }
@@ -531,7 +531,7 @@ namespace Pomme
             CASES(OP_SET_GLOBAL)
             {
                 setValue(&(globals[READ_BYTE()]), peek(0));
-                pop(1u);
+                drop(1u);
 
                 DISPATCH();
             }
@@ -546,7 +546,7 @@ namespace Pomme
             CASES(OP_SET_LOCAL)
             {
                 setValue(&(frame->slots[READ_BYTE()]), peek(0));
-                pop(1u);
+                drop(1u);
 
                 DISPATCH();
             }
@@ -570,7 +570,7 @@ namespace Pomme
                     value = klass->getStaticField(*this, slot);
                 }
 
-                pop(1u); // Instance or Class.
+                drop(1u); // Instance or Class.
                 push(*value);
 
                 DISPATCH();
@@ -593,7 +593,7 @@ namespace Pomme
                     setValue(klass->getStaticField(*this, slot), peek(1));
                 }
 
-                pop(2u); // Instance or Class. and Value
+                drop(2u); // Instance or Class. and Value
 
                 DISPATCH();
             }
@@ -671,7 +671,7 @@ namespace Pomme
 
                 if (frameCount == 0)
                 {
-                    pop(1u);
+                    drop(1u);
                     return InterpretResult::INTERPRET_OK;
                 }
 
@@ -706,7 +706,7 @@ namespace Pomme
                 std::memcpy(klass->getMethod(*this, 0u), superclass->getMethod(*this, 0u), sizeof(Value) * klass->nmbMethods);
                 klass->methodsIndices = superclass->methodsIndices;
 
-                pop(1u); // superclass.
+                drop(1u); // superclass.
 
                 DISPATCH();
             }
@@ -788,7 +788,6 @@ namespace Pomme
 
                 if (foundConstructor)
                 {
-                    std::cout << "slot : " << unsigned(slot) << std::endl;
                     assert(IS_FUNCTION(*this, *(klass->getMethod(*this, slot))));
 
                     if (!call(AS_FUNCTION(*this, *(klass->getMethod(*this, slot))), argCount))
@@ -829,7 +828,7 @@ namespace Pomme
             {
                 Value value = BOOL_VAL(AS_INT(peek(1)) < AS_INT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -840,7 +839,7 @@ namespace Pomme
             {
                 Value value = BOOL_VAL((double) AS_INT(peek(1)) < AS_FLOAT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -851,7 +850,7 @@ namespace Pomme
             {
                 Value value = BOOL_VAL(AS_FLOAT(peek(1)) < AS_FLOAT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -862,7 +861,7 @@ namespace Pomme
             {
                 Value value = BOOL_VAL(AS_FLOAT(peek(1)) < (double) AS_INT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -873,7 +872,7 @@ namespace Pomme
             {
                 Value value = INT_VAL(AS_INT(peek(1)) - AS_INT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -884,7 +883,7 @@ namespace Pomme
             {
                 Value value = FLOAT_VAL((double) AS_INT(peek(1)) - AS_FLOAT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -895,7 +894,7 @@ namespace Pomme
             {
                 Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - AS_FLOAT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -906,7 +905,7 @@ namespace Pomme
             {
                 Value value = FLOAT_VAL(AS_FLOAT(peek(1)) - (double) AS_INT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -917,7 +916,7 @@ namespace Pomme
             {
                 Value value = INT_VAL(AS_INT(peek(1)) + AS_INT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -928,7 +927,7 @@ namespace Pomme
             {
                 Value value = FLOAT_VAL((double) AS_INT(peek(1)) + AS_FLOAT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -939,7 +938,7 @@ namespace Pomme
             {
                 Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + AS_FLOAT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -950,7 +949,7 @@ namespace Pomme
             {
                 Value value = FLOAT_VAL(AS_FLOAT(peek(1)) + (double) AS_INT(peek(0)));
 
-                pop(2u);
+                drop(2u);
 
                 push(std::move(value));
 
@@ -1196,7 +1195,7 @@ namespace Pomme
             klass->methodsIndices.emplace(name->chars, slot);
         }
 
-        pop(1u);
+        drop(1u);
     }
 
     void VirtualMachine::defineField(uint16_t slot, ObjString* name, bool isStatic)
@@ -1222,7 +1221,7 @@ namespace Pomme
             klass->fieldsIndices.emplace(name->chars, slot);
         }
         
-        pop(1u);
+        drop(1u);
     }
 
     ObjClass* VirtualMachine::newClass(ObjString* name, uint64_t nmbMethods, uint64_t nmbNativeMethods, uint64_t nmbStaticFields, uint64_t nmbFields)
