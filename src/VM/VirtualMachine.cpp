@@ -14,13 +14,9 @@ namespace Pomme
     : frameCount(0u)
     , stackTop(stack)
     , globalsIndicesCount(0u)
-    //, objects(nullptr)
-    //, bytesAllocated(0u)
-    //, nextGC(1024u * 1024u)
     , objectMemory(1000000u * 10u)
     {
         std::memset(globals, 0, sizeof(Value) * GLOBALS_MAX);
-        //grayStack.reserve(GLOBALS_MAX + STACK_MAX);
         for (uint8_t i = 0; i < static_cast<uint8_t>(PrimitiveType::COUNT); ++i)
         {
             primitives[i] = nullptr;
@@ -135,16 +131,7 @@ namespace Pomme
             return {};
         }
 
-        assert(IS_FUNCTION(*this, globals[it->second]));
-
-        //TODO: call native global function
-
-        ObjFunction* function = AS_FUNCTION(*this, globals[it->second]);
-
-        if (function->arity != params.size())
-        {
-            return {};
-        }
+        assert(IS_FUNCTION(*this, globals[it->second]) || IS_GLOBAL_NATIVE(*this, globals[it->second]));
 
         push(globals[it->second]);
 
@@ -153,21 +140,52 @@ namespace Pomme
             push(params[i]);
         }
 
-        if (!call(function, params.size()))
+        if (IS_GLOBAL_NATIVE(*this, globals[it->second]))
         {
-            return {};
-        }
+            GlobalNativeFn& globalNativeFn = AS_GLOBAL_NATIVE(*this, globals[it->second]);
 
-        if (run(true) != InterpretResult::INTERPRET_OK)
+            if (callNative(globalNativeFn, params.size()))
+            {
+                return pop();
+            }
+            else
+            {
+                return {};
+            }
+        }
+        else
         {
-            return {};
-        }
+            ObjFunction* function = AS_FUNCTION(*this, globals[it->second]);
 
-        return pop();
+            if (function->arity != params.size())
+            {
+                return {};
+            }
+
+            if (!call(function, params.size()))
+            {
+                return {};
+            }
+
+            if (run(true) != InterpretResult::INTERPRET_OK)
+            {
+                return {};
+            }
+
+            return pop();
+        }
+        
     }
 
     std::optional<Value> VirtualMachine::callMethodFunction(ObjInstance* instance, const std::string& methodName, const std::vector<Value>& params)
     {
+        push(OBJ_PTR_VAL(instance->pointer));
+
+        for (std::size_t i = 0; i < params.size(); ++i)
+        {
+            push(params[i]);
+        }
+
         auto it = instance->klass->methodsIndices.find(methodName);
         if (it == instance->klass->methodsIndices.end())
         {
@@ -177,8 +195,10 @@ namespace Pomme
                 return {};
             }
 
-            //TODO: call native method
-            return {};
+            assert(IS_METHOD_NATIVE(*this, *(instance->klass->getNativeMethod(*this, ot->second))));
+
+            MethodNativeFn& methodNative = AS_METHOD_NATIVE(*this, *(instance->klass->getNativeMethod(*this, ot->second)));
+            return methodNative(*this, params.size(), instance, stackTop - params.size());
         }
 
         assert(IS_FUNCTION(*this, *(instance->klass->getMethod(*this, it->second))));
@@ -188,13 +208,6 @@ namespace Pomme
         if (function->arity != params.size())
         {
             return {};
-        }
-
-        push(OBJ_PTR_VAL(instance->pointer));
-
-        for (std::size_t i = 0; i < params.size(); ++i)
-        {
-            push(params[i]);
         }
 
         if (!call(function, params.size()))
