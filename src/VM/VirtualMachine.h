@@ -13,7 +13,7 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 #define GLOBALS_MAX UINT16_COUNT
 
-#define DEBUG_LOG
+//#define DEBUG_LOG
 
 namespace Pomme
 {
@@ -126,11 +126,47 @@ namespace Pomme
 
 		void setValue(Value* dest, const Value& src);
 
-		void push(const Value& value);
-		void push(Value&& value);
-		Value pop();
-		void pop(int depth);
-		Value& peek(int depth) const;
+		inline void push(const Value& value)
+		{
+			*stackTop = value;
+			stackTop++;
+
+			#ifndef NDEBUG
+			if ((stackTop - stack) >= STACK_MAX)
+			{
+				assert(false);
+			}
+			#endif
+		}
+
+		inline void push(Value&& value)
+		{
+			*stackTop = std::move(value);
+			stackTop++;
+
+			#ifndef NDEBUG
+			if ((stackTop - stack) >= STACK_MAX)
+			{
+				assert(false);
+			}
+			#endif
+		}
+
+		inline Value pop()
+		{
+			stackTop--;
+  			return *stackTop;
+		}
+
+		inline void pop(int depth)
+		{
+			stackTop -= depth;
+		}
+
+		inline Value& peek(int depth) const
+		{
+			return stackTop[-1 - depth];
+		}
 
 	private:
 		CallFrame frames[FRAMES_MAX];

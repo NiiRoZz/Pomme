@@ -1997,6 +1997,7 @@ namespace Pomme
         if (!getMethodType(node, variableType, functionIdent, className))
         {
             errors.push_back("can't find method : " + functionIdent);
+            return;
         }
 
         if (firstInstrConstructor)

@@ -273,48 +273,6 @@ namespace Pomme
         return klass->getStaticField(*this, ot->second);
     }
 
-    void VirtualMachine::push(const Value& value)
-    {
-    	*stackTop = value;
-        stackTop++;
-
-        #ifndef NDEBUG
-        if ((stackTop - stack) >= STACK_MAX)
-        {
-            assert(false);
-        }
-        #endif
-    }
-
-    void VirtualMachine::push(Value&& value)
-    {
-    	*stackTop = std::move(value);
-        stackTop++;
-
-        #ifndef NDEBUG
-        if ((stackTop - stack) >= STACK_MAX)
-        {
-            assert(false);
-        }
-        #endif
-    }
-
-    Value VirtualMachine::pop()
-    {
-		stackTop--;
-  		return *stackTop;
-    }
-
-    void VirtualMachine::pop(int depth)
-    {
-		stackTop -= depth;
-    }
-
-	Value& VirtualMachine::peek(int depth) const
-	{
-		return stackTop[-1 - depth];
-	}
-
     ObjString* VirtualMachine::newString()
     {
         ObjString* string = allocateObject<ObjString>();
