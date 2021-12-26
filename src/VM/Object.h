@@ -56,6 +56,8 @@ namespace Pomme
         inline bool isType(ObjType objType) const {return type == objType;}
 
         ObjType type;
+
+        //pointer of itself
         Pointer pointer;
     };
 
@@ -72,6 +74,7 @@ namespace Pomme
 
         uint16_t arity;
         Chunk chunk;
+        //TODO: move C pointer to Pointer type
         ObjString* name;
     };
 
@@ -107,7 +110,7 @@ namespace Pomme
     {
         virtual ~ObjClass() = default;
 
-        //Runtime
+        //TODO: move C pointer to Pointer type
         ObjString* name;
 
         Pointer methods;
@@ -143,10 +146,13 @@ namespace Pomme
     {
         virtual ~ObjInstance() = default;
 
+        //TODO: move C pointer to Pointer type
         ObjClass* klass;
 
         Pointer fields;
         Pointer nativeMethods;
+
+        //ObjClass* getClass(const VirtualMachine& vm, uint16_t slot) const;
 
         Value* getNativeMethod(const VirtualMachine& vm, uint16_t slot) const;
         Value* getNativeMethod(const VirtualMachine& vm, const std::string& name) const;
