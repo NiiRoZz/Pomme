@@ -8,14 +8,15 @@
 
 namespace Pomme
 {
-	TypeChecker::TypeChecker()
+	TypeChecker::TypeChecker(const std::vector<ErrorFile>& errorFiles)
+    : m_ErrorFiles(errorFiles)
 	{
 	}
 
     TypeCheckerVisitor TypeChecker::typeCheck(SimpleNode* tree)
 	{
         AutomateVisitor visitorAutomate;
-		TypeCheckerVisitor visitor;
+		TypeCheckerVisitor visitor(m_ErrorFiles);
 
         tree->jjtAccept(&visitorAutomate, nullptr); // class/method definition
 

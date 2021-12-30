@@ -11,7 +11,10 @@ namespace Pomme
 	class TypeChecker
 	{
 	public:
-        TypeChecker();
+        TypeChecker(const std::vector<ErrorFile>& errorFiles);
         TypeCheckerVisitor typeCheck(SimpleNode* tree);
+
+	private:
+		const std::vector<ErrorFile>& m_ErrorFiles;
 	};
 }

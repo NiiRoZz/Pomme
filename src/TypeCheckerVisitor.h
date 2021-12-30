@@ -4,12 +4,15 @@
 #include "VM/Chunk.h"
 #include "VM/Object.h"
 #include "VM/Common.h"
+#include "Compiler.h"
 #include <map>
 #include <utility>
 #include <vector>
 #include <iostream>
 #include <set>
 #include <unordered_set>
+
+#define DEBUG_LOG_TYPE_CHECKERs
 
 namespace Pomme
 {
@@ -130,7 +133,7 @@ namespace Pomme
             FunctionClass* getMethod(const std::string& methodName);
             VariableClass* getAttribute(const std::string& attributeName);
 
-            void addAttribute(std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
+            void addAttribute(PommeNode* node, std::string &attributeType, std::string attributeName, bool isConst, bool isStatic,
                               TypeCheckerVisitor *typeCheckerVisitor);
             template<typename T>
             void addFunction(T* node, const std::string& functionType, const std::string& functionName, std::unordered_set<std::string> parameters, std::unordered_set<std::string> keywords, bool isNative, bool overriding, TypeCheckerVisitor* typeCheckerVisitor)
@@ -152,8 +155,7 @@ namespace Pomme
                     }
                     else
                     {
-                        typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
-                        std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+                        typeCheckerVisitor->addError(node, "addFunction ERROR : " + functionName + " already defined");
                     }
                 };
 
@@ -162,8 +164,7 @@ namespace Pomme
                     auto access = methods.find(functionName);
                     if (access != methods.end())
                     {
-                        typeCheckerVisitor->errors.push_back("addFunction ERROR : " + functionName + " already defined");
-                        std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+                        typeCheckerVisitor->addError(node, "addFunction ERROR : " + functionName + " already defined");
                     }
 
                     addMethod(nativeMethods);
@@ -173,8 +174,7 @@ namespace Pomme
                     auto access = nativeMethods.find(functionName);
                     if (access != nativeMethods.end())
                     {
-                        typeCheckerVisitor->errors.push_back("addFunction nativeMethods ERROR : " + functionName + " already defined");
-                        std::cout << "ERROR DETECTED while adding function " << functionName << " : function already defined" << std::endl;
+                        typeCheckerVisitor->addError(node, "addFunction ERROR : " + functionName + " already defined");
                     }
 
                     addMethod(methods);
@@ -217,7 +217,7 @@ namespace Pomme
         };
 
 	public:
-        TypeCheckerVisitor();
+        TypeCheckerVisitor(const std::vector<ErrorFile>& errorFiles);
         std::unordered_map<std::string, FunctionClass> globalFunctionsMap;
         std::unordered_map<std::string, ClassClass> classMap;
         std::unordered_map<std::string, std::string> moddedMap;
@@ -246,14 +246,14 @@ namespace Pomme
 
             if (type == "")
             {
-                errors.push_back("Can't find variable type of left expression");
+                addError(node, "Can't find variable type of the left expression");
                 return;
             }
 
             auto it = classMap.find(type);
             if (it == classMap.end())
             {
-                errors.push_back("Can't find class name : " + type);
+                addError(node, "Can't find class name : " + type);
                 return;
             }
 
@@ -262,7 +262,7 @@ namespace Pomme
             FunctionClass* functionClass = it->second.getMethod(nameFunc);
             if (functionClass == nullptr)
             {
-                errors.push_back("Can't find method " + nameFunc);
+                addError(node, "Can't find method " + nameFunc);
                 return;
             }
 
@@ -282,13 +282,13 @@ namespace Pomme
 
             if (leftType == "")
             {
-                errors.push_back("Can't find variable type of left expression");
+                addError(node, "Can't find variable type of the left expression");
                 return;
             }
 
             if (rightType == "")
             {
-                errors.push_back("Can't find variable type of right expression");
+                addError(node, "Can't find variable type of the right expression");
                 return;
             }
 
@@ -298,14 +298,14 @@ namespace Pomme
             auto itLeft = classMap.find(leftType);
             if (itLeft == classMap.end())
             {
-                errors.push_back("Can't find class name : " + leftType);
+                addError(node, "Can't find class name : " + leftType);
                 return;
             }
 
             auto itRight = classMap.find(rightType);
             if (itRight == classMap.end())
             {
-                errors.push_back("Can't find class name : " + rightType);
+                addError(node, "Can't find class name : " + rightType);
                 return;
             }
 
@@ -314,7 +314,7 @@ namespace Pomme
             FunctionClass* functionClass = itLeft->second.getMethod(nameFunc);
             if (functionClass == nullptr)
             {
-                errors.push_back("Can't find method " + nameFunc);
+                addError(node, "Can't find method " + nameFunc);
                 return;
             }
 
@@ -324,18 +324,16 @@ namespace Pomme
         }
 
         void visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords);
-        void addGlobalFunction(const std::string &functionType, const std::string &functionName, std::string functionIdent, bool native,
+        void addGlobalFunction(PommeNode* node, const std::string &functionType, const std::string &functionName, std::string functionIdent, bool native,
                                std::unordered_set<std::string> parameters);
-        void addClass(const std::string& className);
-        void addEnum(const std::string& EnumName);
+        void addClass(PommeNode* node, const std::string& className);
+        void addEnum(PommeNode* node, const std::string& EnumName);
         std::unordered_set<std::string> buildSignature(ASTPommeHeaders *headers);
         bool getMethodType(ASTPommeAccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className);
         bool getExpType(ASTPommeListExp* node, ASTPommeAccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className);
         std::unordered_set<std::string> buildKeyword(ASTPommeIdentFuncs *node);
-        void checkNewMember(std::basic_string<char> enumName, std::basic_string<char> memberName);
+        void checkNewMember(PommeNode* node, std::string enumName, std::string memberName);
         std::string getVariableType(const std::string& type);
-
-        bool checkAccessMethod(ASTPommeAccessMethode *node, std::string* variableType, const std::string& functionName, const std::string& functionIdent, bool addError);
         
         template<typename T>
         void checkVariable(T* node)
@@ -349,19 +347,19 @@ namespace Pomme
 
             if (leftType == "")
             {
-                errors.push_back("Can't find variable type of left expression");
+                addError(node, "Can't find variable type of the left expression");
                 return;
             }
 
             if (rightType == "" && !isNull)
             {
-                errors.push_back("Can't find variable type of right expression");
+                addError(node, "Can't find variable type of the right expression");
                 return;
             }
 
             if (!isNull && leftType != rightType)
             {
-                errors.push_back("Can't assign class " + rightType + " to class " + leftType);
+                addError(node, "Can't assign class " + rightType + " to class " + leftType);
                 return;
             }
         }
@@ -394,6 +392,15 @@ namespace Pomme
 
             return str;
         }
+
+        void addError(PommeNode* node, const std::string& tempErrorMessage);
+
+    private:
+        const ErrorFile* getErrorFile(std::size_t line) const;
+
+    private:
+        const std::vector<ErrorFile>& m_ErrorFiles;
+        std::size_t m_Line;
 
     public:
         // Inherited via TestLexerVisitor

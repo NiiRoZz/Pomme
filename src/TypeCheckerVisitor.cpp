@@ -14,7 +14,9 @@ namespace Pomme
      * todo : modded + enum
      * */
 
-    TypeCheckerVisitor::TypeCheckerVisitor()
+    TypeCheckerVisitor::TypeCheckerVisitor(const std::vector<ErrorFile>& errorFiles)
+    : m_ErrorFiles(errorFiles)
+    , m_Line(0)
 	{
 	}
 
@@ -22,6 +24,7 @@ namespace Pomme
     {
         const std::string &context = class_name;
         bool isStatic = keywords.count("static");
+        PommeNode* pommeNode = dynamic_cast<PommeNode*>(node);
 
         if(class_context && !instrs_context)
         {
@@ -36,43 +39,37 @@ namespace Pomme
                 std::string &attributeType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
                 std::string &attributeName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
-                std::cout << it->second << std::endl << std::endl;
-
                 if (it->second.getAttribute(attributeName) != nullptr)
                 {
-                    errors.emplace_back("Can't redefine variable " + attributeName);
+                    addError(pommeNode, "Can't redefine variable " + attributeName);
                     return;
                 }
 
-                it->second.addAttribute(attributeType, attributeName, isConst, isStatic, this);
+                it->second.addAttribute(pommeNode, attributeType, attributeName, isConst, isStatic, this);
 
                 auto* constant = dynamic_cast<ASTPommeConstant*>(node);
                 if(constant != nullptr)
                 {
                     constant->index = isStatic ? it->second.staticAttributes.size() - 1 : it->second.attributes.size() - 1;
-                    std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << constant->index << std::endl;
                 }else
                 {
                     auto* variable = dynamic_cast<ASTPommeVariable*>(node);
                     variable->index = isStatic ? it->second.staticAttributes.size() - 1 : it->second.attributes.size() - 1;
                     variable->isStatic = isStatic;
-                    std::cout << " INDEX FOR VARIABLE "<< attributeName << " = " << variable->index << std::endl;
                 }
-            }else // todo check coverage to remove this branche
+            }
+            else // todo check coverage to remove this branche
             {
-                std::cout << "ERRORS DETECTED : class " << context << " not defined " << std::endl;
-                errors.push_back("ERRORS DETECTED : class "+ context +" not defined ");
+                addError(pommeNode, "ERRORS DETECTED : class "+ context +" not defined ");
             }
         }else if(instrs_context)
         {
-            std::cout << "instrs_context " << std::endl;
             if (path_number == 1)
             {
                 dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier = getVariableType(dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier);
             }
 
             std::string& localType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-            std::cout << "localType : " << localType << std::endl;
             std::string &localName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
             for(int scope_number = 0; scope_number <= current_scopes; scope_number++)
@@ -84,7 +81,7 @@ namespace Pomme
                     {
                         if(local.variableName == localName)
                         {
-                            errors.push_back("ERRORS DETECTED : variable "+ localName +" already defined in another scope");
+                            addError(pommeNode, "ERRORS DETECTED : variable "+ localName +" already defined in another scope");
                         }
                     }
                 }
@@ -103,16 +100,18 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::addGlobalFunction(const std::string &functionType, const std::string &functionName, const std::string functionIdent, bool native,
+    void TypeCheckerVisitor::addGlobalFunction(PommeNode* node, const std::string &functionType, const std::string &functionName, const std::string functionIdent, bool native,
                                                std::unordered_set<std::string> parameters)
     {
+        #ifdef DEBUG_LOG_TYPE_CHECKERs
         std::cout << "Adding global function " << functionName << " with type " << functionType << " with ident " << functionIdent << std::endl;
+        #endif
         auto access = globalFunctionsMap.find(functionIdent);
         if(access != globalFunctionsMap.end())
         {
             if(access->second.functionIdent == functionIdent)
             {
-                errors.push_back("Global function "+functionName+" already defined");
+                addError(node, "Global function "+functionName+" already defined");
             }
         }else
         {
@@ -122,37 +121,39 @@ namespace Pomme
         }
     }
 
-    void TypeCheckerVisitor::addEnum(const std::string& enumName)
+    void TypeCheckerVisitor::addEnum(PommeNode* node, const std::string& enumName)
     {
+        #ifdef DEBUG_LOG_TYPE_CHECKERs
         std::cout << "Adding enum " << enumName << std::endl;
+        #endif
 
         auto access = enumMap.find(enumName);
         if(access != enumMap.end())
         {
-            errors.push_back("Adding enum "+ enumName +" : Enum already defined");
-            std::cout << "Adding enum " << enumName << " : Enum already defined" <<  std::endl;
-        }else
+            addError(node, "Adding enum "+ enumName +" : Enum already defined");
+        }
+        else
         {
             EnumClass enumClass(enumName,{},"");
             enumMap.emplace(enumName,enumClass);
-            std::cout << "inserted " << enumName << std::endl;
         }
     }
-    void TypeCheckerVisitor::addClass(const std::string& className)
-    {
 
+    void TypeCheckerVisitor::addClass(PommeNode* node, const std::string& className)
+    {
+        #ifdef DEBUG_LOG_TYPE_CHECKERs
         std::cout << "Adding class " << className << std::endl;
+        #endif
 
         auto access = classMap.find(className);
         if(access != classMap.end())
         {
-            errors.push_back("Adding class "+ className +" : Class already defined");
-            std::cout << "Adding class " << className << " : Class already defined" <<  std::endl;
-        }else
+            addError(node, "Adding class "+ className +" : Class already defined");
+        }
+        else
         {
             ClassClass classClass;
             classMap.emplace(className, classClass);
-            std::cout << "inserted " << className << std::endl;
         }
     }
 
@@ -190,10 +191,12 @@ namespace Pomme
         return &it->second;
     }
 
-    void TypeCheckerVisitor::ClassClass::addAttribute(std::string &attributeType, std::string attributeName,
+    void TypeCheckerVisitor::ClassClass::addAttribute(PommeNode* node, std::string &attributeType, std::string attributeName,
                                                  bool isConst, bool isStatic, TypeCheckerVisitor *typeCheckerVisitor)
     {
+        #ifdef DEBUG_LOG_TYPE_CHECKERs
         std::cout << "Adding attribute " << attributeName <<  " with type " << attributeType << " isStatic : " << isStatic << std::endl;
+        #endif
 
         auto addAttribute = [&] (std::unordered_map<std::string, VariableClass>& attributes) {
             auto access = attributes.find(attributeName);
@@ -201,11 +204,10 @@ namespace Pomme
             {
                 VariableClass variable(attributeType, attributeName, attributes.size(), isConst);
                 attributes.emplace(attributeName, variable);
-                std::cout << "inserted " << attributeName <<  " with type " << attributeType << std::endl;
-            }else
+            }
+            else
             {
-                typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
-                std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+                typeCheckerVisitor->addError(node, "addAttribute ERROR : " + attributeName+" already defined");
             }
         };
 
@@ -214,8 +216,7 @@ namespace Pomme
             auto access = attributes.find(attributeName);
             if (access != attributes.end())
             {
-                typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
-                std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+                typeCheckerVisitor->addError(node, "addAttribute ERROR : " + attributeName+" already defined");
             }
 
             addAttribute(staticAttributes);
@@ -225,22 +226,21 @@ namespace Pomme
             auto access = staticAttributes.find(attributeName);
             if (access != staticAttributes.end())
             {
-                typeCheckerVisitor->errors.push_back("addAttribute ERROR : " + attributeName+" already defined");
-                std::cout << "ERROR DETECTED while adding attribute " << attributeName << " : attribute already defined" <<  std::endl;
+                typeCheckerVisitor->addError(node, "addAttribute ERROR : " + attributeName+" already defined");
             }
 
             addAttribute(attributes);
         }
     }
 
-    std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTPommeHeaders *headers) {
+    std::unordered_set<std::string> TypeCheckerVisitor::buildSignature(ASTPommeHeaders *headers)
+    {
         std::unordered_set<std::string> parameters;
         Pomme::Node* header;
 
         std::string parameterName;
         std::string delimiter = " ";
 
-        std::cout << "buildSignature" << std::endl;
         while(headers != nullptr)
         {
             header = headers->jjtGetChild(0);
@@ -249,21 +249,13 @@ namespace Pomme
             parameterName = dynamic_cast<ASTPommeIdent*>(header->jjtGetChild(index))->m_Identifier;
 
             auto it = parameters.emplace(parameterName);
-            std::cout << " parameter NAME =+++ ++ ++ ++ ++ ++  + " << parameterName <<std::endl;
             if(!it.second)
             {
-                errors.push_back("Parameter " + parameterName + " already defined");
-                std::cout << "ERROR DETECTED while adding parameter " << parameterName << " : parameter already defined"
-                          << std::endl;
+                addError(dynamic_cast<PommeNode*>(header), "Parameter " + parameterName + " already defined");
             }
             headers = dynamic_cast<ASTPommeHeaders*>(headers->jjtGetChild(1));
         }
 
-        std::cout << "-------------parameters--------------" <<std::endl;
-        for(const auto& it : parameters)
-        {
-            std::cout << it << std::endl;
-        }
         return parameters;
     }
 
@@ -278,7 +270,6 @@ namespace Pomme
     {
         if (node == nullptr)
         {
-            std::cout << functionIdent << current << " className : " << className << std::endl;
             //global scope
             if (className == "")
             {
@@ -400,13 +391,6 @@ namespace Pomme
             keywords.emplace("override");
         }
 
-        std::cout << "keyword :::::: " << std::endl;
-        for(const auto& keyword : keywords )
-        {
-            std::cout << keyword << " ";
-        }
-        std::cout << std::endl;
-
         return keywords;
     }
 
@@ -436,8 +420,6 @@ namespace Pomme
                     return "";
                 }();     
                 
-                std::cout << "ASTPommeIdent identifier : " << node->m_Identifier << " currentClassName : " << currentClassName << std::endl;
-
                 //locals should be checked only when on left side of listaccess
                 if (variableType == nullptr || *variableType == "")
                 {
@@ -491,11 +473,11 @@ namespace Pomme
                                 return;
                             }
 
-                            errors.emplace_back("Can't user super in not extended/modded class");
+                            addError(node, "Can't user super in not extended/modded class");
                             return;
                         }
 
-                        errors.emplace_back("Can't user super outside of class");
+                        addError(node, "Can't user super outside of class");
                         return;
                     }
                 }
@@ -508,7 +490,6 @@ namespace Pomme
                     auto ot = it->second.attributes.find(node->m_Identifier);
                     if(ot != it->second.attributes.end())
                     {
-                        std::cout << "index of ident " << node->m_Identifier << " in class " << currentClassName << " = " << ot->second.index << std::endl;
                         node->m_IndexAttribute = ot->second.index;
                         node->m_Attribute = true;
 
@@ -524,7 +505,6 @@ namespace Pomme
                     auto pt = it->second.staticAttributes.find(node->m_Identifier);
                     if(pt != it->second.staticAttributes.end())
                     {
-                        std::cout << "index of static ident " << node->m_Identifier << " in class " << currentClassName << " = " << pt->second.index << std::endl;
                         node->m_IndexAttribute = pt->second.index;
                         node->m_Attribute = true;
                         
@@ -559,7 +539,7 @@ namespace Pomme
                     return;
                 }
 
-                errors.push_back("Variable " + node->m_Identifier + " not found in either attribute of class nor locals variables nor class name nor enum name");
+                addError(node, "Variable " + node->m_Identifier + " not found in either attribute of class nor locals variables nor class name nor enum name");
                 break;
             }
         }
@@ -618,7 +598,7 @@ namespace Pomme
         {
             case 0u:
             {
-                addClass(context);
+                addClass(node, context);
                 moddedMap.emplace(context, context);
 
                 node->jjtChildAccept(1, this, data);
@@ -628,7 +608,7 @@ namespace Pomme
 
                 std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
                 node->generateDefaultConstructor = it->second.methods.find(constructorIdent) == it->second.methods.end();
-                std::cout << "generateDefaultConstructor : " << node->generateDefaultConstructor << std::endl;
+                
                 if (node->generateDefaultConstructor)
                 {
                     FunctionClass function("void", constructorIdent, std::string(), {}, {}, it->second.methods.size(), false);
@@ -673,13 +653,13 @@ namespace Pomme
             {
                 if (CommonVisitorFunction::isNativeType(extendedClass))
                 {
-                    errors.push_back("Can't extend from native type");
+                    addError(node, context + " can't extend from native type");
                     return;
                 }
 
                 if (classMap.find(extendedClass) == classMap.end())
                 {
-                    errors.push_back(context + " is extending a non existing class " + extendedClass);
+                    addError(node, context + " is extending a non existing class " + extendedClass);
                     return;
                 }
 
@@ -689,7 +669,7 @@ namespace Pomme
                 auto it = classMap.find(extendedClass);
                 if(it != classMap.end())
                 {
-                    addClass(context);
+                    addClass(node, context);
                     moddedMap.emplace(class_name, class_name);
                     ClassClass& classClass = classMap.find(context)->second;
                     classClass.parent = extendedClass;
@@ -707,7 +687,6 @@ namespace Pomme
 
                 std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
                 node->generateDefaultConstructor = ot->second.methods.find(constructorIdent) == ot->second.methods.end();
-                std::cout << "generateDefaultConstructor : " << node->generateDefaultConstructor << std::endl;
                 if (node->generateDefaultConstructor)
                 {
                     FunctionClass function("void", constructorIdent, std::string(), {}, {}, ot->second.methods.size(), false);
@@ -724,7 +703,6 @@ namespace Pomme
                 assert(it != classMap.end());
 
                 auto& superClass = classMap[parent_name];
-                std::cout << "parent_name : " << parent_name << std::endl;
                 assert(superClass.methods.find(parent_name + NAME_FUNC_SEPARATOR) != superClass.methods.end());
                 node->defaultSuperConstructorIndex = superClass.methods.find(parent_name + NAME_FUNC_SEPARATOR)->second.index;
                 
@@ -769,14 +747,12 @@ namespace Pomme
                     std::string str(length, 0);
                     std::generate_n( str.begin(), length, randchar);
                     return str;
-                }; 
-
-                std::cout << "context moddedClass : " << context << std::endl;
+                };
 
                 auto it = moddedMap.find(context);
                 if (it == moddedMap.end())
                 {
-                    errors.push_back("Can't find className : " + context);
+                    addError(node, "Can't find className : " + context);
                     return;
                 }
 
@@ -797,9 +773,7 @@ namespace Pomme
                 class_name = context;
                 parent_name = node->parentName;
 
-                std::cout << "context : " << context << " parentName : " << node->parentName << " defaultClassName : " << node->defaultClassName << std::endl;
-
-                addClass(context);
+                addClass(node, context);
                 ClassClass& classClass = classMap[context];
                 classClass.parent = it->second;
                 classClass.methods = jt->second.methods;
@@ -817,7 +791,6 @@ namespace Pomme
 
                 std::string constructorIdent = class_name + NAME_FUNC_SEPARATOR;
                 node->generateDefaultConstructor = kt->second.methods.find(constructorIdent) == kt->second.methods.end();
-                std::cout << "generateDefaultConstructor : " << node->generateDefaultConstructor << " constructorIdent : " << constructorIdent << std::endl;
                 if (node->generateDefaultConstructor)
                 {
                     FunctionClass function("void", constructorIdent, std::string(), {}, {}, kt->second.methods.size(), false);
@@ -834,7 +807,6 @@ namespace Pomme
                 assert(it != classMap.end());
 
                 auto& superClass = classMap[node->parentName];
-                std::cout << node->parentName << " : " << superClass << std::endl;
                 node->defaultSuperConstructorIndex = superClass.methods.find(node->parentName + NAME_FUNC_SEPARATOR)->second.index;
                 
                 node->nmbMethods = it->second.methods.size();
@@ -935,12 +907,12 @@ namespace Pomme
                 auto it = classMap.find(class_name);
                 if(it == classMap.end())
                 {
-                    errors.push_back("class" + class_name + "not defined");
+                    addError(node, "Can't find className : " + class_name);
                 }
 
                 if (functionName == class_name && !keywords.count("static"))
                 {
-                    errors.push_back("can't define a method with the same name of the class");
+                    addError(node, "Can't define a method with the same name of the class");
                 }
 
                 auto* headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(3)); // headers
@@ -953,7 +925,7 @@ namespace Pomme
                 {
                     if(!it->second.keywords.count("extends") && !it->second.keywords.count("modded"))
                     {
-                        errors.push_back("Overriding method " + functionName + " while your class don't extends/mod any other class");
+                        addError(node, "Overriding method " + functionName + " while your class don't extends/mod any other class");
                     }
 
                     auto parent = classMap.find(it->second.parent);
@@ -962,7 +934,7 @@ namespace Pomme
                         auto* function = parent->second.getMethod(functionIdent);
                         if(function == nullptr)
                         {
-                            errors.push_back("Overriding method " + functionName + " while your parent class don't have this method defined");
+                            addError(node, "Overriding method " + functionName + " while your parent class don't have this method defined");
                         }
                         else
                         {
@@ -971,7 +943,7 @@ namespace Pomme
                     }
                     else
                     {
-                        errors.push_back("Can't find parent class with name : " + it->second.parent);
+                        addError(node, "Can't find parent class with name : " + it->second.parent);
                     }
                 }
 
@@ -1031,19 +1003,19 @@ namespace Pomme
                 auto it = classMap.find(context);
                 if(it == classMap.end())
                 {
-                    errors.push_back("class" + context + "not defined");
+                    addError(node, "Can't find className : " + class_name);
                     return;
                 }
 
                 if (functionName == context && !keywords.count("static"))
                 {
-                    errors.push_back("can't define a method with the same name of the class");
+                    addError(node, "Can't define a method with the same name of the class");
                     return;
                 }
 
                 if(keywords.count("override"))
                 {
-                    errors.push_back("you can't override a native method");
+                    addError(node, "You can't override a method with a native method declaration");
                     return;
                 }
 
@@ -1057,7 +1029,7 @@ namespace Pomme
                 {
                     if (parent->second.nativeMethods.count(functionIdent))
                     {
-                        errors.push_back("you can't override a native method");
+                        addError(node, "You can't override a native method");
                         return;
                     }
                 }
@@ -1124,8 +1096,7 @@ namespace Pomme
         {
             case 0u: {
                 std::string context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-                addEnum(context);
-                std::cout << "ASTPommeEnum " << std::endl;
+                addEnum(node, context);
                 class_name = context;
                 node->jjtChildAccept(1,this,data);
             }
@@ -1140,8 +1111,7 @@ namespace Pomme
                 std::string context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
                 std::string extendedEnum = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
 
-                addEnum(context);
-                std::cout << "ASTPommeExtendsEnum " << std::endl;
+                addEnum(node, context);
 
                 auto it = enumMap.find(extendedEnum);
                 if(it != enumMap.end())
@@ -1152,7 +1122,7 @@ namespace Pomme
                     enumMap.find(context)->second.keywords.emplace("extends");
                 }else
                 {
-                    errors.push_back(context + " is extending a non existing enum : " + extendedEnum);
+                    addError(node, context + " is extending a non existing enum : " + extendedEnum);
                 }
 
                 class_name = context;
@@ -1167,8 +1137,7 @@ namespace Pomme
         {
             case 0u: {
                 std::string context = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-                addEnum(context);
-                std::cout << "ASTPommeModdedEnum " << std::endl;
+                addEnum(node, context);
                 class_name = context;
                 node->jjtChildAccept(1,this,data);
             }
@@ -1184,14 +1153,14 @@ namespace Pomme
     {
     }
 
-    void TypeCheckerVisitor::checkNewMember(std::basic_string<char> enumName, std::basic_string<char> memberName)
+    void TypeCheckerVisitor::checkNewMember(PommeNode* node, std::string enumName, std::string memberName)
     {
         auto currentEnum = this->enumMap.find(enumName);
         if(currentEnum != this->enumMap.end()) {
             if (std::find(currentEnum->second.members.begin(), currentEnum->second.members.end(), memberName) !=
                 currentEnum->second.members.end())
             {
-                this->errors.push_back("Member : " + memberName + " already defined in enum " + enumName);
+                addError(node, "Member : " + memberName + " already defined in enum " + enumName);
             } else
             {
                 currentEnum->second.members.push_back(memberName);
@@ -1199,18 +1168,16 @@ namespace Pomme
         }
     }
     
-    void TypeCheckerVisitor::visit(ASTPommeEnumAssign *node, void * data) {
-
-        std::cout << " CLASS NAME = " << class_name << std::endl;
+    void TypeCheckerVisitor::visit(ASTPommeEnumAssign *node, void * data)
+    {
         std::string memberName = static_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-        checkNewMember(class_name, memberName);
+        checkNewMember(node, class_name, memberName);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeEnumDefault *node, void * data)
     {
-        std::cout << " CLASS NAME = "<< class_name <<std::endl;
         std::string memberName = static_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-        checkNewMember(class_name, memberName);
+        checkNewMember(node, class_name, memberName);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeGlobalFunction *node, void * data)
@@ -1219,7 +1186,6 @@ namespace Pomme
         {
             case 0u:
             {
-                std::cout << "ASTPommeGlobalFunction path 0" << std::endl;
                 break;
             }
 
@@ -1233,16 +1199,12 @@ namespace Pomme
 
                 std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
-                std::cout << "parameters ___________________________" << std::endl;
-                for(const auto& it : parameters)
-                {
-                    std::cout << it << std::endl;
-                }
-
                 functionIdentNode->m_MethodIdentifier = functionIdent;
 
                 auto* typeIdentNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
-                addGlobalFunction ( (
+                addGlobalFunction (
+                    node,
+                    (
                         (typeIdentNode != nullptr) ? 
                         typeIdentNode->m_Identifier //get return type
                         : "void"
@@ -1274,14 +1236,10 @@ namespace Pomme
                 
                 std::string functionIdent = functionName + NAME_FUNC_SEPARATOR + signatureParameter;
 
-                std::cout << "parameters ___________________________" << std::endl;
-                for(const auto& it : parameters)
-                {
-                    std::cout << it << std::endl;
-                }
-
                 auto* typeIdentNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
-                addGlobalFunction ( (
+                addGlobalFunction (
+                    node, 
+                    (
                         (typeIdentNode != nullptr) ? 
                         typeIdentNode->m_Identifier //get return type
                         : "void"
@@ -1354,7 +1312,7 @@ namespace Pomme
             auto it = classMap.find(type);
             if (it == classMap.end())
             {
-                errors.push_back("Can't find class name : " + type);
+                addError(node, "Can't find class name : " + type);
                 return;
             }
 
@@ -1397,23 +1355,21 @@ namespace Pomme
         std::string rightType = "";
         node->jjtChildAccept(1, this, &rightType);
 
-        std::cout << "path_number : " << unsigned(path_number) << " leftType : " << leftType << " rightType : " << rightType << std::endl;
-
         if (leftType == "")
         {
-            errors.push_back("Can't find variable type of left expression");
+            addError(node, "Can't find variable type of the left expression");
             return;
         }
 
         if (rightType == "")
         {
-            errors.push_back("Can't find variable type of right expression");
+            addError(node, "Can't find variable type of the right expression");
             return;
         }
 
         if (leftType != rightType)
         {
-            errors.push_back("Can't assign class " + rightType + " to class " + leftType);
+            addError(node, "Can't assign class " + rightType + " to class " + leftType);
             return;
         }
 
@@ -1596,13 +1552,15 @@ namespace Pomme
                 const std::string &context = class_name;
 
                 auto it = classMap.find(context);
-                if(it == classMap.end()){
-                    errors.push_back("class" + context + "not defined");
+                if(it == classMap.end())
+                {
+                    addError(node, "Can't find class name : " + context);
+                    return;
                 }
 
                 if (functionName != context)
                 {
-                    errors.push_back("Can't define a constructor with not the same identifier as class. (" + functionName + " expected " + context + ")");
+                    addError(node, "Can't define a constructor with not the same identifier as class. (" + functionName + " expected " + context + ")");
                     return;
                 }
 
@@ -1614,7 +1572,6 @@ namespace Pomme
                 it->second.addFunction(node, functionType, functionIdent, parameters, {}, false, false, this);
                 name->m_MethodIdentifier = functionIdent;
                 node->generateSuperCall = child_context && functionIdent == (class_name + NAME_FUNC_SEPARATOR);
-                std::cout << "generateSuperCall " << node->generateSuperCall << " for " << functionIdent << std::endl;
                 break;
             }
 
@@ -1867,7 +1824,7 @@ namespace Pomme
 
         if (CommonVisitorFunction::isNativeType(className))
         {
-            errors.push_back("can't use new on primitive types");
+            addError(node, "Can't use new on primitive types");
             return;
         }
 
@@ -1876,23 +1833,18 @@ namespace Pomme
         auto it = classMap.find(className);
         if (it == classMap.end())
         {
-            errors.push_back("Can't find class name : " + className);
+            addError(node, "Can't find class name : " + className);
             return;
         }
 
         std::string constructorName = className + NAME_FUNC_SEPARATOR;
         std::string parameters = "";
 
-        std::cout << "className aa : " << className << std::endl;
-        std::cout << it->second << std::endl;
-
         if (!getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), nullptr, nullptr, constructorName, parameters, className))
         {
-            errors.push_back("Can't find constructor with correct parameters");
+            addError(node, "Can't find constructor with correct parameters");
             return;
         }
-
-        std::cout << "constructorName : " << constructorName << std::endl;
 
         auto ot = it->second.methods.find(constructorName);
         if (ot != it->second.methods.end())
@@ -1939,7 +1891,7 @@ namespace Pomme
 
             if (super_call && dynamic_cast<ASTPommeAccessMethode*>(node->jjtGetChild(1)) == nullptr)
             {
-                errors.push_back("Can't user super without a method after the '.'");
+                addError(node, "Can't user super without a method after the '.'");
             }
 
             node->jjtChildAccept(1, this, dataPtr);
@@ -1976,7 +1928,7 @@ namespace Pomme
 
         if (identNode->m_Identifier == "super")
         {
-            errors.push_back("Can't use super call other than the first instruction in constructor");
+            addError(node, "Can't use super call other than the first instruction in constructor");
             return;
         }
 
@@ -1996,7 +1948,7 @@ namespace Pomme
 
         if (!getMethodType(node, variableType, functionIdent, className))
         {
-            errors.push_back("can't find method : " + functionIdent);
+            addError(node, "Can't find method : " + functionIdent);
             return;
         }
 
@@ -2021,5 +1973,42 @@ namespace Pomme
     std::string TypeCheckerVisitor::getVariableType(const std::string& type)
     {
         return moddedMap[type];
+    }
+
+    void TypeCheckerVisitor::addError(PommeNode* node, const std::string& tempErrorMessage)
+    {
+        const std::size_t line = node->getLineNumber();
+        const ErrorFile* file = getErrorFile(line);
+        assert(file != nullptr);
+
+        std::string errorMessage = ((*file).fileName) + ":" + std::to_string(line - ((*file).startLine)) + ":" + std::to_string(node->getLineColumn()) + " : " + tempErrorMessage;
+
+        errors.push_back(std::move(errorMessage));
+    }
+
+    const ErrorFile* TypeCheckerVisitor::getErrorFile(std::size_t line) const
+    {
+        std::size_t before = 0u;
+
+        #ifdef DEBUG_LOG_TYPE_CHECKERs
+        std::cout << "m_ErrorFiles.size() : " << m_ErrorFiles.size() << " line : " << line << std::endl;
+        #endif
+
+        for (auto& currErrorFile: m_ErrorFiles)
+        {
+            #ifdef DEBUG_LOG_TYPE_CHECKERs
+            std::cout << "before : " << before << " line : " << line << " currErrorFile.endLine : " << currErrorFile.endLine << std::endl;
+            #endif
+            
+            if (line > before && line <= currErrorFile.endLine )
+            {
+                return &currErrorFile;
+            }
+
+            before = currErrorFile.endLine;
+        }
+
+        assert(false);
+        return nullptr;
     }
 }
