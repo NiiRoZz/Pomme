@@ -1355,6 +1355,12 @@ namespace Pomme
         std::string rightType = "";
         node->jjtChildAccept(1, this, &rightType);
 
+        if (leftType == "")
+        {
+            addError(node, "Can't find variable type of the left expression");
+            return;
+        }
+
         std::cout << "path_number : " << unsigned(path_number) << " leftType : " << leftType << " rightType : " << rightType << std::endl;
 
         if (leftType != rightType)

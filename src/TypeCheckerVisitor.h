@@ -251,12 +251,6 @@ namespace Pomme
                 return;
             }
 
-            if(CommonVisitorFunction::isNativeType(type))
-            {
-                *returnType = type;
-                return;
-            }
-
             auto it = classMap.find(type);
             if (it == classMap.end())
             {

@@ -813,7 +813,6 @@ TEST(TEST_TYPECHECKER, SuperCallConstructorFromOtherFunction)
 TEST(TEST_TYPECHECKER, Not)
 {
     TEST_TYPECHECKER_TEST("void f() { bool y = true; bool x = !y;  }; \n");
-    std::cout << text << std::endl;
 
     for(const auto& error : visitor.errors)
     {
@@ -824,7 +823,6 @@ TEST(TEST_TYPECHECKER, Not)
 
 TEST(TEST_TYPECHECKER, Not2) {
     TEST_TYPECHECKER_TEST("void f() { string y = \"dd\"; bool x = !y;  }; \n");
-    std::cout << text << std::endl;
 
     EXPECT_TRUE(visitor.errors.size() > 0);
     for (const auto &error: visitor.errors) {
@@ -834,7 +832,6 @@ TEST(TEST_TYPECHECKER, Not2) {
 
 TEST(TEST_TYPECHECKER, Not3) {
     TEST_TYPECHECKER_TEST("void f() { bool x = !8; x = !true; x= !false; }; \n");
-    std::cout << text << std::endl;
 
     EXPECT_TRUE(visitor.errors.size() > 0);
     for(const auto& error : visitor.errors) {
