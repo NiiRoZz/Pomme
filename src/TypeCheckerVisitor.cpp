@@ -1355,17 +1355,7 @@ namespace Pomme
         std::string rightType = "";
         node->jjtChildAccept(1, this, &rightType);
 
-        if (leftType == "")
-        {
-            addError(node, "Can't find variable type of the left expression");
-            return;
-        }
-
-        if (rightType == "")
-        {
-            addError(node, "Can't find variable type of the right expression");
-            return;
-        }
+        std::cout << "path_number : " << unsigned(path_number) << " leftType : " << leftType << " rightType : " << rightType << std::endl;
 
         if (leftType != rightType)
         {
@@ -1373,7 +1363,45 @@ namespace Pomme
             return;
         }
 
+        auto castCheck = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
+        if(castCheck != nullptr) // todo listAccess
+        {
+            std::string identLeft = castCheck->m_Identifier;
+            auto itClass = classMap.find(class_name);
+            auto itGlobal = globalFunctionsMap.find(class_name);
+            if(itClass != classMap.end())
+            {
+                auto attribute = itClass->second.attributes.find(identLeft);
+                auto staticAttribute = itClass->second.staticAttributes.find(identLeft);
+                //auto local = itClass->second.methods.find(class_name); // todo get current fucntion Name
+
+                if(attribute != itClass->second.attributes.end())
+                {
+                    if(attribute->second.isConst)
+                    {
+                        addError(node, "Variable " + identLeft + " is const, impossible to assign other value");
+                    }
+                }else if(staticAttribute != itClass->second.staticAttributes.end())
+                {
+                    if(staticAttribute->second.isConst)
+                    {
+                        addError(node, "Variable " + identLeft + " is const, impossible to assign other value");
+                    }
+                }/*else if(local != itClass->second.methods.end())
+                {
+                    if(local->second.variables.find(identLeft).isConst)
+                    {
+                        errors.push_back("Variable " + identLeft + " is const, impossible to assign other value");
+                    }
+                }*/
+            }else if( itGlobal != globalFunctionsMap.end())
+            {
+                // todo change parameter string to VariableClass to get isConst
+            }
+        }
+
     }
+
 
     void TypeCheckerVisitor::visit(ASTPommeAddEq *node, void * data)
     {
@@ -1811,10 +1839,12 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeNot *node, void * data)
     {
+        visitUnaryOperator(node, "operator!", static_cast<std::string*>(data));
     }
 
     void TypeCheckerVisitor::visit(ASTPommeTilde *node, void * data)
     {
+        visitUnaryOperator(node, "operator~", static_cast<std::string*>(data));
     }
 
     void TypeCheckerVisitor::visit(ASTPommeNew *node, void * data)

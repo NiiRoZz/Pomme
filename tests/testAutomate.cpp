@@ -23,6 +23,8 @@ using namespace Pomme;
 	tree->dump("");\
 	std::string text = buffer.str();\
 	std::cout.rdbuf(old);\
+    AutomateVisitor visitor;\
+    tree->jjtAccept(&visitor, nullptr);\
 
 TEST(TEST_AUTOMATE, Empty) {
     Automaton fa;
@@ -179,9 +181,6 @@ TEST(TEST_AUTOMATE, Graph_Basic) {
     TEST_AUTOMATE_TEST("class test{}; class test2{}; class test3 extends test{}; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
-
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
     ASTPommeClass* n = dynamic_cast<ASTPommeClass*>(visitor.dependanceGraph.getState(0)->node);
     std::string ident = dynamic_cast<ASTPommeIdent*>(n->jjtGetChild(0))->m_Identifier;
@@ -205,8 +204,6 @@ TEST(TEST_AUTOMATE, Graph_Attribute) {
     TEST_AUTOMATE_TEST("class test2{}; class test{ int x; static test2 y; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
@@ -216,8 +213,6 @@ TEST(TEST_AUTOMATE, Graph_SelfLoop) {
     TEST_AUTOMATE_TEST("class test{ static test y; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,0));
@@ -226,8 +221,6 @@ TEST(TEST_AUTOMATE, Graph_3Loop) {
     TEST_AUTOMATE_TEST("class test{ static test1 y; }; class test1{ static test2 y; }; class test2{ static test y; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,3);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
@@ -239,8 +232,6 @@ TEST(TEST_AUTOMATE, Graph_DefinedAfter) {
     TEST_AUTOMATE_TEST("class test{ static test2 y; }; class test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
@@ -250,8 +241,6 @@ TEST(TEST_AUTOMATE, Graph_ExtendsAfter) {
     TEST_AUTOMATE_TEST("class test extends test2 {}; class test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
@@ -261,8 +250,6 @@ TEST(TEST_AUTOMATE, Graph_Extends) {
     TEST_AUTOMATE_TEST("class test2{}; class test extends test2 {};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,1);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
@@ -275,8 +262,6 @@ TEST(TEST_AUTOMATE, Graph_Complex) {
                        "class test3 extends test5{ static test2 x;};\n"); // 3
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions() ,4);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,3));
@@ -289,8 +274,6 @@ TEST(TEST_AUTOMATE, Graph_Multiple) {
     TEST_AUTOMATE_TEST("class test2{}; class test3{}; class test{ static test2 x; static test3 y; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,2));
@@ -301,8 +284,6 @@ TEST(TEST_AUTOMATE, Graph_MultipleAfter) {
     TEST_AUTOMATE_TEST("class test{ static test2 x; static test3 y; }; class test2{}; class test3{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(1,0));
@@ -323,8 +304,6 @@ TEST(TEST_AUTOMATE, Graph_Loop1) {
     TEST_AUTOMATE_TEST("class test2{}; class test extends test2 {};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.hasLoop(), false);
 }
@@ -333,8 +312,6 @@ TEST(TEST_AUTOMATE, Graph_Loop2) {
     TEST_AUTOMATE_TEST("class test{ static test2 x; static test3 y; }; class test2{}; class test3{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     EXPECT_EQ(visitor.dependanceGraph.hasLoop(), false);
 }
 
@@ -342,8 +319,6 @@ TEST(TEST_AUTOMATE, Graph_Loop3) {
     TEST_AUTOMATE_TEST("class test{ static test2 x;}; class test2{ static test x;};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     EXPECT_EQ(visitor.dependanceGraph.hasLoop(), true);
 }
 
@@ -351,8 +326,6 @@ TEST(TEST_AUTOMATE, Graph_Loop4) {
     TEST_AUTOMATE_TEST("class test{ static test2 x;}; class test2{ static test3 x;}; class test3{ static test x;};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     EXPECT_EQ(visitor.dependanceGraph.hasLoop(), true);
 }
 
@@ -395,8 +368,6 @@ TEST(TEST_AUTOMATE, Graph_Sort) {
     TEST_AUTOMATE_TEST("class test{ static test2 x; static test3 y; }; class test2{}; class test3{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
@@ -418,8 +389,6 @@ TEST(TEST_AUTOMATE, Graph_Sort2) {
     TEST_AUTOMATE_TEST("class test{ static test2 x; }; class test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
 
@@ -441,8 +410,6 @@ TEST(TEST_AUTOMATE, Graph_Sort3) {
                        "class test3 extends test5{ static test2 x;};\n"); // 3
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
 
@@ -550,8 +517,6 @@ TEST(TEST_AUTOMATE, Graph_Enum) {
     TEST_AUTOMATE_TEST("enum test{}; enum test1{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 0);
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
@@ -561,8 +526,6 @@ TEST(TEST_AUTOMATE, Graph_Enum2) {
     TEST_AUTOMATE_TEST("enum test{}; enum test1 extends test{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(0,1));
@@ -573,8 +536,6 @@ TEST(TEST_AUTOMATE, Graph_Enum3) {
     TEST_AUTOMATE_TEST("enum test extends test3{}; enum test1 extends test{};  enum test3{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
     EXPECT_TRUE(visitor.dependanceGraph.hasTransition(2,0));
@@ -585,8 +546,6 @@ TEST(TEST_AUTOMATE, Graph_ClassEnum) {
     TEST_AUTOMATE_TEST("enum test{}; class depend{ static test x;};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
@@ -597,8 +556,6 @@ TEST(TEST_AUTOMATE, Graph_ClassEnum2) {
     TEST_AUTOMATE_TEST("enum test extends test2{}; enum test2{}; class depend{ static test x;};  class depend2 extends depend{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
     EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
@@ -611,8 +568,6 @@ TEST(TEST_AUTOMATE, Graph_LoopEnum) {
     TEST_AUTOMATE_TEST("enum test extends test2{}; enum test2 extends test{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.hasLoop(), true);
@@ -623,8 +578,6 @@ TEST(TEST_AUTOMATE, Graph_EnumClass) {
     TEST_AUTOMATE_TEST("enum testEnum{ a }; class test{ static testEnum x; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -636,8 +589,6 @@ TEST(TEST_AUTOMATE, Graph_EnumExtendsClass) {
     TEST_AUTOMATE_TEST("enum testEnum extends testEnum2{ a }; class test{ static testEnum x; }; enum testEnum2{ a };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -651,8 +602,6 @@ TEST(TEST_AUTOMATE, Graph_Assignement) {
     TEST_AUTOMATE_TEST("class test{ static int x = 8; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 0);
@@ -663,8 +612,6 @@ TEST(TEST_AUTOMATE, Graph_GlobalReturnTypeIsClass) {
     TEST_AUTOMATE_TEST(" class c2{}; c1 test2(int x, int k){};  class c1 extends c2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -677,8 +624,6 @@ TEST(TEST_AUTOMATE, Graph_GlobalParamTypeIsClass) {
     TEST_AUTOMATE_TEST("c1 test2(c2 x, int k){};  class c2{}; class c1{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -691,8 +636,6 @@ TEST(TEST_AUTOMATE, Graph_GlobalParamTypeIsClassVoidReturn) {
     TEST_AUTOMATE_TEST("void test2(c2 x, int k){};  class c2{}; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -704,8 +647,6 @@ TEST(TEST_AUTOMATE, Graph_GlobalOverloadDependanceParam) {
     TEST_AUTOMATE_TEST("void test2(c2 x){};  void test2(c1 x){}; class c2{}; class c1{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -718,8 +659,6 @@ TEST(TEST_AUTOMATE, Graph_DoubleDependance) {
     TEST_AUTOMATE_TEST("class c2{}; class c1{ static c2 x; static c2 y;};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -733,8 +672,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementVarDependanceToResolve)
     TEST_AUTOMATE_TEST("class test2{ static int j = test.k(); static int k = test.a; }; class test{ static int a = 8; static int k(){}; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -747,8 +684,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementVarDependance)
     TEST_AUTOMATE_TEST("class test{ static int k(){}; }; class test2{ static int j = test.k(); };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -761,8 +696,82 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance)
     TEST_AUTOMATE_TEST("class test2{ static int j = func(8); }; int func(int w){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance2)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(true); }; int func(bool w){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance3)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(\"Hello\"); }; int func(string w){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance4)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(); }; int func(){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance5)
+{
+    TEST_AUTOMATE_TEST("class test{}; class test2{ static int j = func(new test()); }; int func(test w){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,1), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,1), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalDependance6)
+{
+    TEST_AUTOMATE_TEST("class test{}; class test2{}; class test3{ static int j = func(new test() + new test2()); }; int func(test w){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,3), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementStaticDependance)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int j = test.k; }; class test{ static int k; };\n");
+    std::cout << text << std::endl;
+
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -775,8 +784,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalExp)
     TEST_AUTOMATE_TEST("class test2{ static int j = func(8 + 3); }; int func(int w){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -789,8 +796,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExp)
     TEST_AUTOMATE_TEST("class test2{ static int j = func((8+3), (1-2), (6*4), (9/9)); }; int func(int w, int x, int z, int om){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -803,8 +808,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool)
     TEST_AUTOMATE_TEST("class test2{ static int j = func((8 > 3), (1>=2), (6<=4), (9<9)); }; int func(bool w, bool x, bool z, bool om){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -817,8 +820,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalMultipleExpBool2)
     TEST_AUTOMATE_TEST("class test2{ static int j = func((8 == 3), (1!=2)); }; int func(bool w, bool x){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 1);
@@ -831,8 +832,6 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithOtherDependance)
     TEST_AUTOMATE_TEST("class test{}; class test2{ static test f; static int j = func2(f); }; int func2(test k){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -842,13 +841,11 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithOtherDependance)
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,1), true);
 }
 
-TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFund)
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedEnum)
 {
-    TEST_AUTOMATE_TEST("class test2{ static int j = func(func2()); }; int func2(){}; int func(bool w, bool x){};\n");
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(enu.a); }; enum enu{ a, b }; int func(int w){};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -857,14 +854,78 @@ TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFund)
     EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
 }
 
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedEnumBefore)
+{
+    TEST_AUTOMATE_TEST("enum enu{ a, b }; int func(int w){}; class test2{ static int j = func(enu.a); };\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFunc)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(func2()); }; int func2(){}; int func(int w){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,0), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFuncBefore)
+{
+    TEST_AUTOMATE_TEST(" int func2(){}; int func(int w){}; class test2{ static int j = func(func2()); };\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,2), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,2), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFunc2)
+{
+    TEST_AUTOMATE_TEST("class test2{ static int j = func(func2(), func3()); }; int func2(){}; int func3(){}; int func(int w, int k){};\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(3,0), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,0), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,0), true);
+}
+
+TEST(TEST_AUTOMATE, Graph_AssignementGlobalWithNestedFuncBefore2)
+{
+    TEST_AUTOMATE_TEST(" int func2(){}; int func3(){}; int func(int w, int k){}; class test2{ static int j = func(func2(), func3()); };\n");
+    std::cout << text << std::endl;
+
+    std::cout << visitor.dependanceGraph << std::endl;
+
+    EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
+    EXPECT_EQ(visitor.dependanceGraph.countStates(), 4);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(0,3), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(1,3), true);
+    EXPECT_EQ(visitor.dependanceGraph.hasTransition(2,3), true);
+}
 
 TEST(TEST_AUTOMATE, Graph_GlobalDependanceOverloading)
 {
     TEST_AUTOMATE_TEST("int func(int j){}; int func(int j, int k){}; class test{ static int z = func(7); static int k = func(8,7); };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -878,8 +939,6 @@ TEST(TEST_AUTOMATE, Graph_Modded)
     TEST_AUTOMATE_TEST("class test2{}; modded class test2{}; modded class test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -893,8 +952,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedExtend)
     TEST_AUTOMATE_TEST("class test2{}; modded class test2{};  class test3 extends test2{}; modded class test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -909,8 +966,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedBeforeDeclaration)
     TEST_AUTOMATE_TEST("modded class test2{}; modded class test2{}; class test2{}; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -924,8 +979,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedMiddleDefinition)
     TEST_AUTOMATE_TEST("modded class test2{}; class test2{}; modded class test2{}; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -939,8 +992,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedChain)
     TEST_AUTOMATE_TEST("class test2{}; modded class test2{}; modded class test2{}; modded class test2{}; modded class test2{}; modded class test2{}; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 5);
@@ -958,8 +1009,6 @@ TEST(TEST_AUTOMATE, Graph_Static)
     TEST_AUTOMATE_TEST("class test2{ static int k = 8; }; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 0);
@@ -971,8 +1020,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedEnum)
     TEST_AUTOMATE_TEST("enum enum1{}; modded enum enum1{}; modded enum enum1{}; \n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -986,8 +1033,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedEnumAfter)
     TEST_AUTOMATE_TEST("modded enum enum1{}; modded enum enum1{}; enum enum1{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 2);
@@ -1001,8 +1046,6 @@ TEST(TEST_AUTOMATE, Graph_LastModdedDependance)
     TEST_AUTOMATE_TEST("class test2{}; modded class test2{}; modded class test2{};  class test{ static test2 k; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -1017,8 +1060,6 @@ TEST(TEST_AUTOMATE, Graph_LastModdedEnumDependance)
     TEST_AUTOMATE_TEST("enum test2{}; modded enum test2{}; modded enum test2{};  class test{ static test2 k; };\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -1033,8 +1074,6 @@ TEST(TEST_AUTOMATE, Graph_LastModdedDependanceAfter)
     TEST_AUTOMATE_TEST("class test{ static test2 k; }; class test2{}; modded class test2{}; modded class test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -1049,8 +1088,6 @@ TEST(TEST_AUTOMATE, Graph_LastModdedEnumDependanceAfter)
     TEST_AUTOMATE_TEST("class test{ static test2 k; }; enum test2{}; modded enum test2{}; modded enum test2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -1065,8 +1102,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedEnumInBetween)
     TEST_AUTOMATE_TEST("enum test{}; modded enum test{};  class x{ static test k; }; modded enum test{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -1081,8 +1116,6 @@ TEST(TEST_AUTOMATE, Graph_ModdedInBetween)
     TEST_AUTOMATE_TEST("class test{}; modded class test{};  class x{ static test k; }; modded class test{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);
@@ -1097,8 +1130,6 @@ TEST(TEST_AUTOMATE, Graph_NativeGlobal)
     TEST_AUTOMATE_TEST("class transition{}; native transition test2(int k); native void test3(transition k, transition2 x); class transition2{};\n");
     std::cout << text << std::endl;
 
-    AutomateVisitor visitor;
-    tree->jjtAccept(&visitor, nullptr);
     std::cout << visitor.dependanceGraph << std::endl;
 
     EXPECT_EQ(visitor.dependanceGraph.countTransitions(), 3);

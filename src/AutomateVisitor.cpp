@@ -6,7 +6,6 @@ namespace Pomme
     /**
      * todo accessmethode
      */
-
     void AutomateVisitor::processModded(Node* node)
     {
         std::string ident = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(0))->m_Identifier;
@@ -26,6 +25,10 @@ namespace Pomme
             }else
             {
                 stateToUse = moddedClassIndex;
+                if(dependanceGraph.getState(stateToUse)->isEnum)
+                {
+                    dependanceGraph.getState(nbState)->isEnum = true;
+                }
             }
 
             for(auto it : dependanceGraph.getTransitionsExiting(stateToUse))
@@ -52,15 +55,15 @@ namespace Pomme
         }
     }
 
-    void AutomateVisitor::classToResolveCheck(const std::string &className, const std::string& classToResolve)
+    void AutomateVisitor::classToResolveCheck(const std::string &classTobeFound, const std::string& classDepending)
     {
-        auto ut = classToBeResolved.find(className);
+        auto ut = classToBeResolved.find(classTobeFound);
         if(ut != classToBeResolved.end())
         {
-            ut->second.insert(classToResolve);
+            ut->second.insert(classDepending);
         }else
         {
-            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(className,{classToResolve}));
+            classToBeResolved.insert(std::pair<std::string, std::unordered_set<std::string>>(classTobeFound,{classDepending}));
         }
     }
 
@@ -207,6 +210,8 @@ namespace Pomme
         {
             std::cout << "!nullptr" << std::endl;
             state->node = node;
+            state->isEnum = true;
+
             auto nType = dynamic_cast<ASTPommeEnum*>(node);
             if(nType == nullptr)
             {
@@ -235,17 +240,28 @@ namespace Pomme
         {
             state->node = node;
             state->global = true;
+            auto functionType = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
             auto functionIdent = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1));
             auto headers = dynamic_cast<ASTPommeHeaders*>(node->jjtGetChild(2));
 
             state->globalName = functionIdent->m_Identifier + NAME_FUNC_SEPARATOR;
             state->globalName += CommonVisitorFunction::getParametersType(headers);
 
+            if(dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0)) != nullptr)
+            {
+                state->type = functionType->m_Identifier;
+            }
+
             auto checkDependance = classToBeResolved.find(state->globalName);
+            for(const auto& debug : classToBeResolved)
+            {
+                std::cout << debug.first << std::endl;
+            }
             if(checkDependance != classToBeResolved.end())
             {
                 for(const auto& it : checkDependance->second)
                 {
+                    std::cout << "dep on : " << it << std::endl;
                     dependanceGraph.addTransition(nbState, dependanceGraph.getState(it));
                 }
             }
@@ -441,6 +457,7 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeIdent *node, void * data)
     {
+        // todo need to store every static attribute type?.????
     }
     void AutomateVisitor::visit(ASTPommeIdentOp *node, void * data)
     {
@@ -456,7 +473,8 @@ namespace Pomme
         *variableType = "float";
     }
     void AutomateVisitor::visit(ASTPommeString *node, void * data)
-    {auto* variableType = static_cast<std::string*>(data);
+    {
+        auto* variableType = static_cast<std::string*>(data);
         *variableType = "string";
     }
     void AutomateVisitor::visit(ASTPommeScopes *node, void * data)
@@ -481,11 +499,10 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeClassChild *node, void * data)
     {
-        if(!resolved(node, true))
-        {
+        if (!resolved(node, true)) {
             addState(node);
         }
-        std::string ident = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        std::string ident = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(0))->m_Identifier;
         node->jjtChildrenAccept(this, &ident);
     }
     void AutomateVisitor::visit(ASTPommeModdedClass *node, void * data)
@@ -522,8 +539,6 @@ namespace Pomme
             node->jjtChildAccept(2, this, data);
             return;
         }
-
-
     }
     void AutomateVisitor::visit(ASTPommeDnil *node, void * data)
     {
@@ -563,13 +578,14 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeEnum *node, void * data)
     {
-        if(!resolved(node, false))
-        {
+
+        if (!resolved(node, false)) {
             addEnum(node);
         }
-        std::string ident = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        std::string ident = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(0))->m_Identifier;
         std::cout << "ASTPommeEnum " << ident << std::endl;
         node->jjtChildrenAccept(this, &ident);
+
     }
     void AutomateVisitor::visit(ASTPommeExtendsEnum *node, void * data)
     {
@@ -601,18 +617,19 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeGlobalFunction *node, void * data)
     {
-        this->currentClassName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
+        this->currentClassName = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(1))->m_Identifier;
         addGlobal(node);
         checkGlobalDependance(node);
     }
     void AutomateVisitor::visit(ASTPommeGlobalFunctionNative *node, void * data)
     {
-        this->currentClassName = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(1))->m_Identifier;
+        this->currentClassName = dynamic_cast<ASTPommeIdent *>(node->jjtGetChild(1))->m_Identifier;
         addGlobal(node);
         checkGlobalDependance(node);
     }
     void AutomateVisitor::visit(ASTPommeInstrs *node, void * data)
     {
+        node->jjtChildrenAccept(this, data);
     }
     void AutomateVisitor::visit(ASTPommeInil *node, void * data)
     {
@@ -715,10 +732,11 @@ namespace Pomme
     void AutomateVisitor::visit(ASTPommeListExp *node, void * data)
     {
         std::cout << "currentClassName : " << currentClassName << std::endl;
-
+        listAccessContext = true;
         auto signature = static_cast<std::string*>(data);
         *signature += NAME_FUNC_SEPARATOR;
         getExpType(node, *signature);
+        listAccessContext = false;
 
         int currentClassStateNumber = dependanceGraph.getState(currentClassName);
         int dependingMethodeStateNumber = dependanceGraph.getState(*signature);
@@ -730,6 +748,14 @@ namespace Pomme
         {
             classToResolveCheck(*signature, currentClassName);
         }
+
+
+        // get ident from func
+        // foreach header : getExpType
+        // put it in data
+        // build it and found glboal
+
+        // if one cant resolved : new struct with current headers node
     }
     void AutomateVisitor::visit(ASTPommeExnil *node, void * data)
     {
@@ -826,6 +852,25 @@ namespace Pomme
 
         auto* variableType = static_cast<std::string*>(data);
         *variableType = types[0];
+
+        if(listAccessContext)
+        {
+            if(dependanceGraph.getState(types[0]) != -1)
+            {
+                dependanceGraph.addTransition(dependanceGraph.getState(types[0]), nbState - 1);
+            }else
+            {
+                classToResolveCheck(types[0], currentClassName);
+            }
+
+            if(dependanceGraph.getState(types[1]) != -1)
+            {
+                dependanceGraph.addTransition(dependanceGraph.getState(types[1]), nbState - 1);
+            }else
+            {
+                classToResolveCheck(types[1], currentClassName);
+            }
+        }
     }
     void AutomateVisitor::visit(ASTPommeMinus *node, void * data)
     {
@@ -877,21 +922,54 @@ namespace Pomme
     }
     void AutomateVisitor::visit(ASTPommeUnary *node, void * data)
     {
+        auto* variableType = static_cast<std::string*>(data);
+        visitUnaryOperator(node, *variableType); //todo test this
     }
     void AutomateVisitor::visit(ASTPommeNot *node, void * data)
     {
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = "bool";
     }
     void AutomateVisitor::visit(ASTPommeTilde *node, void * data)
     {
+        auto* variableType = static_cast<std::string*>(data);
+        visitUnaryOperator(node, *variableType); //todo test this
+        if(listAccessContext)
+        {
+            if(dependanceGraph.getState(*variableType) != -1)
+            {
+                dependanceGraph.addTransition(dependanceGraph.getState(*variableType), nbState - 1);
+            }else
+            {
+                classToResolveCheck(*variableType, currentClassName);
+            }
+        }
     }
     void AutomateVisitor::visit(ASTPommeNew *node, void * data)
     {
+        std::string ident = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = ident;
+        if(listAccessContext)
+        {
+            if(dependanceGraph.getState(ident) != -1)
+            {
+                dependanceGraph.addTransition(dependanceGraph.getState(ident), nbState - 1);
+            }else
+            {
+                classToResolveCheck(ident, currentClassName);
+            }
+        }
     }
     void AutomateVisitor::visit(ASTPommeTrue *node, void * data)
     {
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = "bool";
     }
     void AutomateVisitor::visit(ASTPommeFalse *node, void * data)
     {
+        auto* variableType = static_cast<std::string*>(data);
+        *variableType = "bool";
     }
     void AutomateVisitor::visit(ASTPommeNull *node, void * data)
     {
@@ -913,8 +991,17 @@ namespace Pomme
             {
                 classToResolveCheck(currentClassName,dependingClass);
             }
-        }
 
+            auto state = dependanceGraph.getState(dependingStateNumber);
+            if(state != nullptr)
+            {
+                if(state->isEnum)
+                {
+                    auto* variableType = static_cast<std::string*>(data);
+                    *variableType = "int";
+                }
+            }
+        }
     }
     void AutomateVisitor::visit(ASTPommeAcnil *node, void * data)
     {
@@ -922,13 +1009,35 @@ namespace Pomme
     void AutomateVisitor::visit(ASTPommeAccessMethode *node, void * data)
     {
         std::string identMethode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0))->m_Identifier;
-        std::cout << " DEPENDING ON GLOBAL FUNC " << identMethode << std::endl;
+        std::cout << " DEPENDING ON FUNC " << identMethode << std::endl;
 
-        node->jjtChildrenAccept(this, &identMethode);
+        if(dynamic_cast<ASTPommeExnil*>(node->jjtGetChild(1)) != nullptr) // no parameters global
+        {
+            std::cout << "DEPENDING ON GLBOAL " << identMethode << "();" << std::endl;
+            assert(false);
+            // check global
 
-        // build signature
-        // add toberesolved class
-        std::cout << " XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX " << std::endl;
+            int numState = dependanceGraph.getState(identMethode + NAME_FUNC_SEPARATOR);
+            if(numState == -1)
+            {
+                classToResolveCheck(identMethode + NAME_FUNC_SEPARATOR, currentClassName);
+            }else
+            {
+                dependanceGraph.addTransition(numState,nbState - 1);
+                auto* variableType = static_cast<std::string*>(data);
+                *variableType = dependanceGraph.getState(numState)->type;
+
+                if(!CommonVisitorFunction::isNativeType(*variableType))
+                {
+                    classToResolveCheck(*variableType, currentClassName);
+                }
+            }
+        }else // check all parameter resolution
+        {
+            listAccessContext = true;
+            dynamic_cast<ASTPommeAccessMethode*>(node)->jjtChildrenAccept(this, &identMethode);
+            listAccessContext = false;
+        }
     }
     void AutomateVisitor::visit(ASTPommeAccessTab *node, void * data)
     {
@@ -936,6 +1045,7 @@ namespace Pomme
 
     void AutomateVisitor::visit(ASTPommeConstructor *node, void *data)
     {
+        // same as method
     }
 
     void AutomateVisitor::visit(ASTPommeConstant *node, void *data)

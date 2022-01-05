@@ -11,6 +11,7 @@
 #include <iostream>
 #include <set>
 #include <unordered_set>
+#include "CommonVisitorFunction.h"
 
 #define DEBUG_LOG_TYPE_CHECKERs
 
@@ -73,7 +74,7 @@ namespace Pomme
             std::string functionIdent;
             std::unordered_set<std::string> parameters;
             std::unordered_set<std::string> keywords;
-            std::unordered_map<std::string, std::string> variables;
+            std::unordered_map<std::string, std::string> variables; // todo value = VariableClass
             uint16_t index = 0u;
             bool native = false;
 
@@ -247,6 +248,12 @@ namespace Pomme
             if (type == "")
             {
                 addError(node, "Can't find variable type of the left expression");
+                return;
+            }
+
+            if(CommonVisitorFunction::isNativeType(type))
+            {
+                *returnType = type;
                 return;
             }
 

@@ -16,6 +16,7 @@ namespace Pomme
         std::unordered_map<std::string, std::vector<Node*>> moddedClassToBeResolved;
         std::unordered_map<std::string, int> lastDefinedModdedClassStateNumber;
         std::string currentClassName;
+        bool listAccessContext = false;
 
         void processModded(Node* node);
         void classToResolveCheck(const std::string &className, const std::string& classToResolve);
@@ -44,6 +45,12 @@ namespace Pomme
             array[1] = rightType;
         }
 
+        template<typename T>
+        void visitUnaryOperator(T* node, std::string& type)
+        {
+            node->jjtChildAccept(0, this, &type);
+        }
+
         void getExpType(ASTPommeListExp* node, std::string& current)
         {
             if(node != nullptr)
@@ -53,6 +60,8 @@ namespace Pomme
                 current += type + HEADER_FUNC_SEPARATOR;
                 std::cout << " CURRENT +  " << current << std::endl;
                 getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), current);
+
+                // todo divide string building with check of every part to get dependance on current calling class
             }
         }
 

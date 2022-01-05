@@ -88,6 +88,7 @@ namespace Pomme {
     
     bool Automaton::addTransition(int from, int to)
     {
+        std::cout << from << " - > " << to <<std::endl;
         auto fromState = this->m_state.find(from);
         auto toState = this->m_state.find(to);
 

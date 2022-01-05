@@ -18,7 +18,7 @@ namespace Pomme
         AutomateVisitor visitorAutomate;
 		TypeCheckerVisitor visitor(m_ErrorFiles);
 
-        tree->jjtAccept(&visitorAutomate, nullptr); // class/method definition
+        tree->jjtAccept(&visitorAutomate, nullptr);
 
         if(visitorAutomate.dependanceGraph.hasLoop())
         {
