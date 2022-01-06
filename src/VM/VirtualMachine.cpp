@@ -400,6 +400,7 @@ namespace Pomme
             &&OP_FIELD,
             &&OP_INVOKE_SUPER,
             &&OP_NOT,
+            &&OP_AND,
             &&OP_CLASS,
             &&OP_NEW,
             &&OP_INT,
@@ -757,7 +758,35 @@ namespace Pomme
             CASES(OP_NOT)
             {
                 assert(IS_BOOL(peek(0)));
-                push(!AS_BOOL(peek(0)));
+                push(BOOL_VAL(!AS_BOOL(pop())));
+
+                DISPATCH();
+            }
+
+            CASES(OP_AND)
+            {
+                assert(IS_BOOL(peek(1)));
+                assert(IS_BOOL(peek(0)));
+
+                //left is on top of the stack
+                bool left = AS_BOOL(pop());
+                bool right = AS_BOOL(pop());
+
+                push(BOOL_VAL(left && right));
+
+                DISPATCH();
+            }
+
+            CASES(OP_OR)
+            {
+                assert(IS_BOOL(peek(1)));
+                assert(IS_BOOL(peek(0)));
+
+                //left is on top of the stack
+                bool left = AS_BOOL(pop());
+                bool right = AS_BOOL(pop());
+
+                push(BOOL_VAL(left || right));
 
                 DISPATCH();
             }

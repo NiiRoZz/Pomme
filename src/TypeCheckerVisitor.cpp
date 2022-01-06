@@ -1550,6 +1550,7 @@ namespace Pomme
                 std::string functionType = "void";
                 auto* name = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
                 std::string &functionName = name->m_Identifier;
+                //TODO: fix bug in modded context, doesn't detect correctly if it's the good name
                 if (modded_context)
                 {
                     functionName = class_name;
@@ -1619,10 +1620,12 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeAnd *node, void * data)
     {
+        visitBinaryBoolOperator(node, static_cast<VariableType*>(data));
     }
 
     void TypeCheckerVisitor::visit(ASTPommeOr *node, void * data)
     {
+        visitBinaryBoolOperator(node, static_cast<VariableType*>(data));
     }
 
     void TypeCheckerVisitor::visit(ASTPommeEQ *node, void * data)
@@ -1817,7 +1820,42 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeNot *node, void * data)
     {
+        auto* returnType = static_cast<VariableType*>(data);
 
+        VariableType type;
+        node->jjtChildAccept(0, this, &type);
+
+        if (type.nameVar == "")
+        {
+            addError(node, "Can't find variable type of the right expression");
+            return;
+        }
+
+        if (type.nameVar == "bool")
+        {
+            node->convertBool = false;
+            if (returnType != nullptr) returnType->nameVar = "bool";
+            return;
+        }
+
+        auto it = classMap.find(type.nameVar);
+        if (it == classMap.end())
+        {
+            addError(node, "Can't find class name : " + type.nameVar);
+            return;
+        }
+
+        if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
+        {
+            node->convertBool = true;
+            node->index = fnc->index;
+            node->native = fnc->native;
+            if (returnType != nullptr) returnType->nameVar = fnc->returnType;
+        }
+        else
+        {
+            addError(node, "Can't find method operator bool in the class " + type.nameVar);
+        }
     }
 
     void TypeCheckerVisitor::visit(ASTPommeTilde *node, void * data)

@@ -319,10 +319,54 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeAnd *node, void * data) 
     {
+        node->jjtChildAccept(1, this, nullptr);
+
+        if (node->convertRightBool)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emit16Bits(node->rightIndex);
+            emitByte(node->rightNative);
+            emit16Bits(0);
+        }
+
+        //put left after the right, to have left on top of the stack
+        node->jjtChildAccept(0, this, nullptr);
+
+        if (node->convertLeftBool)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emit16Bits(node->leftIndex);
+            emitByte(node->leftNative);
+            emit16Bits(0);
+        }
+
+        emitByte(AS_OPCODE(OpCode::OP_AND));
     }
 
     void CompilerVisitor::visit(ASTPommeOr *node, void * data) 
     {
+        node->jjtChildAccept(1, this, nullptr);
+
+        if (node->convertRightBool)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emit16Bits(node->rightIndex);
+            emitByte(node->rightNative);
+            emit16Bits(0);
+        }
+
+        //put left after the right, to have left on top of the stack
+        node->jjtChildAccept(0, this, nullptr);
+
+        if (node->convertLeftBool)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emit16Bits(node->leftIndex);
+            emitByte(node->leftNative);
+            emit16Bits(0);
+        }
+
+        emitByte(AS_OPCODE(OpCode::OP_OR));
     }
 
     void CompilerVisitor::visit(ASTPommeEQ *node, void * data) 
@@ -421,6 +465,15 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeNot *node, void * data) 
     {
+        if (node->convertBool)
+        {
+            unaryOperator(node, node->index, node->native);
+        }
+        else
+        {
+            node->jjtChildAccept(0, this, nullptr);
+        }
+
         emitByte(AS_OPCODE(OpCode::OP_NOT));
     }
 

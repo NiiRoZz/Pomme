@@ -1199,6 +1199,186 @@ TEST(TEST_VM, FreeNotUsedClassAfterAnotherFree)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
+TEST(TEST_VM, Not)
+{
+    TEST_VM_TEST("native void t(bool a); native void u(bool a); void f() { bool y = true; bool x = !y; t(y); u(x);  }; \n");
+
+    bool calledT = false;
+	bool calledU = false;
+	
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+	
+		EXPECT_TRUE(AS_BOOL(args[0]));
+
+		calledT = true;
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("u", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledU = true;
+
+		return NULL_VAL;
+	}));
+	
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT && calledU);
+}
+
+TEST(TEST_VM, Not2)
+{
+    TEST_VM_TEST("native void t(bool a); void f() { bool x = !8; t(x); x = !true; t(x); }; \n");
+
+	std::size_t calledT = 0;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+	
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledT++;
+
+		return NULL_VAL;
+	}));
+
+    result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0u);
+	EXPECT_EQ(calledT, 2u);
+}
+
+TEST(TEST_VM, And)
+{
+    TEST_VM_TEST("native void t(bool a); native void u(bool a); void f() { bool y = true; t(y && true); u(y && false);  }; \n");
+
+    bool calledT = false;
+	bool calledU = false;
+	
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+	
+		EXPECT_TRUE(AS_BOOL(args[0]));
+
+		calledT = true;
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("u", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledU = true;
+
+		return NULL_VAL;
+	}));
+	
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT && calledU);
+}
+
+TEST(TEST_VM, And2)
+{
+    TEST_VM_TEST("native void t(bool a); void f() { t((!8) && true); }; \n");
+
+	std::size_t calledT = 0;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+	
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledT++;
+
+		return NULL_VAL;
+	}));
+
+    result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0u);
+	EXPECT_EQ(calledT, 1u);
+}
+
+TEST(TEST_VM, Or)
+{
+    TEST_VM_TEST("native void t(bool a); native void u(bool a); void f() { bool y = true; bool z = false; t(y || false); u(z || false);  }; \n");
+
+    bool calledT = false;
+	bool calledU = false;
+	
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+	
+		EXPECT_TRUE(AS_BOOL(args[0]));
+
+		calledT = true;
+
+		return NULL_VAL;
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("u", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledU = true;
+
+		return NULL_VAL;
+	}));
+	
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT && calledU);
+}
+
+TEST(TEST_VM, Or2)
+{
+    TEST_VM_TEST("native void t(bool a); void f() { t((!8) || false); }; \n");
+
+	std::size_t calledT = 0;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+	
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledT++;
+
+		return NULL_VAL;
+	}));
+
+    result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0u);
+	EXPECT_EQ(calledT, 1u);
+}
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");

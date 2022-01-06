@@ -16,6 +16,14 @@ public:
 
   /** Accept the visitor. **/
   virtual void  jjtAccept(PommeLexerVisitor *visitor, void * data);
+
+  bool convertLeftBool = false;
+  uint16_t leftIndex;
+  bool leftNative;
+
+  bool convertRightBool = false;
+  uint16_t rightIndex;
+  bool rightNative;
 };
 
 }

@@ -821,21 +821,56 @@ TEST(TEST_TYPECHECKER, Not)
     EXPECT_EQ(visitor.errors.size(), 0);
 }
 
-TEST(TEST_TYPECHECKER, Not2) {
-    TEST_TYPECHECKER_TEST("void f() { string y = \"dd\"; bool x = !y;  }; \n");
+TEST(TEST_TYPECHECKER, Not2)
+{
+    TEST_TYPECHECKER_TEST("void f() { bool x = !8; x = !true; x = !false; }; \n");
 
-    EXPECT_TRUE(visitor.errors.size() > 0);
-    for (const auto &error: visitor.errors) {
-        std::cout << error << std::endl;
-    }
-}
-
-TEST(TEST_TYPECHECKER, Not3) {
-    TEST_TYPECHECKER_TEST("void f() { bool x = !8; x = !true; x= !false; }; \n");
-
-    EXPECT_TRUE(visitor.errors.size() > 0);
     for(const auto& error : visitor.errors) {
         std::cout << error << std::endl;
     }
-    EXPECT_EQ(visitor.errors.size(), 1);
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, And)
+{
+    TEST_TYPECHECKER_TEST("void f() { bool y = true; bool x = true; bool z = x && y;  }; \n");
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, And2)
+{
+    TEST_TYPECHECKER_TEST("void f() { bool x = false; bool y = x && (!8);  }; \n");
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, Or)
+{
+    TEST_TYPECHECKER_TEST("void f() { bool y = true; bool x = true; bool z = x || y;  }; \n");
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+TEST(TEST_TYPECHECKER, Or2)
+{
+    TEST_TYPECHECKER_TEST("void f() { bool x = false; bool y = x || (!8);  }; \n");
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
 }

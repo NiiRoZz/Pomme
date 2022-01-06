@@ -38,6 +38,8 @@ namespace Pomme
         OP_FIELD,
         OP_INVOKE_SUPER,
         OP_NOT,
+        OP_AND,
+        OP_OR,
         OP_CLASS,
         OP_NEW,
         OP_INT,

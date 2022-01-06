@@ -44,9 +44,9 @@ namespace Pomme
     #define IS_OBJ_PTR(value)       ((value & _MASK_OBJECT_PTR) == _MASK_OBJECT_PTR)
 
     #define BOOL_VAL(b)             ((b) ? TRUE_VAL : FALSE_VAL)
-    #define FALSE_VAL               ((Value)(uint64_t)(_MASK_QNAN | TAG_FALSE))
-    #define TRUE_VAL                ((Value)(uint64_t)(_MASK_QNAN | TAG_TRUE))
-    #define NULL_VAL                ((Value)(uint64_t)(_MASK_QNAN | TAG_NULL))
+    #define FALSE_VAL               ((Value)(_MASK_QNAN | TAG_FALSE))
+    #define TRUE_VAL                ((Value)(_MASK_QNAN | TAG_TRUE))
+    #define NULL_VAL                ((Value)(_MASK_QNAN | TAG_NULL))
     #define INT_VAL(value)          (_MASK_INTEGER | (uint32_t)(int32_t)(value))
     #define FLOAT_VAL(num)          doubleToValue(num)
     #define OBJ_PTR_VAL(obj)        (_MASK_OBJECT_PTR | (uint32_t)(int32_t)(obj))

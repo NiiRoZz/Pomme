@@ -254,7 +254,7 @@ namespace Pomme
 
             if (type.nameVar == "")
             {
-                addError(node, "Can't find variable type of the left expression");
+                addError(node, "Can't find variable type of the right expression");
                 return;
             }
 
@@ -329,6 +329,79 @@ namespace Pomme
             node->index = functionClass->index;
             node->native = functionClass->native;
             if (returnType != nullptr) returnType->nameVar = functionClass->returnType;
+        }
+
+        template<typename T>
+        void visitBinaryBoolOperator(T* node, VariableType* returnType)
+        {
+            VariableType leftType;
+            node->jjtChildAccept(0, this, &leftType);
+
+            VariableType rightType;
+            node->jjtChildAccept(1, this, &rightType);
+
+            if (leftType.nameVar == "")
+            {
+                addError(node, "Can't find variable type of the left expression");
+                return;
+            }
+
+            if (rightType.nameVar == "")
+            {
+                addError(node, "Can't find variable type of the right expression");
+                return;
+            }
+
+            auto checkBool = [&] (auto iterator, const VariableType& type, bool left)
+            {
+                if (type.nameVar == "bool")
+                {
+                    if (left)
+                    {
+                        node->convertLeftBool = false;
+                    }
+                    else
+                    {
+                        node->convertRightBool = false;
+                    }
+                    if (returnType != nullptr) returnType->nameVar = "bool";
+
+                    return;
+                }
+
+                if (FunctionClass* fnc = iterator->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
+                {
+                    if (left)
+                    {
+                        node->convertLeftBool = true;
+                        node->leftIndex = fnc->index;
+                        node->leftNative = fnc->native;
+                    }
+                    else
+                    {
+                        node->convertRightBool = true;
+                        node->rightIndex = fnc->index;
+                        node->leftNative = fnc->native;
+                    }
+                }
+            };
+
+            auto itLeft = classMap.find(leftType.nameVar);
+            if (itLeft == classMap.end())
+            {
+                addError(node, "Can't find class name : " + leftType.nameVar);
+                return;
+            }
+
+            auto itRight = classMap.find(rightType.nameVar);
+            if (itRight == classMap.end())
+            {
+                addError(node, "Can't find class name : " + rightType.nameVar);
+                return;
+            }
+
+            checkBool(itLeft, leftType, true);
+            checkBool(itRight, rightType, false);
         }
 
         void visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords);
