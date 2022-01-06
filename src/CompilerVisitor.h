@@ -200,6 +200,6 @@ namespace Pomme
 		bool m_ConstructorInit;
 		std::vector<Constructor> m_ConstructorFunctions;
 
-		std::vector<uint64_t> scopeBreakable;
+		std::vector<std::vector<uint64_t>> scopeBreakable;
 	};
 }

@@ -224,6 +224,7 @@ namespace Pomme
 
         //statement
         beginScope();
+        scopeBreakable.emplace_back();
         node->jjtChildAccept(1, this, data);
         endScope();
 
@@ -234,17 +235,17 @@ namespace Pomme
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
         //Patch all break jumps
-        for (auto& currBreak: scopeBreakable)
+        for (auto& currBreak: scopeBreakable.back())
         {
             patchJump(currBreak);
         }
-        scopeBreakable.clear();
+        scopeBreakable.pop_back();
     }
 
     void CompilerVisitor::visit(ASTPommeBreak *node, void * data) 
     {
         uint64_t jump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
-        scopeBreakable.push_back(jump);
+        scopeBreakable.back().push_back(jump);
     }
 
     void CompilerVisitor::visit(ASTPommeIf *node, void * data) 
