@@ -476,10 +476,9 @@ namespace Pomme
             CASES(OP_TEST_NOT_NULL)
             {
                 bool isNull = IS_NULL(peek(0));
-                Value value = BOOL_VAL(!isNull);
 
                 drop(1u); //pop obj/null value
-                push(value);
+                push(BOOL_VAL(!isNull));
 
                 DISPATCH();
             }

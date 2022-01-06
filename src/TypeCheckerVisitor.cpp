@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <utility>
+#include <algorithm>
 
 namespace Pomme
 {
@@ -362,6 +363,15 @@ namespace Pomme
                 node->convertTo = "bool";
                 node->index = fnc->index;
                 node->native = fnc->native;
+                return true;
+            }
+        }
+        else if (!CommonVisitorFunction::isNativeType(type.nameVar))
+        {
+            next += std::string("bool") + HEADER_FUNC_SEPARATOR;
+            if (getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, next, className))
+            {
+                node->convertNullTest = true;
                 return true;
             }
         }
@@ -1300,8 +1310,7 @@ namespace Pomme
 
         if (type.nameVar != "bool")
         {
-            addError(node, "You can't put other things than bool inside while condition");
-            return;
+            node->testNull = true;
         }
 
         current_scopes++;
@@ -1383,7 +1392,8 @@ namespace Pomme
             return;
         }
 
-        if (leftType.nameVar != rightType.nameVar)
+        //Second condition is to show error only when we are not assigning a null to an object
+        if (leftType.nameVar != rightType.nameVar && !(!CommonVisitorFunction::isNativeType(leftType.nameVar) && rightType.nameVar == "null"))
         {
             addError(node, "Can't assign type " + rightType.nameVar + " to type " + leftType.nameVar);
             return;
@@ -1863,7 +1873,8 @@ namespace Pomme
         }
         else
         {
-            addError(node, "Can't find method operator bool in the class " + type.nameVar);
+            node->testNull = true;
+            if (returnType != nullptr) returnType->nameVar = "bool";
         }
     }
 

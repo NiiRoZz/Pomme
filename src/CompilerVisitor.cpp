@@ -219,6 +219,11 @@ namespace Pomme
         //condition
         node->jjtChildAccept(0, this, data);
 
+        if (node->testNull)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_TEST_NOT_NULL));
+        }
+
         uint64_t exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
@@ -485,6 +490,11 @@ namespace Pomme
         else
         {
             node->jjtChildAccept(0, this, nullptr);
+        }
+
+        if (node->testNull)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_TEST_NOT_NULL));
         }
 
         emitByte(AS_OPCODE(OpCode::OP_NOT));
@@ -1003,6 +1013,10 @@ namespace Pomme
                     emitByte(exp->native);
                     emit16Bits(0);
                 }
+            }
+            else if (exp->convertNullTest)
+            {
+                emitByte(AS_OPCODE(OpCode::OP_TEST_NOT_NULL));
             }
 
             exp = dynamic_cast<ASTPommeListExp*>(exp->jjtGetChild(1));

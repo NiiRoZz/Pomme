@@ -19,6 +19,7 @@ public:
 
   bool convert = false;
   std::string convertTo = "";
+  bool convertNullTest = false;
   uint16_t index = 0u;
   bool native = false;
 };
