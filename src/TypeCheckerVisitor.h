@@ -21,6 +21,13 @@ namespace Pomme
 
 	class TypeCheckerVisitor : public PommeLexerVisitor
 	{
+    private:
+        struct VariableType
+        {
+            std::string nameVar;
+            bool constVar;
+        };
+
 
     public:
 
@@ -240,21 +247,21 @@ namespace Pomme
         bool firstInstrConstructor = false;
 
         template<typename T>
-        void visitUnaryOperator(T* node, const std::string& name, std::string* returnType)
+        void visitUnaryOperator(T* node, const std::string& name, VariableType* returnType)
         {
-            std::string type;
+            VariableType type;
             node->jjtChildAccept(0, this, &type);
 
-            if (type == "")
+            if (type.nameVar == "")
             {
                 addError(node, "Can't find variable type of the left expression");
                 return;
             }
 
-            auto it = classMap.find(type);
+            auto it = classMap.find(type.nameVar);
             if (it == classMap.end())
             {
-                addError(node, "Can't find class name : " + type);
+                addError(node, "Can't find class name : " + type.nameVar);
                 return;
             }
 
@@ -269,25 +276,25 @@ namespace Pomme
 
             node->index = functionClass->index;
             node->native = functionClass->native;
-            if (returnType != nullptr) *returnType = functionClass->returnType;
+            if (returnType != nullptr) returnType->nameVar = functionClass->returnType;
         }
 
         template<typename T>
-        void visitBinaryOperator(T* node, const std::string& name, std::string* returnType, std::array<std::string, 2>& array)
+        void visitBinaryOperator(T* node, const std::string& name, VariableType* returnType, std::array<VariableType, 2>& array)
         {
-            std::string leftType;
+            VariableType leftType;
             node->jjtChildAccept(0, this, &leftType);
 
-            std::string rightType;
+            VariableType rightType;
             node->jjtChildAccept(1, this, &rightType);
 
-            if (leftType == "")
+            if (leftType.nameVar == "")
             {
                 addError(node, "Can't find variable type of the left expression");
                 return;
             }
 
-            if (rightType == "")
+            if (rightType.nameVar == "")
             {
                 addError(node, "Can't find variable type of the right expression");
                 return;
@@ -296,21 +303,21 @@ namespace Pomme
             array[0] = leftType;
             array[1] = rightType;
 
-            auto itLeft = classMap.find(leftType);
+            auto itLeft = classMap.find(leftType.nameVar);
             if (itLeft == classMap.end())
             {
-                addError(node, "Can't find class name : " + leftType);
+                addError(node, "Can't find class name : " + leftType.nameVar);
                 return;
             }
 
-            auto itRight = classMap.find(rightType);
+            auto itRight = classMap.find(rightType.nameVar);
             if (itRight == classMap.end())
             {
-                addError(node, "Can't find class name : " + rightType);
+                addError(node, "Can't find class name : " + rightType.nameVar);
                 return;
             }
 
-            std::string nameFunc = name + NAME_FUNC_SEPARATOR + rightType + HEADER_FUNC_SEPARATOR;
+            std::string nameFunc = name + NAME_FUNC_SEPARATOR + rightType.nameVar + HEADER_FUNC_SEPARATOR;
 
             FunctionClass* functionClass = itLeft->second.getMethod(nameFunc);
             if (functionClass == nullptr)
@@ -321,7 +328,7 @@ namespace Pomme
 
             node->index = functionClass->index;
             node->native = functionClass->native;
-            if (returnType != nullptr) *returnType = functionClass->returnType;
+            if (returnType != nullptr) returnType->nameVar = functionClass->returnType;
         }
 
         void visiteVariable(Node * node, bool isConst, const std::unordered_set<std::string>& keywords);
@@ -330,8 +337,8 @@ namespace Pomme
         void addClass(PommeNode* node, const std::string& className);
         void addEnum(PommeNode* node, const std::string& EnumName);
         std::unordered_set<std::string> buildSignature(ASTPommeHeaders *headers);
-        bool getMethodType(ASTPommeAccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className);
-        bool getExpType(ASTPommeListExp* node, ASTPommeAccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className);
+        bool getMethodType(ASTPommeAccessMethode *node, VariableType* variableType, std::string& functionIdent, const std::string& className);
+        bool getExpType(ASTPommeListExp* node, ASTPommeAccessMethode *accessNode, VariableType* variableType, std::string& functionIdent, std::string& current, const std::string& className);
         std::unordered_set<std::string> buildKeyword(ASTPommeIdentFuncs *node);
         void checkNewMember(PommeNode* node, std::string enumName, std::string memberName);
         std::string getVariableType(const std::string& type);

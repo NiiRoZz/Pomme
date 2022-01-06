@@ -259,14 +259,14 @@ namespace Pomme
         return parameters;
     }
 
-    bool TypeCheckerVisitor::getMethodType(ASTPommeAccessMethode *node, std::string* variableType, std::string& functionIdent, const std::string& className)
+    bool TypeCheckerVisitor::getMethodType(ASTPommeAccessMethode *node, VariableType* variableType, std::string& functionIdent, const std::string& className)
     {
         auto* functionParameters = dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1));
         std::string typeExp = "";
         return getExpType(functionParameters, node, variableType, functionIdent, typeExp, className);
     }
 
-    bool TypeCheckerVisitor::getExpType(ASTPommeListExp* node, ASTPommeAccessMethode *accessNode, std::string* variableType, std::string& functionIdent, std::string& current, const std::string& className)
+    bool TypeCheckerVisitor::getExpType(ASTPommeListExp* node, ASTPommeAccessMethode *accessNode, VariableType* variableType, std::string& functionIdent, std::string& current, const std::string& className)
     {
         if (node == nullptr)
         {
@@ -286,7 +286,7 @@ namespace Pomme
                         accessNode->index = ut->second.index;
                     }
                     
-                    if (variableType != nullptr) *variableType = ut->second.returnType;
+                    if (variableType != nullptr) variableType->nameVar = ut->second.returnType;
                     return true;
                 }
             }
@@ -305,11 +305,11 @@ namespace Pomme
                             accessNode->global = false;
                             accessNode->native = function->native;
                             accessNode->index = function->index;
-                            accessNode->methodCall = variableType == nullptr || *variableType == "";
+                            accessNode->methodCall = variableType == nullptr || variableType->nameVar == "";
                             accessNode->superCall = super_call;
                         }
                         
-                        if (variableType != nullptr) *variableType = function->returnType;
+                        if (variableType != nullptr) variableType->nameVar = function->returnType;
                         return true;
                     }
                     else
@@ -327,7 +327,7 @@ namespace Pomme
                                 accessNode->index = ut->second.index;
                             }
                             
-                            if (variableType != nullptr) *variableType = ut->second.returnType;
+                            if (variableType != nullptr) variableType->nameVar = ut->second.returnType;
                             return true;
                         }
                     }
@@ -339,10 +339,10 @@ namespace Pomme
 
         std::string next = current;
 
-        std::string type;
+        VariableType type;
         node->jjtGetChild(0)->jjtAccept(this, &type);
 
-        current += type + HEADER_FUNC_SEPARATOR;
+        current += type.nameVar + HEADER_FUNC_SEPARATOR;
         
         if (getExpType(dynamic_cast<ASTPommeListExp*>(node->jjtGetChild(1)), accessNode, variableType, functionIdent, current, className))
         {
@@ -350,7 +350,7 @@ namespace Pomme
             return true;
         }
 
-        auto it = classMap.find(type);
+        auto it = classMap.find(type.nameVar);
         if (it == classMap.end()) assert (false);
 
         if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
@@ -409,19 +409,19 @@ namespace Pomme
             case 0u:
             case 1u:
             {
-                auto* variableType = static_cast<std::string*>(data);
+                auto* variableType = static_cast<VariableType*>(data);
                 std::string currentClassName = [&] () {
                     //Special case, where we had the type of return of left expression
-                    if (variableType != nullptr && *variableType != "") return (*variableType).c_str();
+                    if (variableType != nullptr && variableType->nameVar != "") return variableType->nameVar.c_str();
 
                     //Special case, where we don't have the type of return, and we are not in class_context
                     if (class_context) return class_name.c_str();
 
                     return "";
-                }();     
+                }();
                 
                 //locals should be checked only when on left side of listaccess
-                if (variableType == nullptr || *variableType == "")
+                if (variableType == nullptr || variableType->nameVar == "")
                 {
                     // locals
                     for(int scopes = current_scopes; scopes >= 0; scopes-- )
@@ -435,7 +435,9 @@ namespace Pomme
                                 {
                                     if (variableType != nullptr)
                                     {
-                                        *variableType = ot.variableType;
+                                        std::cout << "ot.variableType : " << ot.variableType << " const : " << ot.isConst << std::endl;
+                                        variableType->nameVar = ot.variableType;
+                                        variableType->constVar = ot.isConst;
                                     }
 
                                     return;
@@ -449,7 +451,8 @@ namespace Pomme
                     {
                         if (variableType != nullptr)
                         {
-                            *variableType = class_name;
+                            variableType->nameVar = class_name;
+                            variableType->constVar = true;
                         }
 
                         return;
@@ -467,7 +470,8 @@ namespace Pomme
                                 super_call = true;
                                 if (variableType != nullptr)
                                 {
-                                    *variableType = it->second.parent;
+                                    variableType->nameVar = it->second.parent;
+                                    variableType->constVar = true;
                                 }
 
                                 return;
@@ -495,7 +499,8 @@ namespace Pomme
 
                         if (variableType != nullptr)
                         {
-                            *variableType = ot->second.variableType;
+                            variableType->nameVar = ot->second.variableType;
+                            variableType->constVar = ot->second.isConst;
                         }
 
                         return;
@@ -510,7 +515,8 @@ namespace Pomme
                         
                         if (variableType != nullptr)
                         {
-                            *variableType = pt->second.variableType;
+                            variableType->nameVar = pt->second.variableType;
+                            variableType->constVar = pt->second.isConst;
                         }
 
                         return;
@@ -523,7 +529,8 @@ namespace Pomme
                 {
                     if (variableType != nullptr)
                     {
-                        *variableType = node->m_Identifier;
+                        variableType->nameVar = node->m_Identifier;
+                        variableType->constVar = true;
                     }
                     return;
                 }
@@ -533,7 +540,8 @@ namespace Pomme
                 {
                     if (variableType != nullptr)
                     {
-                        *variableType = node->m_Identifier;
+                        variableType->nameVar = node->m_Identifier;
+                        variableType->constVar = true;
                     }
 
                     return;
@@ -553,24 +561,21 @@ namespace Pomme
     {
         if (data == nullptr) return;
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "int";
+        static_cast<VariableType*>(data)->nameVar = "int";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeFloat *node, void * data)
     {
         if (data == nullptr) return;
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "float";
+        static_cast<VariableType*>(data)->nameVar = "float";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeString *node, void * data)
     {
         if (data == nullptr) return;
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "string";
+        static_cast<VariableType*>(data)->nameVar = "string";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeScopes *node, void * data)
@@ -1282,7 +1287,7 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeReturn *node, void * data)
     {
-        std::string type;
+        VariableType type;
         node->jjtChildrenAccept(this, &type);
 
         //TODO: check if it's equal to the return type of the current function
@@ -1301,18 +1306,18 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeIf *node, void * data)
     {
-        std::string type;
+        VariableType type;
         node->jjtChildAccept(0, this, &type);
 
         node->convert = false;
         node->testNull = false;
 
-        if (type != "bool")
+        if (type.nameVar != "bool")
         {
-            auto it = classMap.find(type);
+            auto it = classMap.find(type.nameVar);
             if (it == classMap.end())
             {
-                addError(node, "Can't find class name : " + type);
+                addError(node, "Can't find class name : " + type.nameVar);
                 return;
             }
 
@@ -1339,7 +1344,7 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommePrint *node, void * data)
     {
-        std::string type;
+        VariableType type;
         node->jjtChildrenAccept(this, &type);
     }
 
@@ -1349,111 +1354,79 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeAssign *node, void * data)
     {
-        std::string leftType = "";
+        VariableType leftType = {};
         node->jjtChildAccept(0, this, &leftType);
 
-        std::string rightType = "";
+        VariableType rightType = {};
         node->jjtChildAccept(1, this, &rightType);
 
-        if (leftType == "")
+        std::cout << "leftType : " << leftType.nameVar << " " << leftType.constVar << std::endl;
+
+        if (leftType.nameVar == "")
         {
             addError(node, "Can't find variable type of the left expression");
             return;
         }
 
-        std::cout << "path_number : " << unsigned(path_number) << " leftType : " << leftType << " rightType : " << rightType << std::endl;
-
-        if (leftType != rightType)
+        if (leftType.constVar)
         {
-            addError(node, "Can't assign class " + rightType + " to class " + leftType);
+            addError(node, "Can't assign value to const value");
             return;
         }
 
-        auto castCheck = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
-        if(castCheck != nullptr) // todo listAccess
+        if (leftType.nameVar != rightType.nameVar)
         {
-            std::string identLeft = castCheck->m_Identifier;
-            auto itClass = classMap.find(class_name);
-            auto itGlobal = globalFunctionsMap.find(class_name);
-            if(itClass != classMap.end())
-            {
-                auto attribute = itClass->second.attributes.find(identLeft);
-                auto staticAttribute = itClass->second.staticAttributes.find(identLeft);
-                //auto local = itClass->second.methods.find(class_name); // todo get current fucntion Name
-
-                if(attribute != itClass->second.attributes.end())
-                {
-                    if(attribute->second.isConst)
-                    {
-                        addError(node, "Variable " + identLeft + " is const, impossible to assign other value");
-                    }
-                }else if(staticAttribute != itClass->second.staticAttributes.end())
-                {
-                    if(staticAttribute->second.isConst)
-                    {
-                        addError(node, "Variable " + identLeft + " is const, impossible to assign other value");
-                    }
-                }/*else if(local != itClass->second.methods.end())
-                {
-                    if(local->second.variables.find(identLeft).isConst)
-                    {
-                        errors.push_back("Variable " + identLeft + " is const, impossible to assign other value");
-                    }
-                }*/
-            }else if( itGlobal != globalFunctionsMap.end())
-            {
-                // todo change parameter string to VariableClass to get isConst
-            }
+            addError(node, "Can't assign type " + rightType.nameVar + " to type " + leftType.nameVar);
+            return;
         }
-
     }
 
 
     void TypeCheckerVisitor::visit(ASTPommeAddEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator+=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeMinusEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator-=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeDivEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator/=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeMultEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator*=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeOrEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator|=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeAndEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator&=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeShiftLEq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator<<=", nullptr, types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeShiftREq *node, void * data)
     {
-        std::array<std::string, 2> types;
+        std::array<VariableType, 2> types;
         visitBinaryOperator(node, "operator>>=", nullptr, types);
     }
 
@@ -1514,10 +1487,9 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeOmega *node, void * data)
     {
-        if (data == nullptr) return;
+        assert(data != nullptr);
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "null";
+        static_cast<VariableType*>(data)->nameVar = "null";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeHeaders *node, void * data)
@@ -1657,62 +1629,62 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator==", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator==", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeNEQ *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator!=", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator!=", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeGT *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator>", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator>", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeGET *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator>=", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator>=", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeLT *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator<", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator<", static_cast<VariableType*>(data), types);
 
-        if (types[0] == "int")
+        if (types[0].nameVar == "int")
         {
-            if (types[1] == "int")
+            if (types[1].nameVar == "int")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_LT_INT_INT;
             }
-            else if (types[1] == "float")
+            else if (types[1].nameVar == "float")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_LT_INT_FLOAT;
             }
         }
-        else if (types[0] == "float")
+        else if (types[0].nameVar == "float")
         {
-            if (types[1] == "int")
+            if (types[1].nameVar == "int")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_LT_FLOAT_INT;
             }
-            else if (types[1] == "float")
+            else if (types[1].nameVar == "float")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_LT_FLOAT_FLOAT;
@@ -1724,38 +1696,38 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator<=", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator<=", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeAdd *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator+", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator+", static_cast<VariableType*>(data), types);
 
-        if (types[0] == "int")
+        if (types[0].nameVar == "int")
         {
-            if (types[1] == "int")
+            if (types[1].nameVar == "int")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_ADD_INT_INT;
             }
-            else if (types[1] == "float")
+            else if (types[1].nameVar == "float")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_ADD_INT_FLOAT;
             }
         }
-        else if (types[0] == "float")
+        else if (types[0].nameVar == "float")
         {
-            if (types[1] == "int")
+            if (types[1].nameVar == "int")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_ADD_FLOAT_INT;
             }
-            else if (types[1] == "float")
+            else if (types[1].nameVar == "float")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_ADD_FLOAT_FLOAT;
@@ -1767,30 +1739,30 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator-", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator-", static_cast<VariableType*>(data), types);
 
-        if (types[0] == "int")
+        if (types[0].nameVar == "int")
         {
-            if (types[1] == "int")
+            if (types[1].nameVar == "int")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_MINUS_INT_INT;
             }
-            else if (types[1] == "float")
+            else if (types[1].nameVar == "float")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_MINUS_INT_FLOAT;
             }
         }
-        else if (types[0] == "float")
+        else if (types[0].nameVar == "float")
         {
-            if (types[1] == "int")
+            if (types[1].nameVar == "int")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_MINUS_FLOAT_INT;
             }
-            else if (types[1] == "float")
+            else if (types[1].nameVar == "float")
             {
                 node->primitive = true;
                 node->opCode = OpCode::OP_MINUS_FLOAT_FLOAT;
@@ -1802,55 +1774,55 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator>>", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator>>", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeShiftL *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator<<", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator<<", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeMult *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator*", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator*", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeDiv *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator/", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator/", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeModulo *node, void * data)
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator%", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator%", static_cast<VariableType*>(data), types);
     }
 
     void TypeCheckerVisitor::visit(ASTPommeUnary *node, void * data)
     {
-        visitUnaryOperator(node, "operator-", static_cast<std::string*>(data));
+        visitUnaryOperator(node, "operator-", static_cast<VariableType*>(data));
     }
 
     void TypeCheckerVisitor::visit(ASTPommeNot *node, void * data)
     {
-        visitUnaryOperator(node, "operator!", static_cast<std::string*>(data));
+
     }
 
     void TypeCheckerVisitor::visit(ASTPommeTilde *node, void * data)
     {
-        visitUnaryOperator(node, "operator~", static_cast<std::string*>(data));
+
     }
 
     void TypeCheckerVisitor::visit(ASTPommeNew *node, void * data)
@@ -1889,34 +1861,28 @@ namespace Pomme
             node->index = ot->second.index;
         }
 
-        if (data == nullptr) return;
-            
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = className;
+        if (data != nullptr) static_cast<VariableType*>(data)->nameVar = className;
     }
 
     void TypeCheckerVisitor::visit(ASTPommeTrue *node, void * data)
     {
-        if (data == nullptr) return;
+        assert(data != nullptr);
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "bool";
+        static_cast<VariableType*>(data)->nameVar = "bool";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeFalse *node, void * data)
     {
         if (data == nullptr) return;
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "bool";
+        static_cast<VariableType*>(data)->nameVar = "bool";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeNull *node, void * data)
     {
         if (data == nullptr) return;
         
-        auto* variableType = static_cast<std::string*>(data);
-        *variableType = "";
+        static_cast<VariableType*>(data)->nameVar = "null";
     }
 
     void TypeCheckerVisitor::visit(ASTPommeListAccess *node, void * data)
@@ -1938,7 +1904,7 @@ namespace Pomme
 
         if (data == nullptr)
         {
-            std::string type = "";
+            VariableType type = {};
             acceptListAccess(&type);
             return;
         }
@@ -1957,7 +1923,7 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeAccessMethode *node, void * data)
     {
-        auto* variableType = static_cast<std::string*>(data);
+        auto* variableType = static_cast<VariableType*>(data);
 
         auto *identNode = dynamic_cast<ASTPommeIdent*>(node->jjtGetChild(0));
         std::string functionIdent = identNode->m_Identifier + NAME_FUNC_SEPARATOR;
@@ -1969,9 +1935,9 @@ namespace Pomme
         }
 
         std::string className = [&] () {
-            if(variableType != nullptr && *variableType != "")
+            if(variableType != nullptr && variableType->nameVar != "")
             {
-                return (*variableType).c_str();
+                return variableType->nameVar.c_str();
             }
             
             if (class_context)
@@ -2000,8 +1966,8 @@ namespace Pomme
     {
         assert(data != nullptr);
 
-        std::array<std::string, 2> types;
-        visitBinaryOperator(node, "operator[]", static_cast<std::string*>(data), types);
+        std::array<VariableType, 2> types;
+        visitBinaryOperator(node, "operator[]", static_cast<VariableType*>(data), types);
 
         node->jjtChildAccept(2, this, data);
     }
