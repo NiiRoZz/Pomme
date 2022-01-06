@@ -213,12 +213,12 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeWhile *node, void * data) 
     {
-        int loopStart = currentChunk()->count;
+        uint64_t loopStart = currentChunk()->count;
 
         //condition
         node->jjtChildAccept(0, this, data);
 
-        int exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
+        uint64_t exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
         //statement
@@ -254,7 +254,7 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_TEST_NOT_NULL));
         }
 
-        int thenJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
+        uint64_t thenJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
         emitByte(AS_OPCODE(OpCode::OP_POP));
 
         //Statement
@@ -262,7 +262,7 @@ namespace Pomme
         node->jjtChildAccept(1, this, data);
         endScope();
 
-        int elseJump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
+        uint64_t elseJump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
 
         patchJump(thenJump);
         emitByte(AS_OPCODE(OpCode::OP_POP));
@@ -319,6 +319,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeAnd *node, void * data) 
     {
+        //TODO: don't execute right if left is false
         node->jjtChildAccept(1, this, nullptr);
 
         if (node->convertRightBool)
@@ -345,6 +346,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeOr *node, void * data) 
     {
+        //TODO: don't execute right if left is false
         node->jjtChildAccept(1, this, nullptr);
 
         if (node->convertRightBool)
@@ -1111,7 +1113,7 @@ namespace Pomme
 		emitByte(AS_OPCODE(OpCode::OP_RETURN));
 	}
 
-    int CompilerVisitor::emitJump(uint8_t instruction)
+    uint64_t CompilerVisitor::emitJump(uint8_t instruction)
     {
         emitByte(instruction);
         emitByte(0xff);
@@ -1119,7 +1121,7 @@ namespace Pomme
         return currentChunk()->count - 2;
     }
 
-	void CompilerVisitor::patchJump(int offset)
+	void CompilerVisitor::patchJump(uint64_t offset)
     {
         // -2 to adjust for the bytecode for the jump offset itself.
         int jump = currentChunk()->count - offset - 2;
@@ -1133,11 +1135,11 @@ namespace Pomme
         currentChunk()->code[offset + 1] = jump & 0xff;
     }
 
-    void CompilerVisitor::emitLoop(int loopStart)
+    void CompilerVisitor::emitLoop(uint64_t loopStart)
     {
         emitByte(AS_OPCODE(OpCode::OP_LOOP));
 
-        int offset = currentChunk()->count - loopStart + 2;
+        uint64_t offset = currentChunk()->count - loopStart + 2;
         //if (offset > UINT16_MAX) error("Loop body too large.");
 
         emit16Bits((uint16_t) offset);

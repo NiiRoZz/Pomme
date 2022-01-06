@@ -1379,6 +1379,25 @@ TEST(TEST_VM, Or2)
 	EXPECT_EQ(calledT, 1u);
 }
 
+TEST(TEST_VM, WhileTest)
+{
+	TEST_VM_TEST("native void t(int f); void f() { int s = 0; while (s < 10) { s = s + 1; }; t(s); };};\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+
+		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");

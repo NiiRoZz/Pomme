@@ -157,10 +157,10 @@ namespace Pomme
 
 		void emitReturn();
 
-		int emitJump(uint8_t instruction);
-		void patchJump(int offset);
+		uint64_t emitJump(uint8_t instruction);
+		void patchJump(uint64_t offset);
 
-		void emitLoop(int loopStart);
+		void emitLoop(uint64_t loopStart);
 
 		void emitDefaultValue(const std::string& typeName);
 

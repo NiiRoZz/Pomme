@@ -1295,8 +1295,17 @@ namespace Pomme
 
     void TypeCheckerVisitor::visit(ASTPommeWhile *node, void * data)
     {
-        current_scopes++;
+        VariableType type;
+        node->jjtChildAccept(0, this, &type);
 
+        if (type.nameVar != "bool")
+        {
+            addError(node, "You can't put other things than bool inside while condition");
+            return;
+        }
+
+        current_scopes++;
+        node->jjtChildAccept(1, this, data);
         current_scopes--;
     }
 
