@@ -1014,7 +1014,6 @@ namespace Pomme
         if(dynamic_cast<ASTPommeExnil*>(node->jjtGetChild(1)) != nullptr) // no parameters global
         {
             std::cout << "DEPENDING ON GLBOAL " << identMethode << "();" << std::endl;
-            assert(false);
             // check global
 
             int numState = dependanceGraph.getState(identMethode + NAME_FUNC_SEPARATOR);
