@@ -1477,7 +1477,7 @@ namespace Pomme
 
             case 1u:
             {
-                visiteVariable(node, false, {});
+                visiteVariable(node, true, {});
 
                 checkVariable(node);
                 break;
