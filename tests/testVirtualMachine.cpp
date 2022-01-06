@@ -629,15 +629,19 @@ TEST(TEST_VM, ClassNativeMethodTest)
 
 TEST(TEST_VM, ClassNativeMethodCallGlobalTest)
 {
-	TEST_VM_TEST("int g(int a) {return a + 10;}; class TestClass { native int meth(int a); }; void f() { TestClass oui = new TestClass(); print(oui.meth(573)); };\n");
+	TEST_VM_TEST("int g(int a) {return a + 10;}; class TestClass { native int meth(int a); }; void f() { TestClass oui = new TestClass(); oui.meth(573); };\n");
 
-	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
+	bool calledMeth = false;
+	
+	EXPECT_TRUE(vm.linkMethodNative("TestClass", vm.getFunctionName("meth", "int"), [&] (VirtualMachine& vm, int argCount, ObjInstance* instance, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 
 		std::optional<Value> val = vm.callGlobalFunction(vm.getFunctionName("g", "int"), {args[0]});
 
 		EXPECT_TRUE(val.has_value());
 		EXPECT_EQ(AS_INT(*val), 583);
+
+		calledMeth = true;
 
 		return *val;
 	}));
@@ -646,6 +650,7 @@ TEST(TEST_VM, ClassNativeMethodCallGlobalTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledMeth);
 }
 
 
@@ -1415,11 +1420,15 @@ TEST(TEST_VM, WhileTest)
 {
 	TEST_VM_TEST("native void t(int f); void f() { int s = 0; while (s < 10) { s = s + 1; }; t(s); };};\n");
 
-	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+	bool calledT = false;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 		EXPECT_TRUE(IS_INT(args[0]));
 
 		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		calledT = true;
 
 		return NULL_VAL;
 	}));
@@ -1428,17 +1437,22 @@ TEST(TEST_VM, WhileTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT);
 }
 
 TEST(TEST_VM, While2Test)
 {
 	TEST_VM_TEST("native void t(bool f); class TestClass {}; void f() { TestClass oui = new TestClass(); while (oui) { oui = null; }; t(oui); };};\n");
 
-	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [] (VirtualMachine& vm, int argCount, Value* args) {
+	bool calledT = false;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 		EXPECT_TRUE(IS_BOOL(args[0]));
 
 		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledT = true;
 
 		return NULL_VAL;
 	}));
@@ -1447,17 +1461,47 @@ TEST(TEST_VM, While2Test)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT);
+}
+
+
+TEST(TEST_VM, OperatorBoolNullTest)
+{
+	TEST_VM_TEST("native void t(bool b); class TestClass { bool operatorbool() {return true; }; }; void f() { TestClass oui = new TestClass(); oui = null; if (oui) {} else {t(oui);}; };};\n");
+
+	bool calledT = false;
+	
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "bool"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_BOOL(args[0]));
+
+		EXPECT_FALSE(AS_BOOL(args[0]));
+
+		calledT = true;
+
+		return NULL_VAL;
+	}));
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT);
 }
 
 TEST(TEST_VM, BreakTest)
 {
 	TEST_VM_TEST("native void t(int f); void f() { int s = 0; while (s < 10) { if (s > 5) { break; }; s = s + 1; }; t(s); };};\n");
 
-	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+	bool calledT = false;
+	
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
 		EXPECT_TRUE(argCount == 1);
 		EXPECT_TRUE(IS_INT(args[0]));
 
 		EXPECT_EQ(AS_INT(args[0]), 6);
+
+		calledT = true;
 
 		return NULL_VAL;
 	}));
@@ -1466,6 +1510,7 @@ TEST(TEST_VM, BreakTest)
 
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
 	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT);
 }
 
 TEST(TEST_VM, fibTest)

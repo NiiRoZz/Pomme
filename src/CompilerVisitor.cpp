@@ -219,7 +219,14 @@ namespace Pomme
         //condition
         node->jjtChildAccept(0, this, data);
 
-        if (node->testNull)
+        if (node->convert)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
+            emit16Bits(node->index);
+            emitByte(node->native);
+            emit16Bits(0);
+        }
+        else if (node->testNull)
         {
             emitByte(AS_OPCODE(OpCode::OP_TEST_NOT_NULL));
         }
@@ -260,7 +267,7 @@ namespace Pomme
 
         if (node->convert)
         {
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
             emit16Bits(node->index);
             emitByte(node->native);
             emit16Bits(0);
@@ -340,7 +347,7 @@ namespace Pomme
 
         if (node->convertRightBool)
         {
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
             emit16Bits(node->rightIndex);
             emitByte(node->rightNative);
             emit16Bits(0);
@@ -351,7 +358,7 @@ namespace Pomme
 
         if (node->convertLeftBool)
         {
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
             emit16Bits(node->leftIndex);
             emitByte(node->leftNative);
             emit16Bits(0);
@@ -367,7 +374,7 @@ namespace Pomme
 
         if (node->convertRightBool)
         {
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
             emit16Bits(node->rightIndex);
             emitByte(node->rightNative);
             emit16Bits(0);
@@ -378,7 +385,7 @@ namespace Pomme
 
         if (node->convertLeftBool)
         {
-            emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
             emit16Bits(node->leftIndex);
             emitByte(node->leftNative);
             emit16Bits(0);
@@ -1008,7 +1015,7 @@ namespace Pomme
             {
                 if (exp->convertTo == "bool")
                 {
-                    emitByte(AS_OPCODE(OpCode::OP_INVOKE));
+                    emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
                     emit16Bits(exp->index);
                     emitByte(exp->native);
                     emit16Bits(0);

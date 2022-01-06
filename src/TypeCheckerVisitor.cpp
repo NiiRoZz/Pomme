@@ -1310,7 +1310,23 @@ namespace Pomme
 
         if (type.nameVar != "bool")
         {
-            node->testNull = true;
+            auto it = classMap.find(type.nameVar);
+            if (it == classMap.end())
+            {
+                addError(node, "Can't find class name : " + type.nameVar);
+                return;
+            }
+
+            if (FunctionClass* fnc = it->second.getMethod(std::string("operatorbool") + NAME_FUNC_SEPARATOR))
+            {
+                node->convert = true;
+                node->index = fnc->index;
+                node->native = fnc->native;
+            }
+            else
+            {
+                node->testNull = true;
+            }
         }
 
         current_scopes++;

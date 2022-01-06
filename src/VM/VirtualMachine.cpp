@@ -388,6 +388,7 @@ namespace Pomme
             &&OP_GET_PROPERTY,
             &&OP_SET_PROPERTY,
             &&OP_INVOKE,
+            &&OP_CONVERT_INVOKE,
             &&OP_JUMP,
             &&OP_JUMP_IF_FALSE,
             &&OP_LOOP,
@@ -603,6 +604,30 @@ namespace Pomme
                 uint16_t slot = READ_UINT16();
                 bool native = READ_BYTE();
                 uint16_t argCount = READ_UINT16();
+                
+                if (!invoke(argCount, slot, native))
+                {
+                    return InterpretResult::INTERPRET_RUNTIME_ERROR;
+                }
+
+                frame = &frames[frameCount - 1];
+
+                DISPATCH();
+            }
+
+            CASES(OP_CONVERT_INVOKE)
+            {
+                uint16_t slot = READ_UINT16();
+                bool native = READ_BYTE();
+                uint16_t argCount = READ_UINT16();
+
+                if (IS_NULL(peek(0)))
+                {
+                    drop(1u);
+                    push(FALSE_VAL);
+
+                    DISPATCH();
+                }
                 
                 if (!invoke(argCount, slot, native))
                 {
