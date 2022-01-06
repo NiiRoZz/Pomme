@@ -14,6 +14,7 @@ class int
     native int operator-();
 
     native bool operator<(int rhs);
+    native bool operator>(int rhs);
     native bool operator==(int rhs);
 
     native bool operatorbool();

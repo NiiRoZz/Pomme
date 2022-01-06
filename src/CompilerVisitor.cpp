@@ -18,6 +18,7 @@ namespace Pomme
     , m_InMethod(false)
     , m_ConstructorInit(false)
 	{
+        scopeBreakable.reserve(20u);
 	}
 
     Chunk* CompilerVisitor::currentChunk()
@@ -231,10 +232,19 @@ namespace Pomme
         patchJump(exitJump);
 
         emitByte(AS_OPCODE(OpCode::OP_POP));
+
+        //Patch all break jumps
+        for (auto& currBreak: scopeBreakable)
+        {
+            patchJump(currBreak);
+        }
+        scopeBreakable.clear();
     }
 
     void CompilerVisitor::visit(ASTPommeBreak *node, void * data) 
     {
+        uint64_t jump = emitJump(AS_OPCODE(OpCode::OP_JUMP));
+        scopeBreakable.push_back(jump);
     }
 
     void CompilerVisitor::visit(ASTPommeIf *node, void * data) 

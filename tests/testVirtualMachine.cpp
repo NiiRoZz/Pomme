@@ -47,6 +47,14 @@ void defineStdNative(VirtualMachine& vm)
 
 		return BOOL_VAL(AS_INT(*primitive) == AS_INT(args[0]));
 	}));
+
+	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator>", "int"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+		assert(argCount == 1);
+        assert(IS_INT(*primitive));
+		assert(IS_INT(args[0]));
+
+		return BOOL_VAL(AS_INT(*primitive) > AS_INT(args[0]));
+	}));
 }
 
 TEST(TEST_VM, BasicTest)
@@ -1388,6 +1396,25 @@ TEST(TEST_VM, WhileTest)
 		EXPECT_TRUE(IS_INT(args[0]));
 
 		EXPECT_EQ(AS_INT(args[0]), 10);
+
+		return NULL_VAL;
+	}));
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+}
+
+TEST(TEST_VM, BreakTest)
+{
+	TEST_VM_TEST("native void t(int f); void f() { int s = 0; while (s < 10) { if (s > 5) { break; }; s = s + 1; }; t(s); };};\n");
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+
+		EXPECT_EQ(AS_INT(args[0]), 6);
 
 		return NULL_VAL;
 	}));
