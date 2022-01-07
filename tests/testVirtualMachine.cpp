@@ -1298,7 +1298,7 @@ TEST(TEST_VM, Not3)
 
 TEST(TEST_VM, And)
 {
-    TEST_VM_TEST("native void t(bool a); native void u(bool a); void f() { bool y = true; t(y && true); u(y && false);  }; \n");
+    TEST_VM_TEST("native void t(bool a); native void u(bool a); void f() { bool y = true; t(y && true); u(false && y);  }; \n");
 
     bool calledT = false;
 	bool calledU = false;

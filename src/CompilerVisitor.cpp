@@ -46,7 +46,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeIdent *node, void * data) 
     {
-        bool assign = (data == nullptr) ? false : *(bool*)data;
+        bool assign = (data == nullptr) ? (false) : (*static_cast<bool*>(data));
 
         if (node->m_Super) return;
 
@@ -208,7 +208,8 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeReturn *node, void * data) 
     {
-        node->jjtChildrenAccept(this, data);
+        node->jjtChildAccept(0, this, data);
+
         emitByte(AS_OPCODE(OpCode::OP_RETURN));
     }
 
@@ -342,18 +343,7 @@ namespace Pomme
 
     void CompilerVisitor::visit(ASTPommeAnd *node, void * data) 
     {
-        //TODO: don't execute right if left is false
-        node->jjtChildAccept(1, this, nullptr);
-
-        if (node->convertRightBool)
-        {
-            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
-            emit16Bits(node->rightIndex);
-            emitByte(node->rightNative);
-            emit16Bits(0);
-        }
-
-        //put left after the right, to have left on top of the stack
+        //left
         node->jjtChildAccept(0, this, nullptr);
 
         if (node->convertLeftBool)
@@ -361,26 +351,29 @@ namespace Pomme
             emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
             emit16Bits(node->leftIndex);
             emitByte(node->leftNative);
+            emit16Bits(0);
+        }
+
+        uint64_t exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_FALSE));
+
+        node->jjtChildAccept(1, this, nullptr);
+
+        if (node->convertRightBool)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
+            emit16Bits(node->rightIndex);
+            emitByte(node->rightNative);
             emit16Bits(0);
         }
 
         emitByte(AS_OPCODE(OpCode::OP_AND));
+
+        patchJump(exitJump);
     }
 
     void CompilerVisitor::visit(ASTPommeOr *node, void * data) 
     {
-        //TODO: don't execute right if left is false
-        node->jjtChildAccept(1, this, nullptr);
-
-        if (node->convertRightBool)
-        {
-            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
-            emit16Bits(node->rightIndex);
-            emitByte(node->rightNative);
-            emit16Bits(0);
-        }
-
-        //put left after the right, to have left on top of the stack
+        //left
         node->jjtChildAccept(0, this, nullptr);
 
         if (node->convertLeftBool)
@@ -391,7 +384,21 @@ namespace Pomme
             emit16Bits(0);
         }
 
+        uint64_t exitJump = emitJump(AS_OPCODE(OpCode::OP_JUMP_IF_TRUE));
+
+        node->jjtChildAccept(1, this, nullptr);
+
+        if (node->convertRightBool)
+        {
+            emitByte(AS_OPCODE(OpCode::OP_CONVERT_INVOKE));
+            emit16Bits(node->rightIndex);
+            emitByte(node->rightNative);
+            emit16Bits(0);
+        }
+
         emitByte(AS_OPCODE(OpCode::OP_OR));
+
+        patchJump(exitJump);
     }
 
     void CompilerVisitor::visit(ASTPommeEQ *node, void * data) 
@@ -701,7 +708,6 @@ namespace Pomme
 
         if (node->generateDefaultConstructor)
         {
-            std::cout << "generateDefaultConstructor" << std::endl;
             method(nullptr, name, node->constructorIdent, node->defaultConstructorIndex, true, true);
         }
 

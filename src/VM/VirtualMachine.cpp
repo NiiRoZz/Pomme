@@ -391,6 +391,7 @@ namespace Pomme
             &&OP_CONVERT_INVOKE,
             &&OP_JUMP,
             &&OP_JUMP_IF_FALSE,
+            &&OP_JUMP_IF_TRUE,
             &&OP_LOOP,
             &&OP_CALL_NATIVE,
             &&OP_CALL_GLOBAL,
@@ -655,6 +656,14 @@ namespace Pomme
                 DISPATCH();
             }
 
+            CASES(OP_JUMP_IF_TRUE)
+            {
+                uint16_t offset = READ_UINT16();
+                if (!isFalsey(peek(0))) frame->ip += offset;
+
+                DISPATCH();
+            }
+
             CASES(OP_LOOP)
             {
                 uint16_t offset = READ_UINT16();
@@ -789,12 +798,11 @@ namespace Pomme
 
             CASES(OP_AND)
             {
-                assert(IS_BOOL(peek(1)));
                 assert(IS_BOOL(peek(0)));
+                assert(IS_BOOL(peek(1)));
 
-                //left is on top of the stack
-                bool left = AS_BOOL(pop());
                 bool right = AS_BOOL(pop());
+                bool left = AS_BOOL(pop());
 
                 push(BOOL_VAL(left && right));
 
@@ -803,12 +811,11 @@ namespace Pomme
 
             CASES(OP_OR)
             {
-                assert(IS_BOOL(peek(1)));
                 assert(IS_BOOL(peek(0)));
+                assert(IS_BOOL(peek(1)));
 
-                //left is on top of the stack
-                bool left = AS_BOOL(pop());
                 bool right = AS_BOOL(pop());
+                bool left = AS_BOOL(pop());
 
                 push(BOOL_VAL(left || right));
 
@@ -1345,6 +1352,8 @@ namespace Pomme
                 return jumpInstruction("OP_JUMP", 1, chunk, offset);
             case AS_OPCODE(OpCode::OP_JUMP_IF_FALSE):
                 return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
+            case AS_OPCODE(OpCode::OP_JUMP_IF_TRUE):
+                return jumpInstruction("OP_JUMP_IF_TRUE", 1, chunk, offset);
             case AS_OPCODE(OpCode::OP_LOOP):
                 return jumpInstruction("OP_LOOP", -1, chunk, offset);
             case AS_OPCODE(OpCode::OP_CALL_GLOBAL):

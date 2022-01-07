@@ -30,6 +30,7 @@ namespace Pomme
         OP_CONVERT_INVOKE,
         OP_JUMP,
         OP_JUMP_IF_FALSE,
+        OP_JUMP_IF_TRUE,
         OP_LOOP,
         OP_CALL_NATIVE,
         OP_CALL_GLOBAL,
