@@ -11,8 +11,28 @@
 using namespace Pomme;
 
 #define TEST_TYPECHECKER_TEST(testString) \
-    std::ifstream t(std::string(POMME_BIN_PATH) + "std.pomme");\
-	std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());\
+    std::string str = "class float" "\n" \
+        "{" "\n" \
+            "native float operator+(float rhs);" "\n" \
+            "native float operator-(float rhs);" "\n" \
+        "};" "\n" \
+        "class int" "\n" \
+        "{" "\n" \
+        "native int operator+(int rhs);" "\n" \
+        "native float operator+(float rhs);" "\n" \
+        "native int operator-(int rhs);" "\n" \
+        "native float operator-(float rhs);" "\n" \
+        "native int operator-();" "\n" \
+        "native bool operator<(int rhs);" "\n" \
+        "native bool operator>(int rhs);" "\n" \
+        "native bool operator==(int rhs);" "\n" \
+        "native bool operatorbool();" "\n" \
+        "};" "\n" \
+        "class bool" "\n" \
+        "{" "\n" \
+        "native bool empty();" "\n" \
+        "};" "\n" \
+    ;\
     std::size_t countLinesStr = std::count_if(str.begin(), str.end(), [](char i){return i == '\n';});\
     std::string testStr = testString;\
     std::size_t countLinesTestStr = std::count_if(testStr.begin(), testStr.end(), [](char i){return i == '\n';});\
@@ -30,7 +50,7 @@ using namespace Pomme;
 	std::string text = buffer.str();\
 	std::cout.rdbuf(old);\
     std::vector<ErrorFile> compileFiles;\
-    compileFiles.emplace_back(std::string(POMME_BIN_PATH) + "std.pomme", 1u, countLinesStr);\
+    compileFiles.emplace_back("StdString", 1u, countLinesStr);\
     compileFiles.emplace_back("CustomString", countLinesStr, countLinesStr + countLinesTestStr );\
     TypeChecker typeChecker(compileFiles);\
     TypeCheckerVisitor visitor = typeChecker.typeCheck(tree);\
