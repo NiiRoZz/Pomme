@@ -1,26 +1,21 @@
-class float
-{
-    native float operator+(float rhs);
-    native float operator-(float rhs);
-};
-
-class int
-{
-    native int operator+(int rhs);
-    native float operator+(float rhs);
-    
-    native int operator-(int rhs);
-    native float operator-(float rhs);
-    native int operator-();
-
-    native bool operator<(int rhs);
-    native bool operator>(int rhs);
-    native bool operator==(int rhs);
-
-    native bool operatorbool();
-};
-
-class bool
-{
-
-};
+"class float" "\n"
+"{" "\n"
+    "native float operator+(float rhs);" "\n"
+    "native float operator-(float rhs);" "\n"
+"};" "\n"
+"class int" "\n"
+"{" "\n"
+"native int operator+(int rhs);" "\n"
+"native float operator+(float rhs);" "\n"
+"native int operator-(int rhs);" "\n"
+"native float operator-(float rhs);" "\n"
+"native int operator-();" "\n"
+"native bool operator<(int rhs);" "\n"
+"native bool operator>(int rhs);" "\n"
+"native bool operator==(int rhs);" "\n"
+"native bool operatorbool();" "\n"
+"};" "\n"
+"class bool" "\n"
+"{" "\n"
+"native bool empty();" "\n"
+"};" "\n"

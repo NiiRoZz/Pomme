@@ -223,6 +223,43 @@ namespace Pomme
         return pop();
     }
 
+    bool VirtualMachine::linkStdNative()
+    {
+        bool result = false;
+
+        result |= linkMethodNative("int", getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 0);
+            assert(IS_INT(*primitive));
+
+            return INT_VAL(-AS_INT(*primitive));
+        });
+
+	    result |= linkMethodNative("int", getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 0);
+            assert(IS_INT(*primitive));
+
+            return BOOL_VAL(static_cast<bool>(AS_INT(*primitive)));
+        });
+
+	    result |= linkMethodNative("int", getFunctionName("operator==", "int"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 1);
+            assert(IS_INT(*primitive));
+            assert(IS_INT(args[0]));
+
+            return BOOL_VAL(AS_INT(*primitive) == AS_INT(args[0]));
+        });
+
+	    result |= linkMethodNative("int", getFunctionName("operator>", "int"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 1);
+            assert(IS_INT(*primitive));
+            assert(IS_INT(args[0]));
+
+            return BOOL_VAL(AS_INT(*primitive) > AS_INT(args[0]));
+        });
+
+        return result;
+    }
+
     bool VirtualMachine::linkGlobalNative(const std::string& name, GlobalNativeFn function)
     {
         auto it = globalsIndices.find(name);

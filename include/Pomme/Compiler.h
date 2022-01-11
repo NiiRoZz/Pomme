@@ -24,6 +24,7 @@ namespace Pomme
 
 		void addFile(const std::string& filePath);
 		void addString(const std::string& data);
+		void addStdLibrary();
 
 		ObjFunction* compile(bool printTree = false);
 

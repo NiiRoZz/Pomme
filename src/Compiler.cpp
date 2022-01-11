@@ -44,6 +44,28 @@ namespace Pomme
 		m_CompileString += data;
 	}
 
+	void Compiler::addStdLibrary()
+	{
+		static constexpr std::string_view str = 
+			#include "../library/std.pomme"
+		;
+		static constexpr std::size_t nmbReturnLine = [&] () -> std::size_t
+		{
+			std::size_t nmb = 0;
+			for (char i : str)
+			{
+				if (i == '\n') nmb++;
+			}
+
+			return nmb;
+		}();
+
+		std::cout << "a : " << str << std::endl;
+		
+		addCompileFile("StdLibrary", nmbReturnLine);
+		m_CompileString += str;
+	}
+
 	ObjFunction* Compiler::compile(bool printTree)
 	{
 		CharStream charStream(m_CompileString.c_str(), m_CompileString.size() - 1, 1, 1);

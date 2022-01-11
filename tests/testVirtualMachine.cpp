@@ -16,46 +16,13 @@ using namespace Pomme;
 	std::string s = testString;\
 	VirtualMachine vm;\
     Compiler compiler(vm);\
-	compiler.addFile(std::string(POMME_BIN_PATH) + "std.pomme");\
+	compiler.addStdLibrary();\
 	compiler.addString(s);\
 	ObjFunction *function = compiler.compile(true);\
 	EXPECT_TRUE(function != nullptr);\
 	InterpretResult result = vm.interpret(function);\
 	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);\
-	defineStdNative(vm);\
-
-void defineStdNative(VirtualMachine& vm)
-{
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
-		assert(argCount == 0);
-        assert(IS_INT(*primitive));
-
-		return INT_VAL(-AS_INT(*primitive));
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
-		assert(argCount == 0);
-        assert(IS_INT(*primitive));
-
-		return BOOL_VAL(static_cast<bool>(AS_INT(*primitive)));
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator==", "int"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(IS_INT(*primitive));
-		assert(IS_INT(args[0]));
-
-		return BOOL_VAL(AS_INT(*primitive) == AS_INT(args[0]));
-	}));
-
-	EXPECT_TRUE(vm.linkMethodNative("int", vm.getFunctionName("operator>", "int"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
-		assert(argCount == 1);
-        assert(IS_INT(*primitive));
-		assert(IS_INT(args[0]));
-
-		return BOOL_VAL(AS_INT(*primitive) > AS_INT(args[0]));
-	}));
-}
+	vm.linkStdNative();\
 
 TEST(TEST_VM, BasicTest)
 {
