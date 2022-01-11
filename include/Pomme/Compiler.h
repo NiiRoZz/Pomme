@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VM/Object.h"
+#include "Object.h"
 #include <string>
 
 namespace Pomme

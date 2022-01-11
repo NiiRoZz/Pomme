@@ -1,7 +1,7 @@
 #include "CompilerVisitor.h"
 #include "CommonVisitorFunction.h"
-#include "VM/VirtualMachine.h"
-#include "VM/Chunk.h"
+#include "VirtualMachine.h"
+#include "Chunk.h"
 
 #include <iostream>
 #include <assert.h>

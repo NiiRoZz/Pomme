@@ -1,7 +1,7 @@
 #include <iostream>
 #include "TypeChecker.h"
 
-#include "VM/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "CompilerVisitor.h"
 #include "TypeCheckerVisitor.h"
 #include "AutomateVisitor.h"

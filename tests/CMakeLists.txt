@@ -19,6 +19,7 @@ target_include_directories(pomme_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest/include
     ${CMAKE_CURRENT_SOURCE_DIR}/googletest/googletest
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/Pomme
     ${JAVACC_GENERATED_SRC_DIR}
 )
 

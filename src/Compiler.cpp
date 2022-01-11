@@ -1,6 +1,6 @@
 #include "Compiler.h"
 
-#include "VM/VirtualMachine.h"
+#include "VirtualMachine.h"
 #include "CompilerVisitor.h"
 #include "PommeLexerTokenManager.h"
 #include "MyErrorHandler.h"

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include <iostream>
-#include "Automate/Automaton.h"
+#include "Automaton.h"
 #include "PommeLexer.h"
 #include "PommeLexerTokenManager.h"
 #include "AutomateVisitor.h"

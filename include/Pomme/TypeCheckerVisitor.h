@@ -1,9 +1,9 @@
 #pragma once
 
 #include "PommeLexerVisitor.h"
-#include "VM/Chunk.h"
-#include "VM/Object.h"
-#include "VM/Common.h"
+#include "Chunk.h"
+#include "Object.h"
+#include "Common.h"
 #include "Compiler.h"
 #include <map>
 #include <utility>

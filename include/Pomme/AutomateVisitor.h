@@ -2,7 +2,7 @@
 
 
 #include "PommeLexerVisitor.h"
-#include "Automate/Automaton.h"
+#include "Automaton.h"
 #include "CommonVisitorFunction.h"
 
 namespace Pomme

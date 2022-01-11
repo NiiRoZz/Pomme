@@ -3,8 +3,8 @@
 #include "PommeLexer.h"
 #include "Compiler.h"
 #include "TypeChecker.h"
-#include "VM/VirtualMachine.h"
-#include "VM/Chunk.h"
+#include "VirtualMachine.h"
+#include "Chunk.h"
 #include "PommeLexerTokenManager.h"
 #include "MyErrorHandler.h"
 

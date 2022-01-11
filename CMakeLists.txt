@@ -35,7 +35,11 @@ endif()
 include(GNUInstallDirs)
 
 # Add directories for generated include files
-include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "include/" )
+include_directories( ${PROJECT_BINARY_DIR} ${JAVACC_GENERATED_SRC_DIR} "src/" "include/Pomme" )
+
+file(GLOB JAVACC_SOURCE_FILES
+    src/Javacc/*.cc
+)
 
 # Add source to this project's executable.
 add_library(${APP}
@@ -51,7 +55,8 @@ add_library(${APP}
   "src/TypeCheckerVisitor.cpp"
   "src/PommeNode.cpp"
   "src/CommonVisitorFunction.cpp"
-  "src/AutomateVisitor.cpp")
+  "src/AutomateVisitor.cpp"
+  ${JAVACC_SOURCE_FILES})
 
 if(JAVACC_GENERATE MATCHES ON)
   add_custom_target(
@@ -91,6 +96,11 @@ install(
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/Pomme"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(

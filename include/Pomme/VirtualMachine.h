@@ -13,7 +13,7 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 #define GLOBALS_MAX UINT16_COUNT
 
-//#define DEBUG_LOG
+#define DEBUG_LOG
 
 namespace Pomme
 {
