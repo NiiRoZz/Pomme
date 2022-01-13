@@ -910,7 +910,7 @@ TEST(TEST_TYPECHECKER, scopes)
 
 TEST(TEST_TYPECHECKER, scopesRedefinition)
 {
-    TEST_TYPECHECKER_TEST("class x {  void f(int x){ int x = 8; }; void g(int y){ int y;} };\n");
+    TEST_TYPECHECKER_TEST("class x {  void f(int x){ int x = 8; }; void g(int y){ int y; }; };\n");
 
     for(const auto& error : visitor.errors)
     {
