@@ -32,7 +32,7 @@ namespace Pomme
 
 		std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
-		addCompileFile(filePath, std::count_if(filePath.begin(), filePath.end(), [](char i){return i == '\n';}));
+		addCompileFile(filePath, std::count_if(str.begin(), str.end(), [](char i){return i == '\n';}));
 		m_CompileString += str;
 	}
 
