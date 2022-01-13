@@ -978,8 +978,14 @@ namespace Pomme
 
             case 1u:
             {
+                current_scopes = 0;
+                locals.clear();
+
                 node->jjtChildAccept(3, this, data); // headers
                 node->jjtChildAccept(4, this, data); // instrs
+
+                current_scopes = 0;
+                locals.clear();
                 break;
             }
         }
@@ -1642,7 +1648,14 @@ namespace Pomme
                     }
                 }
 
+
+                current_scopes = 0;
+                locals.clear();
+
                 node->jjtChildAccept(2, this, data); // instrs
+
+                current_scopes = 0;
+                locals.clear();
                 break;
             }
         }

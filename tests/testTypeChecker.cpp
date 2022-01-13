@@ -894,3 +894,27 @@ TEST(TEST_TYPECHECKER, Or2)
     }
     EXPECT_EQ(visitor.errors.size(), 0);
 }
+
+
+TEST(TEST_TYPECHECKER, scopes)
+{
+    TEST_TYPECHECKER_TEST("class x {  void f(int x){ x = 8; }; void f(){ int x = 0; x = 3; }; };\n");
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 0);
+}
+
+
+TEST(TEST_TYPECHECKER, scopesRedefinition)
+{
+    TEST_TYPECHECKER_TEST("class x {  void f(int x){ int x = 8; }; void g(int y){ int y;} };\n");
+
+    for(const auto& error : visitor.errors)
+    {
+        std::cout << error << std::endl;
+    }
+    EXPECT_EQ(visitor.errors.size(), 2);
+}
