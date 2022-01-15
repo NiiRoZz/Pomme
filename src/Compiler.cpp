@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 namespace Pomme
 {

@@ -1499,7 +1499,7 @@ TEST(TEST_VM, fibTest)
 	EXPECT_EQ(vm.stackSize(), 0);
 }
 
-static void fibNativeBench(benchmark::State& state)
+static void fibNativeRecursiveBench(benchmark::State& state)
 {
 	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(42)); };\n");
 
@@ -1542,10 +1542,47 @@ static void fibNativeBench(benchmark::State& state)
 		EXPECT_EQ(vm.stackSize(), 0);
 	}
 }
+BENCHMARK(fibNativeRecursiveBench)->Unit(benchmark::kSecond);
 
-BENCHMARK(fibNativeBench)->Unit(benchmark::kSecond);
+static void fibNativeIterativeBench(benchmark::State& state)
+{
+	TEST_VM_TEST("native int fib(int n); native void t(int n); void f() { t(fib(42)); };\n");
 
-static void fibNoNativeBench(benchmark::State& state)
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("fib", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+
+		int x = 0, y = 1, z = 0;
+		for (int i = 0; i < AS_INT(args[0]); i++)
+		{
+			z = x + y;
+			x = y;
+			y = z;
+		}
+
+		return INT_VAL(x);
+	}));
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 267914296);
+
+		return NULL_VAL;
+	}));
+
+	for (auto _ : state)
+	{
+		result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+		EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+		EXPECT_EQ(vm.stackSize(), 0);
+	}
+}
+BENCHMARK(fibNativeIterativeBench)->Unit(benchmark::kNanosecond);
+
+static void fibNoNativeRecursiveBench(benchmark::State& state)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { t(fib(42)); };\n");
 
@@ -1563,14 +1600,33 @@ static void fibNoNativeBench(benchmark::State& state)
 		result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
 	}
 }
+BENCHMARK(fibNoNativeRecursiveBench)->Unit(benchmark::kSecond);
 
-BENCHMARK(fibNoNativeBench)->Unit(benchmark::kSecond);
+static void fibNoNativeIterativeBench(benchmark::State& state)
+{
+	TEST_VM_TEST("int fib(int n) {int x = 0; int y = 1; int z = 0; int i = 0; while (i < n) { z = x + y; x = y; y = z; i = i + 1; }; return x; }; native void t(int n); void f() { t(fib(42)); };\n");
 
-/*
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+	
+		EXPECT_EQ(AS_INT(args[0]), 267914296);
+
+		return NULL_VAL;
+	}));
+
+	for (auto _ : state)
+	{
+		result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+	}
+}
+BENCHMARK(fibNoNativeIterativeBench)->Unit(benchmark::kNanosecond);
+
+
 TEST(TEST_VM, benchmarkTest)
 {
-	::benchmark::RunSpecifiedBenchmarks("fibNativeBench");
-	::benchmark::RunSpecifiedBenchmarks("fibNoNativeBench");
-}*/
+	//::benchmark::RunSpecifiedBenchmarks("fibNativeIterativeBench");
+	::benchmark::RunSpecifiedBenchmarks("fibNoNativeIterativeBench");
+}
 
 #undef TEST_VM_TEST
