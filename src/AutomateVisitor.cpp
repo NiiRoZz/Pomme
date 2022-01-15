@@ -1,5 +1,6 @@
 #include "AutomateVisitor.h"
 
+#include <array>
 
 namespace Pomme
 {
