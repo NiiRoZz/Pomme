@@ -60,8 +60,6 @@ namespace Pomme
 
 			return nmb;
 		}();
-
-		std::cout << "a : " << str << std::endl;
 		
 		addCompileFile("StdLibrary", nmbReturnLine);
 		m_CompileString += str;

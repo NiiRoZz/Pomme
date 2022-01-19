@@ -6,6 +6,7 @@
 "class int" "\n"
 "{" "\n"
 "native int operator+(int rhs);" "\n"
+"native int operator+(bool rhs);" "\n"
 "native float operator+(float rhs);" "\n"
 "native int operator-(int rhs);" "\n"
 "native float operator-(float rhs);" "\n"

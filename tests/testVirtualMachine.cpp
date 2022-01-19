@@ -1480,6 +1480,40 @@ TEST(TEST_VM, BreakTest)
 	EXPECT_TRUE(calledT);
 }
 
+TEST(TEST_VM, IntPlusBoolTest)
+{
+	TEST_VM_TEST("native void t(int f); native bool z(); void f() { int s = 0; s = s + z(); s = s + z(); t(s); };};\n");
+
+	bool calledT = false;
+	bool calledZ = false;
+
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("z"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 0);
+
+		calledZ = true;
+
+		return BOOL_VAL(true);
+	}));
+	
+	EXPECT_TRUE(vm.linkGlobalNative(vm.getFunctionName("t", "int"), [&] (VirtualMachine& vm, int argCount, Value* args) {
+		EXPECT_TRUE(argCount == 1);
+		EXPECT_TRUE(IS_INT(args[0]));
+
+		EXPECT_EQ(AS_INT(args[0]), 2);
+
+		calledT = true;
+
+		return NULL_VAL;
+	}));
+ 
+	result = vm.interpretGlobalFunction(vm.getFunctionName("f"), {});
+
+	EXPECT_EQ(result, Pomme::InterpretResult::INTERPRET_OK);
+	EXPECT_EQ(vm.stackSize(), 0);
+	EXPECT_TRUE(calledT);
+	EXPECT_TRUE(calledZ);
+}
+
 TEST(TEST_VM, fibTest)
 {
 	TEST_VM_TEST("int fib(int n) {if (n < 2) {return n;}; return fib(n-1) + fib(n-2);}; native void t(int n); void f() { int z = fib(20); t(z); };\n");
@@ -1626,7 +1660,7 @@ BENCHMARK(fibNoNativeIterativeBench)->Unit(benchmark::kNanosecond);
 TEST(TEST_VM, benchmarkTest)
 {
 	//::benchmark::RunSpecifiedBenchmarks("fibNativeIterativeBench");
-	::benchmark::RunSpecifiedBenchmarks("fibNoNativeIterativeBench");
+	::benchmark::RunSpecifiedBenchmarks("fibNoNativeRecursiveBench");
 }
 
 #undef TEST_VM_TEST

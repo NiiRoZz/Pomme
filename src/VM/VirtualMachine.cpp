@@ -234,6 +234,14 @@ namespace Pomme
             return INT_VAL(-AS_INT(*primitive));
         });
 
+        result |= linkMethodNative("int", getFunctionName("operator+", "bool"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 1);
+            assert(IS_INT(*primitive));
+            assert(IS_BOOL(args[0]));
+
+            return INT_VAL((AS_INT(*primitive) + (AS_BOOL(args[0]) ? 1u : 0u)));
+        });
+
 	    result |= linkMethodNative("int", getFunctionName("operatorbool"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
             assert(argCount == 0);
             assert(IS_INT(*primitive));
