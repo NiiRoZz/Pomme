@@ -48,7 +48,7 @@ namespace Pomme
     #define TRUE_VAL                ((Pomme::Value)(_MASK_QNAN | TAG_TRUE))
     #define NULL_VAL                ((Pomme::Value)(_MASK_QNAN | TAG_NULL))
     #define INT_VAL(value)          (_MASK_INTEGER | (uint32_t)(int32_t)(value))
-    #define FLOAT_VAL(num)          doubleToValue(num)
+    #define FLOAT_VAL(num)          (Pomme::doubleToValue(num))
     #define OBJ_PTR_VAL(obj)        (_MASK_OBJECT_PTR | (uint32_t)(int32_t)(obj))
 
     static inline Value doubleToValue(double num)
@@ -59,7 +59,7 @@ namespace Pomme
     }
 
     #define AS_BOOL(value)                          ((value) == TRUE_VAL)
-    #define AS_FLOAT(value)                         doubleToNum(value)
+    #define AS_FLOAT(value)                         (Pomme::doubleToNum(value))
     #define AS_INT(value)                           ((int32_t)((value) & _PAYLOAD_INTEGER))
     #define AS_OBJ_PTR(value)                       ((uint32_t)((value) & _PAYLOAD_INTEGER))
     #define AS_OBJ(vm, value)                       ((vm).getObject<Obj>(AS_OBJ_PTR(value)))

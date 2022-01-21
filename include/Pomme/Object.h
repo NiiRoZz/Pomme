@@ -182,7 +182,7 @@ namespace Pomme
     bool isObjType(const VirtualMachine& vm, const Value& value, ObjType type);
 
     template<typename T>
-    static constexpr ObjType getObjType()
+    static inline constexpr ObjType getObjType()
     {
         if constexpr (std::is_same_v<T, Obj>)
         {

@@ -227,6 +227,29 @@ namespace Pomme
     {
         bool result = false;
 
+        result |= linkMethodNative("float", getFunctionName("operator*", "float"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 1);
+            assert(IS_FLOAT(*primitive));
+            assert(IS_FLOAT(args[0]));
+
+            return FLOAT_VAL(AS_FLOAT(*primitive) * AS_FLOAT(args[0]));
+        });
+
+        result |= linkMethodNative("float", getFunctionName("operator>", "float"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 1);
+            assert(IS_FLOAT(*primitive));
+            assert(IS_FLOAT(args[0]));
+
+            return BOOL_VAL(AS_FLOAT(*primitive) > AS_FLOAT(args[0]));
+        });
+
+        result |= linkMethodNative("float", getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
+            assert(argCount == 0);
+            assert(IS_FLOAT(*primitive));
+
+            return FLOAT_VAL(-AS_FLOAT(*primitive));
+        });
+
         result |= linkMethodNative("int", getFunctionName("operator-"), [] (VirtualMachine& vm, int argCount, Value* primitive, Value* args) {
             assert(argCount == 0);
             assert(IS_INT(*primitive));

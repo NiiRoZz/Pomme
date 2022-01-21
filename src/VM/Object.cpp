@@ -59,8 +59,6 @@ namespace Pomme
         auto it = staticFieldsIndices.find(name);
         if (it == staticFieldsIndices.end()) return nullptr;
 
-        std::cout << "slot : " << it->second << std::endl;
-
         return getStaticField(vm, it->second);
     }
 
