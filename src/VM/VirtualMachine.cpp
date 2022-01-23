@@ -14,7 +14,7 @@ namespace Pomme
     : frameCount(0u)
     , stackTop(stack)
     , globalsIndicesCount(0u)
-    , objectMemory(1000000u * 10u)
+    , objectMemory(1000000u * 100u)
     {
         std::memset(globals, 0, sizeof(Value) * GLOBALS_MAX);
         for (uint8_t i = 0; i < static_cast<uint8_t>(PrimitiveType::COUNT); ++i)
