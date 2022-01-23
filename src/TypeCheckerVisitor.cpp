@@ -1625,6 +1625,9 @@ namespace Pomme
 
             case 1u:
             {
+                current_scopes = 0;
+                locals.clear();
+
                 node->jjtChildAccept(1, this, data); // headers
 
                 if (child_context)
@@ -1647,11 +1650,7 @@ namespace Pomme
                         }
                     }
                 }
-
-
-                current_scopes = 0;
-                locals.clear();
-
+                
                 node->jjtChildAccept(2, this, data); // instrs
 
                 current_scopes = 0;
